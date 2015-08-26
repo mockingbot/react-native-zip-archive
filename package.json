@@ -1,0 +1,24 @@
+{
+  "name": "react-native-zip-archive",
+  "version": "0.0.1",
+  "description": "A litter wrapper on ZipArchive for react-native",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:plrthink/react-native-zip-archive.git"
+  },
+  "keywords": [
+    "react-component",
+    "react-native",
+    "ios",
+    "zip-archive"
+  ],
+  "devDependencies": {
+    "react-native": "^0.8.0"
+  },
+  "author": "Perry Poon <plrthink@gmail.com> (https://github.com/plrthink)",
+  "license": "MIT"
+}

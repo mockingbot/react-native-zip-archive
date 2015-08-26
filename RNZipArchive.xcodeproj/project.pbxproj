@@ -1,0 +1,320 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D058BD9B1B8DA5A7004D9F18 /* ioapi.c in Sources */ = {isa = PBXBuildFile; fileRef = D058BD911B8DA5A7004D9F18 /* ioapi.c */; };
+		D058BD9C1B8DA5A7004D9F18 /* mztools.c in Sources */ = {isa = PBXBuildFile; fileRef = D058BD931B8DA5A7004D9F18 /* mztools.c */; };
+		D058BD9D1B8DA5A7004D9F18 /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = D058BD951B8DA5A7004D9F18 /* unzip.c */; };
+		D058BD9E1B8DA5A7004D9F18 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = D058BD971B8DA5A7004D9F18 /* zip.c */; };
+		D058BD9F1B8DA5A7004D9F18 /* SSZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = D058BD9A1B8DA5A7004D9F18 /* SSZipArchive.m */; };
+		D058BDA21B8DA744004D9F18 /* RNZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = D058BDA01B8DA744004D9F18 /* RNZipArchive.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D058BD721B8DA4AB004D9F18 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D058BD741B8DA4AB004D9F18 /* libRNZipArchive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNZipArchive.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D058BD851B8DA4AB004D9F18 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D058BD901B8DA5A7004D9F18 /* crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypt.h; sourceTree = "<group>"; };
+		D058BD911B8DA5A7004D9F18 /* ioapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ioapi.c; sourceTree = "<group>"; };
+		D058BD921B8DA5A7004D9F18 /* ioapi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ioapi.h; sourceTree = "<group>"; };
+		D058BD931B8DA5A7004D9F18 /* mztools.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mztools.c; sourceTree = "<group>"; };
+		D058BD941B8DA5A7004D9F18 /* mztools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mztools.h; sourceTree = "<group>"; };
+		D058BD951B8DA5A7004D9F18 /* unzip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unzip.c; sourceTree = "<group>"; };
+		D058BD961B8DA5A7004D9F18 /* unzip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unzip.h; sourceTree = "<group>"; };
+		D058BD971B8DA5A7004D9F18 /* zip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = zip.c; sourceTree = "<group>"; };
+		D058BD981B8DA5A7004D9F18 /* zip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zip.h; sourceTree = "<group>"; };
+		D058BD991B8DA5A7004D9F18 /* SSZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSZipArchive.h; sourceTree = "<group>"; };
+		D058BD9A1B8DA5A7004D9F18 /* SSZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSZipArchive.m; sourceTree = "<group>"; };
+		D058BDA01B8DA744004D9F18 /* RNZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNZipArchive.m; sourceTree = "<group>"; };
+		D058BDA11B8DA744004D9F18 /* RNZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNZipArchive.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D058BD711B8DA4AB004D9F18 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D058BD6B1B8DA4AB004D9F18 = {
+			isa = PBXGroup;
+			children = (
+				D058BDA01B8DA744004D9F18 /* RNZipArchive.m */,
+				D058BDA11B8DA744004D9F18 /* RNZipArchive.h */,
+				D058BD8E1B8DA5A7004D9F18 /* SSZipArchive */,
+				D058BD831B8DA4AB004D9F18 /* RNZipArchiveTests */,
+				D058BD751B8DA4AB004D9F18 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D058BD751B8DA4AB004D9F18 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D058BD741B8DA4AB004D9F18 /* libRNZipArchive.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D058BD831B8DA4AB004D9F18 /* RNZipArchiveTests */ = {
+			isa = PBXGroup;
+			children = (
+				D058BD841B8DA4AB004D9F18 /* Supporting Files */,
+			);
+			path = RNZipArchiveTests;
+			sourceTree = "<group>";
+		};
+		D058BD841B8DA4AB004D9F18 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				D058BD851B8DA4AB004D9F18 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D058BD8E1B8DA5A7004D9F18 /* SSZipArchive */ = {
+			isa = PBXGroup;
+			children = (
+				D058BD8F1B8DA5A7004D9F18 /* minizip */,
+				D058BD991B8DA5A7004D9F18 /* SSZipArchive.h */,
+				D058BD9A1B8DA5A7004D9F18 /* SSZipArchive.m */,
+			);
+			path = SSZipArchive;
+			sourceTree = "<group>";
+		};
+		D058BD8F1B8DA5A7004D9F18 /* minizip */ = {
+			isa = PBXGroup;
+			children = (
+				D058BD901B8DA5A7004D9F18 /* crypt.h */,
+				D058BD911B8DA5A7004D9F18 /* ioapi.c */,
+				D058BD921B8DA5A7004D9F18 /* ioapi.h */,
+				D058BD931B8DA5A7004D9F18 /* mztools.c */,
+				D058BD941B8DA5A7004D9F18 /* mztools.h */,
+				D058BD951B8DA5A7004D9F18 /* unzip.c */,
+				D058BD961B8DA5A7004D9F18 /* unzip.h */,
+				D058BD971B8DA5A7004D9F18 /* zip.c */,
+				D058BD981B8DA5A7004D9F18 /* zip.h */,
+			);
+			path = minizip;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D058BD731B8DA4AB004D9F18 /* RNZipArchive */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D058BD881B8DA4AB004D9F18 /* Build configuration list for PBXNativeTarget "RNZipArchive" */;
+			buildPhases = (
+				D058BD701B8DA4AB004D9F18 /* Sources */,
+				D058BD711B8DA4AB004D9F18 /* Frameworks */,
+				D058BD721B8DA4AB004D9F18 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RNZipArchive;
+			productName = RNZipArchive;
+			productReference = D058BD741B8DA4AB004D9F18 /* libRNZipArchive.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D058BD6C1B8DA4AB004D9F18 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0640;
+				ORGANIZATIONNAME = "Perry Poon";
+				TargetAttributes = {
+					D058BD731B8DA4AB004D9F18 = {
+						CreatedOnToolsVersion = 6.4;
+					};
+				};
+			};
+			buildConfigurationList = D058BD6F1B8DA4AB004D9F18 /* Build configuration list for PBXProject "RNZipArchive" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D058BD6B1B8DA4AB004D9F18;
+			productRefGroup = D058BD751B8DA4AB004D9F18 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D058BD731B8DA4AB004D9F18 /* RNZipArchive */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D058BD701B8DA4AB004D9F18 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D058BD9B1B8DA5A7004D9F18 /* ioapi.c in Sources */,
+				D058BD9F1B8DA5A7004D9F18 /* SSZipArchive.m in Sources */,
+				D058BDA21B8DA744004D9F18 /* RNZipArchive.m in Sources */,
+				D058BD9D1B8DA5A7004D9F18 /* unzip.c in Sources */,
+				D058BD9E1B8DA5A7004D9F18 /* zip.c in Sources */,
+				D058BD9C1B8DA5A7004D9F18 /* mztools.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D058BD861B8DA4AB004D9F18 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(SRCROOT)/../../React/**",
+					"$(SRCROOT)/../react-native/React/**",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		D058BD871B8DA4AB004D9F18 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(SRCROOT)/../../React/**",
+					"$(SRCROOT)/../react-native/React/**",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D058BD891B8DA4AB004D9F18 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		D058BD8A1B8DA4AB004D9F18 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D058BD6F1B8DA4AB004D9F18 /* Build configuration list for PBXProject "RNZipArchive" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D058BD861B8DA4AB004D9F18 /* Debug */,
+				D058BD871B8DA4AB004D9F18 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D058BD881B8DA4AB004D9F18 /* Build configuration list for PBXNativeTarget "RNZipArchive" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D058BD891B8DA4AB004D9F18 /* Debug */,
+				D058BD8A1B8DA4AB004D9F18 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D058BD6C1B8DA4AB004D9F18 /* Project object */;
+}
