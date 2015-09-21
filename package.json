@@ -20,5 +20,8 @@
     "react-native": "^0.8.0"
   },
   "author": "Perry Poon <plrthink@gmail.com> (https://github.com/plrthink)",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^2.10.0"
+  }
 }
