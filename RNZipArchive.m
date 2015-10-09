@@ -16,7 +16,7 @@ RCT_EXPORT_MODULE();
 RCT_EXPORT_METHOD(unzip:(NSString *)zipPath destinationPath:(NSString *)destinationPath callback:(RCTResponseSenderBlock)callback) {
     [SSZipArchive unzipFileAtPath:zipPath
                     toDestination:destinationPath];
-    callback(@[@0]);
+    callback(@[[NSNull null]]);
 }
 
 @end
