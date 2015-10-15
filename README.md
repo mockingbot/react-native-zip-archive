@@ -17,7 +17,7 @@ npm install react-native-zip-archive --save
 1. In XCode, in the project navigator right click `Libraries` ➜ `Add Files to [your project's name]`
 2. Go to `node_modules` ➜ `react-native-zip-archive` and add `RNZipArchive.xcodeproj`
 3. Add `libRNZipArchive.a` (from 'Products' under RNZipArchive.xcodeproj) to your project's `Build Phases` ➜ `Link Binary With Libraries` phase
-4. Add the `libz` library to your target 
+4. Add the `libz` library to your target
 5. Look for Header Search Paths and make sure it contains both `$(SRCROOT)/../react-native/React` and `$(SRCROOT)/../../React` - mark both as recursive
 6. Run your project (`Cmd+R`)
 
@@ -39,7 +39,10 @@ const ZipArchive = require('react-native').NativeModules.RNZipArchive
 Example
 
 ```js
-ZipArchive.unzip(`sourcePath`, `targetPath`)
+let sourcePath = 'path_to_your_zip_file'
+let targetPath = 'path_to_the_folder_where_you_want_it_unzipped'
+
+ZipArchive.unzip(sourcePath, targetPath)
 .then(() => {
   console.log('unzip completed!')
 })
