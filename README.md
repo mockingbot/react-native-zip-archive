@@ -26,9 +26,14 @@ npm install react-native-zip-archive --save
 require it in your file
 
 ```js
-const ZipArchive = require('react-native').NativeModules.RNZipArchive
+const ZipArchive = require('react-native-zip-archive')
 ```
 
+you may also want to use something like [react-native-fs](https://github.com/johanneslumpe/react-native-fs) to access the file system (check its repo for more information)
+
+```js
+const RNFS = require('react-native-fs')
+```
 
 ## API
 
@@ -40,7 +45,7 @@ Example
 
 ```js
 let sourcePath = 'path_to_your_zip_file'
-let targetPath = 'path_to_the_folder_where_you_want_it_unzipped'
+let targetPath = RNFS.DocumentDirectoryPath
 
 ZipArchive.unzip(sourcePath, targetPath)
 .then(() => {
