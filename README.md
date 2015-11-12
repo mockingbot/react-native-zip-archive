@@ -51,7 +51,7 @@ ZipArchive.unzip(sourcePath, targetPath)
 .then(() => {
   console.log('unzip completed!')
 })
-catch((error) => {
+.catch((error) => {
   console.log(error)
 })
 ```
