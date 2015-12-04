@@ -1,9 +1,9 @@
 'use strict'
 
 var RNZipArchive = require('react-native').NativeModules.RNZipArchive
-var Promise = require('bluebird')
+var promisify = require("es6-promisify")
 
-var _unzip = Promise.promisify(RNZipArchive.unzip)
+var _unzip = promisify(RNZipArchive.unzip)
 
 var _error = (err) => {
   throw error

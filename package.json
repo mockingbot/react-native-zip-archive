@@ -22,6 +22,6 @@
   "author": "Perry Poon <plrthink@gmail.com> (https://github.com/plrthink)",
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^2.10.0"
+    "es6-promisify": "^3.0.0"
   }
 }
