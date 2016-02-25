@@ -2,7 +2,7 @@
   "name": "react-native-zip-archive",
   "version": "0.0.6",
   "description": "A little wrapper on ZipArchive for react-native",
-  "main": "index.ios.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

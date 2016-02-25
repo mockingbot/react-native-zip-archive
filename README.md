@@ -21,6 +21,56 @@ npm install react-native-zip-archive --save
 5. Look for Header Search Paths and make sure it contains both `$(SRCROOT)/../react-native/React` and `$(SRCROOT)/../../React` - mark both as recursive
 6. Run your project (`Cmd+R`)
 
+## Getting started - Android
+
+* Edit `android/settings.gradle` to look like this (without the +):
+
+  ```diff
+  rootProject.name = 'MyApp'
+
+  include ':app'
+
+  + include ':react-native-zip-archive'
+  + project(':react-native-zip-archive').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-zip-archive/android')
+  ```
+
+* Edit `android/app/build.gradle` (note: **app** folder) to look like this: 
+
+  ```diff
+  apply plugin: 'com.android.application'
+
+  android {
+    ...
+  }
+
+  dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:23.0.0'
+    compile 'com.facebook.react:react-native:0.16.+'
+  + compile project(':react-native-zip-archive')
+  }
+  ```
+
+* Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+
+  ```diff
+  package com.myapp;
+
+  + import com.rnziparchive.RNZipArchivePackage;
+
+  ....
+
+    @Override
+    protected List<ReactPackage> getPackages() {
+      return Arrays.<ReactPackage>asList(
+        new MainReactPackage(),
+  +     new RNZipArchivePackage()
+      );
+    }
+
+  }
+  ```
+  
 ## Usage
 
 require it in your file
