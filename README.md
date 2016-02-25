@@ -10,8 +10,6 @@ Note: this project is under development and functionality will improve over time
 npm install react-native-zip-archive --save
 ```
 
- Note that does not support Android.
-
 ## Getting started - iOS
 
 1. In XCode, in the project navigator right click `Libraries` ➜ `Add Files to [your project's name]`
@@ -34,7 +32,7 @@ npm install react-native-zip-archive --save
   + project(':react-native-zip-archive').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-zip-archive/android')
   ```
 
-* Edit `android/app/build.gradle` (note: **app** folder) to look like this: 
+* Edit `android/app/build.gradle` (note: **app** folder) to look like this:
 
   ```diff
   apply plugin: 'com.android.application'
@@ -70,7 +68,7 @@ npm install react-native-zip-archive --save
 
   }
   ```
-  
+
 ## Usage
 
 require it in your file
