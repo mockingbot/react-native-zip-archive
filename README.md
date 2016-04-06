@@ -1,4 +1,4 @@
-# React Native Zip Archive
+# React Native Zip Archive [![react-native-zip-archive](http://img.shields.io/npm/dm/react-native-zip-archive.svg)](https://www.npmjs.org/package/react-native-zip-archive)
 
 Zip archive utility for react-native
 

@@ -6,7 +6,7 @@ var promisify = require("es6-promisify")
 var _unzip = promisify(RNZipArchive.unzip)
 
 var _error = (err) => {
-  throw error
+  throw err
 }
 
 var ZipArchive = {
