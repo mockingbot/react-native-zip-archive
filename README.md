@@ -19,6 +19,8 @@ npm install react-native-zip-archive --save
 5. Look for Header Search Paths and make sure it contains both `$(SRCROOT)/../react-native/React` and `$(SRCROOT)/../../React` - mark both as recursive
 6. Run your project (`Cmd+R`)
 
+Warning: If you're using [rnpm](https://github.com/rnpm/rnpm) to link this module, you also need manually link `libz` library to your target otherwise your project wouldn't compile.
+
 ## Getting started - Android
 
 * Edit `android/settings.gradle` to look like this (without the +):
