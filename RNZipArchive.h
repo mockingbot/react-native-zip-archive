@@ -7,7 +7,8 @@
 //
 
 #import "RCTBridgeModule.h"
+#import "SSZipArchive/SSZipArchive.h"
 
-@interface RNZipArchive : NSObject<RCTBridgeModule>
+@interface RNZipArchive : NSObject<RCTBridgeModule, SSZipArchiveDelegate>
 
 @end
