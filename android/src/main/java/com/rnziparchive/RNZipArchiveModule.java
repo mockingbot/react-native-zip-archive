@@ -46,7 +46,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       inputStream = new FileInputStream(zipFilePath);
       file = new File(zipFilePath);
     } catch (FileNotFoundException | NullPointerException e) {
-      callback.invoke(makeErrorPayload(e));
+      callback.invoke(makeErrorPayload("Couldn't open file " + zipFilePath + ". ", e));
       return;
     }
     unzipStream(zipFilePath, destDirectory, inputStream, file.length(), callback);
@@ -55,21 +55,17 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void unzipAssets(String assetsPath, String destDirectory, Callback completionCallback) {
     InputStream assetsInputStream;
+    long size;
+
     try {
       assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
-    } catch (IOException e) {
-      completionCallback.invoke(makeErrorPayload(e));
-      return;
-    }
-
-    long size;
-    try {
       AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
       size = fileDescriptor.getLength();
     } catch (IOException e) {
-      completionCallback.invoke(makeErrorPayload(e));
+      completionCallback.invoke(makeErrorPayload(String.format("Asset file `%s` could not be opened", assetsPath), e));
       return;
     }
+
     unzipStream(assetsPath, destDirectory, assetsInputStream, size, completionCallback);
   }
 
@@ -115,7 +111,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     } catch (Exception ex) {
       ex.printStackTrace();
       updateProgress(0, 1, zipFilePath); // force 0%
-      completionCallback.invoke(makeErrorPayload(ex));
+      completionCallback.invoke(makeErrorPayload(String.format("Couldn't extract %s", zipFilePath), ex));
     }
   }
 
@@ -152,9 +148,9 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     return size;
   }
 
-  private WritableMap makeErrorPayload(Exception ex) {
+  private WritableMap makeErrorPayload(String message, Exception ex) {
     WritableMap error = Arguments.createMap();
-    error.putString("message", ex.getMessage());
+    error.putString("message", String.format("%s (%s)", message, ex.getMessage()));
     return error;
   }
 }
