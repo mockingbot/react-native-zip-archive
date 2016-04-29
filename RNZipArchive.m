@@ -7,16 +7,36 @@
 //
 
 #import "RNZipArchive.h"
-#import "SSZipArchive/SSZipArchive.h"
+
+#import "RCTBridge.h"
+#import "RCTEventDispatcher.h"
 
 @implementation RNZipArchive
+
+@synthesize bridge = _bridge;
 
 RCT_EXPORT_MODULE();
 
 RCT_EXPORT_METHOD(unzip:(NSString *)zipPath destinationPath:(NSString *)destinationPath callback:(RCTResponseSenderBlock)callback) {
-    [SSZipArchive unzipFileAtPath:zipPath
-                    toDestination:destinationPath];
+
+    [self zipArchiveProgressEvent:0 total:1]; // force 0%
+    
+    [SSZipArchive unzipFileAtPath:zipPath toDestination:destinationPath delegate:self];
+    
+    [self zipArchiveProgressEvent:1 total:1]; // force 100%
+    
     callback(@[[NSNull null]]);
+}
+
+- (void)zipArchiveProgressEvent:(NSInteger)loaded total:(NSInteger)total {
+    if (total == 0) {
+        return;
+    }
+    
+    // TODO: should send the filename, just like the Android version
+    [self.bridge.eventDispatcher sendAppEventWithName:@"zipArchiveProgressEvent" body:@{
+                                                                                            @"progress": @( (float)loaded / (float)total )
+                                                                                        }];
 }
 
 @end
