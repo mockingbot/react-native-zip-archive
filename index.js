@@ -1,6 +1,7 @@
 'use strict'
 
-var React, { DeviceEventEmitter, NativeAppEventEmitter, Platform } = require('react-native')
+var React = require('react-native')
+var { DeviceEventEmitter, NativeAppEventEmitter, Platform } = React
 
 var RNZipArchive = React.NativeModules.RNZipArchive
 var promisify = require("es6-promisify")
