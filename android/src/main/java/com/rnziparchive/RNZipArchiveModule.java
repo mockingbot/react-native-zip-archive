@@ -10,8 +10,10 @@ import com.facebook.react.bridge.WritableMap;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -30,12 +32,36 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void unzip(String zipFilePath, String destDirectory, Callback callback) {
+    FileInputStream inputStream;
+    try {
+      inputStream = new FileInputStream(zipFilePath);
+    } catch (FileNotFoundException e) {
+      callback.invoke(makeErrorPayload(e));
+      return;
+    }
+    unzipStream(destDirectory, callback, inputStream);
+  }
+
+  @ReactMethod
+  public void unzipAssets(String assetsPath, String destDirectory, Callback callback) {
+    InputStream assetsInputStream;
+    try {
+      assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
+    } catch (IOException e) {
+      callback.invoke(makeErrorPayload(e));
+      return;
+    }
+
+    unzipStream(destDirectory, callback, assetsInputStream);
+  }
+
+  private void unzipStream(String destDirectory, Callback callback, InputStream inputStream) {
     try {
       File destDir = new File(destDirectory);
       if (!destDir.exists()) {
         destDir.mkdir();
       }
-      ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath));
+      ZipInputStream zipIn = new ZipInputStream(inputStream);
       ZipEntry entry = zipIn.getNextEntry();
       // iterates over entries in the zip file
       while (entry != null) {

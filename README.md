@@ -105,3 +105,24 @@ ZipArchive.unzip(sourcePath, targetPath)
   console.log(error)
 })
 ```
+
+**unzipAssets(assetPath: string, target: string): Promise**
+
+> unzip file from Android `assets` folder to target path
+
+Note: Android only.
+
+`assetPath` is the relative path to the file inside the pre-bundled assets folder, e.g. `folder/myFile.zip`. Do not pass an absolute directory.
+
+```js
+let assetPath = 'folder/myFile.zip' 
+let targetPath = RNFS.DocumentDirectoryPath
+
+ZipArchive.unzipAssets(assetPath, targetPath)
+.then(() => {
+  console.log('unzip completed!')
+})
+.catch((error) => {
+  console.log(error)
+})
+```
