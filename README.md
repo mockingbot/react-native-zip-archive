@@ -126,3 +126,26 @@ ZipArchive.unzipAssets(assetPath, targetPath)
   console.log(error)
 })
 ```
+
+**subscribe(callback: ({progress: number})): EmitterSubscription**
+
+> Subscribe to unzip progress callbacks. Useful for displaying a progress bar on your UI during the unzip process.
+
+Your callback will passed an object with the following fields:
+
+- `progress` (number)  a value from 0 to 1 representing the progress of the unzip method. 1 is completed.
+
+Note: Remember to unsubscribe! Run .remove() on the object returned by this method.
+
+```js
+componentWillMount() {
+	this.zipProgress = ZipArchive.subscribe((e)=>{
+         this.setState({zipProgress: e.progress})
+    });
+}
+
+componentWillUnmount() {
+   // Important: Unsubscribe from the progress events
+   this.zipProgress.remove()
+}
+```

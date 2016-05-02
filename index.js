@@ -1,6 +1,9 @@
 'use strict'
 
-var RNZipArchive = require('react-native').NativeModules.RNZipArchive
+var React = require('react-native')
+var { DeviceEventEmitter, NativeAppEventEmitter, Platform } = React
+
+var RNZipArchive = React.NativeModules.RNZipArchive
 var promisify = require("es6-promisify")
 
 var _unzip = promisify(RNZipArchive.unzip)
@@ -22,8 +25,11 @@ var ZipArchive = {
 
   	return _unzipAssets(source, target)
   		.catch(_error)
+  },
+  subscribe(callback) {
+      const emitter = Platform.OS == 'ios' ? NativeAppEventEmitter : DeviceEventEmitter;
+      return emitter.addListener("zipArchiveProgressEvent", callback);
   }
-
 }
 
 module.exports = ZipArchive
