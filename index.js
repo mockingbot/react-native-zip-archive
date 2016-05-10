@@ -20,7 +20,7 @@ var ZipArchive = {
   },
   unzipAssets(source, target) {
   	if (!_unzipAssets) {
-  		throw new Exception("unzipAssets not supported on this platform");
+  		throw new Error("unzipAssets not supported on this platform");
   	}
 
   	return _unzipAssets(source, target)
