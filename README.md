@@ -110,13 +110,13 @@ ZipArchive.unzip(sourcePath, targetPath)
 
 > unzip file from Android `assets` folder to target path
 
-Note: Android only.
+*Note: Android only.*
 
 `assetPath` is the relative path to the file inside the pre-bundled assets folder, e.g. `folder/myFile.zip`. Do not pass an absolute directory.
 
 ```js
-let assetPath = 'folder/myFile.zip' 
-let targetPath = RNFS.DocumentDirectoryPath
+const assetPath = 'folder/myFile.zip'
+const targetPath = RNFS.DocumentDirectoryPath
 
 ZipArchive.unzipAssets(assetPath, targetPath)
 .then(() => {
@@ -131,21 +131,21 @@ ZipArchive.unzipAssets(assetPath, targetPath)
 
 > Subscribe to unzip progress callbacks. Useful for displaying a progress bar on your UI during the unzip process.
 
-Your callback will passed an object with the following fields:
+Your callback will be passed an object with the following fields:
 
 - `progress` (number)  a value from 0 to 1 representing the progress of the unzip method. 1 is completed.
 
-Note: Remember to unsubscribe! Run .remove() on the object returned by this method.
+*Note: Remember to unsubscribe! Run .remove() on the object returned by this method.*
 
 ```js
 componentWillMount() {
-	this.zipProgress = ZipArchive.subscribe((e)=>{
-         this.setState({zipProgress: e.progress})
-    });
+  this.zipProgress = ZipArchive.subscribe((e) => {
+    this.setState({ zipProgress: e.progress })
+  })
 }
 
 componentWillUnmount() {
-   // Important: Unsubscribe from the progress events
-   this.zipProgress.remove()
+  // Important: Unsubscribe from the progress events
+  this.zipProgress.remove()
 }
 ```
