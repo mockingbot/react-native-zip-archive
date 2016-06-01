@@ -20,22 +20,26 @@ RCT_EXPORT_MODULE();
 RCT_EXPORT_METHOD(unzip:(NSString *)zipPath destinationPath:(NSString *)destinationPath callback:(RCTResponseSenderBlock)callback) {
 
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
-    
-    [SSZipArchive unzipFileAtPath:zipPath toDestination:destinationPath delegate:self];
-    
+
+    BOOL success = [SSZipArchive unzipFileAtPath:zipPath toDestination:destinationPath delegate:self];
+
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
-    
-    callback(@[[NSNull null]]);
+
+    if (success) {
+        callback(@[[NSNull null]]);
+    } else {
+        callback(@[@"unzip error"]);
+    }
 }
 
 - (void)zipArchiveProgressEvent:(NSInteger)loaded total:(NSInteger)total {
     if (total == 0) {
         return;
     }
-    
+
     // TODO: should send the filename, just like the Android version
     [self.bridge.eventDispatcher sendAppEventWithName:@"zipArchiveProgressEvent" body:@{
-                                                                                            @"progress": @( (float)loaded / (float)total )
+                                                                                        @"progress": @( (float)loaded / (float)total )
                                                                                         }];
 }
 
