@@ -1,6 +1,6 @@
 {
   "name": "react-native-zip-archive",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "A little wrapper on ZipArchive for react-native",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,8 @@
     "react-native",
     "ios",
     "android",
-    "zip-archive"
+    "zip-archive",
+    "unzip"
   ],
   "devDependencies": {
     "react-native": "^0.8.0"
