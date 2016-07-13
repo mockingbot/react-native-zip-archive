@@ -3,7 +3,7 @@ pjson = JSON.parse(File.read('package.json'))
 
 Pod::Spec.new do |s|
 
-  s.name            = "RNZIP"
+  s.name            = "RNZIp"
   s.version         = pjson["version"]
   s.homepage        = "https://github.com/plrthink/react-native-zip-archive"
   s.summary         = pjson["description"]
