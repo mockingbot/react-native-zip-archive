@@ -3,7 +3,7 @@ pjson = JSON.parse(File.read('package.json'))
 
 Pod::Spec.new do |s|
 
-  s.name            = "RNZIp"
+  s.name            = "RNZipArchive"
   s.version         = pjson["version"]
   s.homepage        = "https://github.com/plrthink/react-native-zip-archive"
   s.summary         = pjson["description"]
@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.source          = { :git => "https://github.com/plrthink/react-native-zip-archive", :tag => "#{s.version}" }
   s.source_files    = '**/*.{h,m,c}'
   s.preserve_paths  = "**/*.js"
-  
+
   s.dependency 'React/Core'
 
 end
