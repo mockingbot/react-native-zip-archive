@@ -1,12 +1,12 @@
 //
-//  SSZipArchive.m
-//  SSZipArchive
+//  RNSSZipArchive.m
+//  RNSSZipArchive
 //
 //  Created by Sam Soffes on 7/21/10.
 //  Copyright (c) Sam Soffes 2010-2014. All rights reserved.
 //
 
-#import "SSZipArchive.h"
+#import "RNSSZipArchive.h"
 #include "zip.h"
 #import "zlib.h"
 #import "zconf.h"
@@ -15,12 +15,12 @@
 
 #define CHUNK 16384
 
-@interface SSZipArchive ()
+@interface RNSSZipArchive ()
 + (NSDate *)_dateWithMSDOSFormat:(UInt32)msdosDateTime;
 @end
 
 
-@implementation SSZipArchive {
+@implementation RNSSZipArchive {
 	NSString *_path;
 	NSString *_filename;
     zipFile _zip;
@@ -39,18 +39,18 @@
 }
 
 
-+ (BOOL)unzipFileAtPath:(NSString *)path toDestination:(NSString *)destination delegate:(id<SSZipArchiveDelegate>)delegate {
++ (BOOL)unzipFileAtPath:(NSString *)path toDestination:(NSString *)destination delegate:(id<RNSSZipArchiveDelegate>)delegate {
 	return [self unzipFileAtPath:path toDestination:destination overwrite:YES password:nil error:nil delegate:delegate];
 }
 
 
-+ (BOOL)unzipFileAtPath:(NSString *)path toDestination:(NSString *)destination overwrite:(BOOL)overwrite password:(NSString *)password error:(NSError **)error delegate:(id<SSZipArchiveDelegate>)delegate {
++ (BOOL)unzipFileAtPath:(NSString *)path toDestination:(NSString *)destination overwrite:(BOOL)overwrite password:(NSString *)password error:(NSError **)error delegate:(id<RNSSZipArchiveDelegate>)delegate {
 	// Begin opening
 	zipFile zip = unzOpen((const char*)[path UTF8String]);
 	if (zip == NULL) {
 		NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"failed to open zip file" forKey:NSLocalizedDescriptionKey];
 		if (error) {
-			*error = [NSError errorWithDomain:@"SSZipArchiveErrorDomain" code:-1 userInfo:userInfo];
+			*error = [NSError errorWithDomain:@"RNSSZipArchiveErrorDomain" code:-1 userInfo:userInfo];
 		}
 		return NO;
 	}
@@ -66,7 +66,7 @@
 	if (unzGoToFirstFile(zip) != UNZ_OK) {
 		NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"failed to open first file in zip file" forKey:NSLocalizedDescriptionKey];
 		if (error) {
-			*error = [NSError errorWithDomain:@"SSZipArchiveErrorDomain" code:-2 userInfo:userInfo];
+			*error = [NSError errorWithDomain:@"RNSSZipArchiveErrorDomain" code:-2 userInfo:userInfo];
 		}
 		return NO;
 	}
@@ -169,7 +169,7 @@
 				[fileManager createDirectoryAtPath:[fullPath stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:directoryAttr error:&err];
 			}
 	        if (nil != err) {
-	            NSLog(@"[SSZipArchive] Error: %@", err.localizedDescription);
+	            NSLog(@"[RNSSZipArchive] Error: %@", err.localizedDescription);
 	        }
 
 	        if(!fileIsSymbolicLink)
@@ -205,7 +205,7 @@
 	                    if (attr) {
 	                        if ([fileManager setAttributes:attr ofItemAtPath:fullPath error:nil] == NO) {
 	                            // Can't set attributes
-	                            NSLog(@"[SSZipArchive] Failed to set attributes - whilst setting modification date");
+	                            NSLog(@"[RNSSZipArchive] Failed to set attributes - whilst setting modification date");
 	                        }
 	                    }
 	                }
@@ -225,7 +225,7 @@
                         // Update attributes
                         if ([fileManager setAttributes:attrs ofItemAtPath:fullPath error:nil] == NO) {
                             // Unable to set the permissions attribute
-                            NSLog(@"[SSZipArchive] Failed to set attributes - whilst setting permissions");
+                            NSLog(@"[RNSSZipArchive] Failed to set attributes - whilst setting permissions");
                         }
                         
 #if !__has_feature(objc_arc)
@@ -277,10 +277,10 @@
     NSError * err = nil;
     for (NSDictionary * d in directoriesModificationDates) {
         if (![[NSFileManager defaultManager] setAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[d objectForKey:@"modDate"], NSFileModificationDate, nil] ofItemAtPath:[d objectForKey:@"path"] error:&err]) {
-            NSLog(@"[SSZipArchive] Set attributes failed for directory: %@.", [d objectForKey:@"path"]);
+            NSLog(@"[RNSSZipArchive] Set attributes failed for directory: %@.", [d objectForKey:@"path"]);
         }
         if (err) {
-            NSLog(@"[SSZipArchive] Error setting directory file modification date attribute: %@",err.localizedDescription);
+            NSLog(@"[RNSSZipArchive] Error setting directory file modification date attribute: %@",err.localizedDescription);
         }
     }
 
@@ -305,7 +305,7 @@
 
 + (BOOL)createZipFileAtPath:(NSString *)path withFilesAtPaths:(NSArray *)paths {
 	BOOL success = NO;
-	SSZipArchive *zipArchive = [[SSZipArchive alloc] initWithPath:path];
+	RNSSZipArchive *zipArchive = [[RNSSZipArchive alloc] initWithPath:path];
 	if ([zipArchive open]) {
 		for (NSString *path in paths) {
 			[zipArchive writeFile:path];
@@ -325,7 +325,7 @@
     BOOL success = NO;
 
     NSFileManager *fileManager = nil;
-	SSZipArchive *zipArchive = [[SSZipArchive alloc] initWithPath:path];
+	RNSSZipArchive *zipArchive = [[RNSSZipArchive alloc] initWithPath:path];
 
 	if ([zipArchive open]) {
         // use a local filemanager (queue/thread compatibility)
@@ -480,7 +480,7 @@
 
 
 - (BOOL)close {
-	NSAssert((_zip != NULL), @"[SSZipArchive] Attempting to close an archive which was never opened");
+	NSAssert((_zip != NULL), @"[RNSSZipArchive] Attempting to close an archive which was never opened");
 	zipClose(_zip, NULL);
 	return YES;
 }
@@ -511,7 +511,7 @@
 
     NSDateComponents *components = [[NSDateComponents alloc] init];
 
-    NSAssert(0xFFFFFFFF == (kYearMask | kMonthMask | kDayMask | kHourMask | kMinuteMask | kSecondMask), @"[SSZipArchive] MSDOS date masks don't add up");
+    NSAssert(0xFFFFFFFF == (kYearMask | kMonthMask | kDayMask | kHourMask | kMinuteMask | kSecondMask), @"[RNSSZipArchive] MSDOS date masks don't add up");
 
     [components setYear:1980 + ((msdosDateTime & kYearMask) >> 25)];
     [components setMonth:(msdosDateTime & kMonthMask) >> 21];

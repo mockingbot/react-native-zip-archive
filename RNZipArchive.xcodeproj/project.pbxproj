@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D058BD9B1B8DA5A7004D9F18 /* ioapi.c in Sources */ = {isa = PBXBuildFile; fileRef = D058BD911B8DA5A7004D9F18 /* ioapi.c */; };
-		D058BD9C1B8DA5A7004D9F18 /* mztools.c in Sources */ = {isa = PBXBuildFile; fileRef = D058BD931B8DA5A7004D9F18 /* mztools.c */; };
-		D058BD9D1B8DA5A7004D9F18 /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = D058BD951B8DA5A7004D9F18 /* unzip.c */; };
-		D058BD9E1B8DA5A7004D9F18 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = D058BD971B8DA5A7004D9F18 /* zip.c */; };
-		D058BD9F1B8DA5A7004D9F18 /* SSZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = D058BD9A1B8DA5A7004D9F18 /* SSZipArchive.m */; };
 		D058BDA21B8DA744004D9F18 /* RNZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = D058BDA01B8DA744004D9F18 /* RNZipArchive.m */; };
+		D0C6AFD71DDC4C3500BFD27B /* ioapi.c in Sources */ = {isa = PBXBuildFile; fileRef = D0C6AFCD1DDC4C3500BFD27B /* ioapi.c */; };
+		D0C6AFD81DDC4C3500BFD27B /* mztools.c in Sources */ = {isa = PBXBuildFile; fileRef = D0C6AFCF1DDC4C3500BFD27B /* mztools.c */; };
+		D0C6AFD91DDC4C3500BFD27B /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = D0C6AFD11DDC4C3500BFD27B /* unzip.c */; };
+		D0C6AFDA1DDC4C3500BFD27B /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = D0C6AFD31DDC4C3500BFD27B /* zip.c */; };
+		D0C6AFDB1DDC4C3500BFD27B /* RNSSZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = D0C6AFD61DDC4C3500BFD27B /* RNSSZipArchive.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,20 +29,19 @@
 
 /* Begin PBXFileReference section */
 		D058BD741B8DA4AB004D9F18 /* libRNZipArchive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNZipArchive.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		D058BD851B8DA4AB004D9F18 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D058BD901B8DA5A7004D9F18 /* crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypt.h; sourceTree = "<group>"; };
-		D058BD911B8DA5A7004D9F18 /* ioapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ioapi.c; sourceTree = "<group>"; };
-		D058BD921B8DA5A7004D9F18 /* ioapi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ioapi.h; sourceTree = "<group>"; };
-		D058BD931B8DA5A7004D9F18 /* mztools.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mztools.c; sourceTree = "<group>"; };
-		D058BD941B8DA5A7004D9F18 /* mztools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mztools.h; sourceTree = "<group>"; };
-		D058BD951B8DA5A7004D9F18 /* unzip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unzip.c; sourceTree = "<group>"; };
-		D058BD961B8DA5A7004D9F18 /* unzip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unzip.h; sourceTree = "<group>"; };
-		D058BD971B8DA5A7004D9F18 /* zip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = zip.c; sourceTree = "<group>"; };
-		D058BD981B8DA5A7004D9F18 /* zip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zip.h; sourceTree = "<group>"; };
-		D058BD991B8DA5A7004D9F18 /* SSZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSZipArchive.h; sourceTree = "<group>"; };
-		D058BD9A1B8DA5A7004D9F18 /* SSZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSZipArchive.m; sourceTree = "<group>"; };
 		D058BDA01B8DA744004D9F18 /* RNZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNZipArchive.m; sourceTree = "<group>"; };
 		D058BDA11B8DA744004D9F18 /* RNZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNZipArchive.h; sourceTree = "<group>"; };
+		D0C6AFCC1DDC4C3500BFD27B /* crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypt.h; sourceTree = "<group>"; };
+		D0C6AFCD1DDC4C3500BFD27B /* ioapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ioapi.c; sourceTree = "<group>"; };
+		D0C6AFCE1DDC4C3500BFD27B /* ioapi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ioapi.h; sourceTree = "<group>"; };
+		D0C6AFCF1DDC4C3500BFD27B /* mztools.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mztools.c; sourceTree = "<group>"; };
+		D0C6AFD01DDC4C3500BFD27B /* mztools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mztools.h; sourceTree = "<group>"; };
+		D0C6AFD11DDC4C3500BFD27B /* unzip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unzip.c; sourceTree = "<group>"; };
+		D0C6AFD21DDC4C3500BFD27B /* unzip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unzip.h; sourceTree = "<group>"; };
+		D0C6AFD31DDC4C3500BFD27B /* zip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = zip.c; sourceTree = "<group>"; };
+		D0C6AFD41DDC4C3500BFD27B /* zip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zip.h; sourceTree = "<group>"; };
+		D0C6AFD51DDC4C3500BFD27B /* RNSSZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNSSZipArchive.h; sourceTree = "<group>"; };
+		D0C6AFD61DDC4C3500BFD27B /* RNSSZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNSSZipArchive.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,10 +58,9 @@
 		D058BD6B1B8DA4AB004D9F18 = {
 			isa = PBXGroup;
 			children = (
+				D0C6AFCA1DDC4C3500BFD27B /* RNSSZipArchive */,
 				D058BDA01B8DA744004D9F18 /* RNZipArchive.m */,
 				D058BDA11B8DA744004D9F18 /* RNZipArchive.h */,
-				D058BD8E1B8DA5A7004D9F18 /* SSZipArchive */,
-				D058BD831B8DA4AB004D9F18 /* RNZipArchiveTests */,
 				D058BD751B8DA4AB004D9F18 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -75,44 +73,28 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		D058BD831B8DA4AB004D9F18 /* RNZipArchiveTests */ = {
+		D0C6AFCA1DDC4C3500BFD27B /* RNSSZipArchive */ = {
 			isa = PBXGroup;
 			children = (
-				D058BD841B8DA4AB004D9F18 /* Supporting Files */,
+				D0C6AFCB1DDC4C3500BFD27B /* minizip */,
+				D0C6AFD51DDC4C3500BFD27B /* RNSSZipArchive.h */,
+				D0C6AFD61DDC4C3500BFD27B /* RNSSZipArchive.m */,
 			);
-			path = RNZipArchiveTests;
+			path = RNSSZipArchive;
 			sourceTree = "<group>";
 		};
-		D058BD841B8DA4AB004D9F18 /* Supporting Files */ = {
+		D0C6AFCB1DDC4C3500BFD27B /* minizip */ = {
 			isa = PBXGroup;
 			children = (
-				D058BD851B8DA4AB004D9F18 /* Info.plist */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		D058BD8E1B8DA5A7004D9F18 /* SSZipArchive */ = {
-			isa = PBXGroup;
-			children = (
-				D058BD8F1B8DA5A7004D9F18 /* minizip */,
-				D058BD991B8DA5A7004D9F18 /* SSZipArchive.h */,
-				D058BD9A1B8DA5A7004D9F18 /* SSZipArchive.m */,
-			);
-			path = SSZipArchive;
-			sourceTree = "<group>";
-		};
-		D058BD8F1B8DA5A7004D9F18 /* minizip */ = {
-			isa = PBXGroup;
-			children = (
-				D058BD901B8DA5A7004D9F18 /* crypt.h */,
-				D058BD911B8DA5A7004D9F18 /* ioapi.c */,
-				D058BD921B8DA5A7004D9F18 /* ioapi.h */,
-				D058BD931B8DA5A7004D9F18 /* mztools.c */,
-				D058BD941B8DA5A7004D9F18 /* mztools.h */,
-				D058BD951B8DA5A7004D9F18 /* unzip.c */,
-				D058BD961B8DA5A7004D9F18 /* unzip.h */,
-				D058BD971B8DA5A7004D9F18 /* zip.c */,
-				D058BD981B8DA5A7004D9F18 /* zip.h */,
+				D0C6AFCC1DDC4C3500BFD27B /* crypt.h */,
+				D0C6AFCD1DDC4C3500BFD27B /* ioapi.c */,
+				D0C6AFCE1DDC4C3500BFD27B /* ioapi.h */,
+				D0C6AFCF1DDC4C3500BFD27B /* mztools.c */,
+				D0C6AFD01DDC4C3500BFD27B /* mztools.h */,
+				D0C6AFD11DDC4C3500BFD27B /* unzip.c */,
+				D0C6AFD21DDC4C3500BFD27B /* unzip.h */,
+				D0C6AFD31DDC4C3500BFD27B /* zip.c */,
+				D0C6AFD41DDC4C3500BFD27B /* zip.h */,
 			);
 			path = minizip;
 			sourceTree = "<group>";
@@ -173,12 +155,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D058BD9B1B8DA5A7004D9F18 /* ioapi.c in Sources */,
-				D058BD9F1B8DA5A7004D9F18 /* SSZipArchive.m in Sources */,
+				D0C6AFD71DDC4C3500BFD27B /* ioapi.c in Sources */,
 				D058BDA21B8DA744004D9F18 /* RNZipArchive.m in Sources */,
-				D058BD9D1B8DA5A7004D9F18 /* unzip.c in Sources */,
-				D058BD9E1B8DA5A7004D9F18 /* zip.c in Sources */,
-				D058BD9C1B8DA5A7004D9F18 /* mztools.c in Sources */,
+				D0C6AFDB1DDC4C3500BFD27B /* RNSSZipArchive.m in Sources */,
+				D0C6AFD91DDC4C3500BFD27B /* unzip.c in Sources */,
+				D0C6AFDA1DDC4C3500BFD27B /* zip.c in Sources */,
+				D0C6AFD81DDC4C3500BFD27B /* mztools.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -226,7 +208,7 @@
 					"$(SRCROOT)/../../React/**",
 					"$(SRCROOT)/../react-native/React/**",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -268,7 +250,7 @@
 					"$(SRCROOT)/../../React/**",
 					"$(SRCROOT)/../react-native/React/**",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;

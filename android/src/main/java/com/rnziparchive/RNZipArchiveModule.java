@@ -73,7 +73,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     try {
       File destDir = new File(destDirectory);
       if (!destDir.exists()) {
-        destDir.mkdirs();
+        destDir.mkdir();
       }
       ZipInputStream zipIn = new ZipInputStream(inputStream);
       ZipEntry entry = zipIn.getNextEntry();
