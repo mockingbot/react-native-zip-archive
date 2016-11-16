@@ -73,7 +73,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     try {
       File destDir = new File(destDirectory);
       if (!destDir.exists()) {
-        destDir.mkdir();
+        destDir.mkdirs();
       }
       ZipInputStream zipIn = new ZipInputStream(inputStream);
       ZipEntry entry = zipIn.getNextEntry();
@@ -91,7 +91,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         } else {
           // if the entry is a directory, make the directory
           File dir = new File(filePath);
-          dir.mkdir();
+          dir.mkdirs();
         }
 
         zipIn.closeEntry();
@@ -130,10 +130,10 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
    * Extracts a zip entry (file entry)
    *
    * @param zipIn
-   * @param filePath
-   * @throws IOException
+   * @param filePath
+   * @throws IOException
    * @return number of bytes extracted
-   */
+   */
   private long extractFile(ZipInputStream zipIn, String filePath) throws IOException {
     BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
     long size = 0;
