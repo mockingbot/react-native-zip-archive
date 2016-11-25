@@ -12,6 +12,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -76,36 +77,32 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         destDir.mkdirs();
       }
       ZipInputStream zipIn = new ZipInputStream(inputStream);
-      ZipEntry entry = zipIn.getNextEntry();
+      BufferedInputStream bin = new BufferedInputStream(zipIn);
+
+      ZipEntry entry;
 
       long extractedBytes = 0;
 
       updateProgress(0, 1, zipFilePath); // force 0%
-
-      // iterates over entries in the zip file
-      while (entry != null) {
-        String filePath = destDirectory + File.separator + entry.getName();
-        if (!entry.isDirectory()) {
-          // if the entry is a file, extracts it
-          extractFile(zipIn, filePath);
-        } else {
-          // if the entry is a directory, make the directory
-          File dir = new File(filePath);
-          dir.mkdir();
+      File fout=null;
+      while((entry = zipIn.getNextEntry())!=null){  
+        if(entry.isDirectory()) continue;  
+        fout=new File(destDirectory, entry.getName());
+        if(!fout.exists()){
+          (new File(fout.getParent())).mkdirs();  
+        }  
+        FileOutputStream out=new FileOutputStream(fout);
+        BufferedOutputStream Bout=new BufferedOutputStream(out);
+        int b;  
+        while((b=bin.read())!=-1){
+          Bout.write(b); 
         }
-
-        zipIn.closeEntry();
-
-        // Count number of bytes of the ZIP we've processed
-        long compressedSize = entry.getCompressedSize();
-        if (compressedSize != -1) {
-          extractedBytes += compressedSize;
-          updateProgress(extractedBytes, totalSize, zipFilePath); // send X% done
-        }
-
-        entry = zipIn.getNextEntry();
+        Bout.close();
+        out.close();
       }
+
       updateProgress(1, 1, zipFilePath); // force 100%
+      bin.close();
       zipIn.close();
       completionCallback.invoke(null, null);
     } catch (Exception ex) {
@@ -114,7 +111,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       completionCallback.invoke(makeErrorPayload(String.format("Couldn't extract %s", zipFilePath), ex));
     }
   }
-
+  
   private void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
     double progress = (double) extractedBytes / (double) totalSize;
     Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
