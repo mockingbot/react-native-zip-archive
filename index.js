@@ -32,8 +32,8 @@ var ZipArchive = {
       .catch(_error)
   },
   subscribe(callback) {
-      const emitter = Platform.OS == 'ios' ? NativeAppEventEmitter : DeviceEventEmitter;
-      return emitter.addListener("zipArchiveProgressEvent", callback);
+    var emitter = Platform.OS == 'ios' ? NativeAppEventEmitter : DeviceEventEmitter;
+    return emitter.addListener("zipArchiveProgressEvent", callback);
   }
 }
 

@@ -1,19 +1,30 @@
 require 'json'
-pjson = JSON.parse(File.read('package.json'))
+
+package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
 
 Pod::Spec.new do |s|
 
-  s.name            = "RNZipArchive"
-  s.version         = pjson["version"]
-  s.homepage        = "https://github.com/plrthink/react-native-zip-archive"
-  s.summary         = pjson["description"]
-  s.license         = pjson["license"]
-  s.author          = { "zimo" => "zimo-go@163.com" }
-  s.platform        = :ios, "7.0"
-  s.source          = { :git => "https://github.com/plrthink/react-native-zip-archive", :tag => "#{s.version}" }
-  s.source_files    = '**/*.{h,m,c}'
-  s.preserve_paths  = "**/*.js"
+  s.name           = 'RNZipArchive'
+  s.version        = package['version']
+  s.summary        = package['description']
+  s.author         = package['author']
+  s.license        = package['license']
+  s.homepage       = package['homepage']
+  s.source         = { :git => 'https://github.com/plrthink/react-native-zip-archive.git', :tag => "v#{s.version}"}
+  s.platform       = :ios, '7.0'
+  s.preserve_paths = '*.js'
+  s.library        = 'z'
 
-  s.dependency 'React/Core'
+  s.dependency 'React'
+
+  s.subspec 'Core' do |ss|
+    ss.source_files = 'ios/RNZipArchive/*.{h,m}'
+    ss.public_header_files = ['ios/RNZipArchive/RNZipArchive.h']
+  end
+
+  s.subspec 'SSZipArchive' do |ss|
+    ss.source_files = 'ios/RNZipArchive/SSZipArchive/*.{h,m}', 'ios/RNZipArchive/SSZipArchive/aes/*.{h,c}', 'ios/RNZipArchive/SSZipArchive/minizip/*.{h,c}'
+    ss.private_header_files = 'ios/RNZipArchive/SSZipArchive/*.h', 'ios/RNZipArchive/SSZipArchive/aes/*.h', 'ios/RNZipArchive/SSZipArchive/minizip/*.h'
+  end
 
 end

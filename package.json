@@ -15,15 +15,21 @@
     "react-native",
     "ios",
     "android",
+    "zip",
+    "archive",
     "zip-archive",
     "unzip"
   ],
-  "devDependencies": {
-    "react-native": "^0.8.0"
-  },
   "author": "Perry Poon <plrthink@gmail.com> (https://github.com/plrthink)",
   "license": "MIT",
   "dependencies": {
     "es6-promisify": "^3.0.0"
+  },
+  "rnpm": {
+    "ios": {
+      "sharedLibraries": [
+        "libz"
+      ]
+    }
   }
 }
