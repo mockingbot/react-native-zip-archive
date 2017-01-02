@@ -19,8 +19,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private static final String TAG = RNZipArchiveModule.class.getSimpleName();
@@ -68,6 +71,94 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     }
 
     unzipStream(assetsPath, destDirectory, assetsInputStream, size, completionCallback);
+  }
+
+  @ReactMethod
+  public void zip(String fileOrDirectory, String destDirectory, Callback callback) {
+    List<String> filePaths = new ArrayList<>();
+    File file;
+    try {
+      File tmp = new File(fileOrDirectory);
+      if (tmp.exists()) {
+        if (tmp.isDirectory()) {
+          List<File> files = getSubFiles(tmp, true);
+          for (int i = 0; i < files.size(); i++) {
+            filePaths.add(files.get(i).getAbsolutePath());
+          }
+        } else {
+          filePaths.add(fileOrDirectory);
+        }
+      } else {
+        throw new FileNotFoundException(fileOrDirectory);
+      }
+    } catch (FileNotFoundException | NullPointerException e) {
+      callback.invoke(makeErrorPayload("Couldn't open file/directory " + fileOrDirectory + ". ", e));
+      return;
+    }
+
+    zipStream(filePaths.toArray(new String[filePaths.size()]), destDirectory, filePaths.size(), callback);
+  }
+
+  private void zipStream(String[] files, String destFile, long totalSize, Callback completionCallback) {
+    try {
+      if (destFile.contains("/")) {
+        File destDir = new File(destFile.substring(0, destFile.lastIndexOf("/")));
+        if (!destDir.exists()) {
+          destDir.mkdirs();
+        }
+      }
+
+      if (new File(destFile).exists()) {
+        new File(destFile).delete();
+      }
+
+      BufferedInputStream origin = null;
+      FileOutputStream dest = new FileOutputStream(destFile);
+
+      ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
+
+      byte data[] = new byte[BUFFER_SIZE];
+
+      updateProgress(0, 1, destFile); // force 0%
+      for (int i = 0; i < files.length; i++) {
+        FileInputStream fi = new FileInputStream(files[i]);
+        String filename = files[i].substring(files[i].lastIndexOf("/") + 1);
+        ZipEntry entry = new ZipEntry(filename);
+        out.putNextEntry(entry);
+        if (!new File(files[i]).isDirectory()) {
+          origin = new BufferedInputStream(fi, BUFFER_SIZE);
+          int count;
+          while ((count = origin.read(data, 0, BUFFER_SIZE)) != -1) {
+            out.write(data, 0, count);
+          }
+          origin.close();
+        }
+      }
+      updateProgress(1, 1, destFile); // force 100%
+      out.close();
+      completionCallback.invoke(null, null);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      updateProgress(0, 1, destFile); // force 0%
+      completionCallback.invoke(makeErrorPayload(String.format("Couldn't zip %s", destFile), ex));
+    }
+  }
+
+  private List<File> getSubFiles(File baseDir, boolean isContainFolder) {
+    List<File> fileList = new ArrayList<>();
+    File[] tmpList = baseDir.listFiles();
+    for (File file : tmpList) {
+      if (file.isFile()) {
+        fileList.add(file);
+      }
+      if (file.isDirectory()) {
+        if (isContainFolder) {
+          fileList.add(file); //key code
+        }
+        fileList.addAll(getSubFiles(file, isContainFolder));
+      }
+    }
+    return fileList;
   }
 
   private void unzipStream(String zipFilePath, String destDirectory, InputStream inputStream, long totalSize, Callback completionCallback) {
