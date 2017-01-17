@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Perry Poon. All rights reserved.
 //
 
-#import "RCTBridgeModule.h"
+#import <React/RCTBridgeModule.h>
 #import "SSZipArchive/SSZipArchive.h"
 
 @interface RNZipArchive : NSObject<RCTBridgeModule, SSZipArchiveDelegate>
