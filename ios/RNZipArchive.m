@@ -22,13 +22,13 @@ RCT_EXPORT_METHOD(unzip:(NSString *)zipPath
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    
+
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
-    
+
     BOOL success = [SSZipArchive unzipFileAtPath:zipPath toDestination:destinationPath delegate:self];
-    
+
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
-    
+
     if (success) {
         resolve(destinationPath);
     } else {
@@ -42,13 +42,13 @@ RCT_EXPORT_METHOD(zip:(NSString *)zipPath
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    
+
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
-    
+
     BOOL success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:zipPath];
-    
+
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
-    
+
     if (success) {
         resolve(destinationPath);
     } else {
@@ -61,7 +61,7 @@ RCT_EXPORT_METHOD(zip:(NSString *)zipPath
     if (total == 0) {
         return;
     }
-    
+
     // TODO: should send the filename, just like the Android version
     [self.bridge.eventDispatcher sendAppEventWithName:@"zipArchiveProgressEvent" body:@{
                                                                                         @"progress": @( (float)loaded / (float)total )
