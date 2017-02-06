@@ -17,22 +17,31 @@
 
 RCT_EXPORT_MODULE();
 
-RCT_EXPORT_METHOD(unzip:(NSString *)zipPath destinationPath:(NSString *)destinationPath callback:(RCTResponseSenderBlock)callback) {
-
+RCT_EXPORT_METHOD(unzip:(NSString *)zipPath
+                  destinationPath:(NSString *)destinationPath
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
-
+    
     BOOL success = [SSZipArchive unzipFileAtPath:zipPath toDestination:destinationPath delegate:self];
-
+    
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
-
+    
     if (success) {
-        callback(@[[NSNull null]]);
+        resolve(destinationPath);
     } else {
-        callback(@[@"unzip error"]);
+        NSError *error = nil;
+        reject(@"unzip_error", @"unable to unzip", error);
     }
 }
 
-RCT_EXPORT_METHOD(zip:(NSString *)zipPath destinationPath:(NSString *)destinationPath callback:(RCTResponseSenderBlock)callback) {
+RCT_EXPORT_METHOD(zip:(NSString *)zipPath
+                  destinationPath:(NSString *)destinationPath
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
     
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
     
@@ -41,9 +50,10 @@ RCT_EXPORT_METHOD(zip:(NSString *)zipPath destinationPath:(NSString *)destinatio
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
     
     if (success) {
-        callback(@[[NSNull null]]);
+        resolve(destinationPath);
     } else {
-        callback(@[@"unzip error"]);
+        NSError *error = nil;
+        reject(@"zip_error", @"unable to zip", error);
     }
 }
 
@@ -51,7 +61,7 @@ RCT_EXPORT_METHOD(zip:(NSString *)zipPath destinationPath:(NSString *)destinatio
     if (total == 0) {
         return;
     }
-
+    
     // TODO: should send the filename, just like the Android version
     [self.bridge.eventDispatcher sendAppEventWithName:@"zipArchiveProgressEvent" body:@{
                                                                                         @"progress": @( (float)loaded / (float)total )

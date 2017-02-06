@@ -176,17 +176,17 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
       updateProgress(0, 1, zipFilePath); // force 0%
       File fout=null;
-      while((entry = zipIn.getNextEntry())!=null){  
-        if(entry.isDirectory()) continue;  
+      while((entry = zipIn.getNextEntry())!=null){
+        if(entry.isDirectory()) continue;
         fout=new File(destDirectory, entry.getName());
         if(!fout.exists()){
-          (new File(fout.getParent())).mkdirs();  
-        }  
+          (new File(fout.getParent())).mkdirs();
+        }
         FileOutputStream out=new FileOutputStream(fout);
         BufferedOutputStream Bout=new BufferedOutputStream(out);
-        int b;  
+        int b;
         while((b=bin.read())!=-1){
-          Bout.write(b); 
+          Bout.write(b);
         }
         Bout.close();
         out.close();
@@ -202,7 +202,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       completionCallback.invoke(makeErrorPayload(String.format("Couldn't extract %s", zipFilePath), ex));
     }
   }
-  
+
   private void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
     double progress = (double) extractedBytes / (double) totalSize;
     Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
