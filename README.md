@@ -1,6 +1,9 @@
-# React Native Zip Archive [![react-native-zip-archive](http://img.shields.io/npm/dm/react-native-zip-archive.svg)](https://www.npmjs.org/package/react-native-zip-archive) [![npm version](https://badge.fury.io/js/react-native-zip-archive.svg)](https://badge.fury.io/js/react-native-zip-archive)
+# React Native Zip Archive[![npm](https://img.shields.io/npm/dm/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive) [![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive)
 
 Zip archive utility for react-native
+
+> ### Important
+> If you're using react-native after v0.40.0, please install this package via the `next` branch. Issues and PR are welcome to make it into master and released.
 
 ## Installation
 
