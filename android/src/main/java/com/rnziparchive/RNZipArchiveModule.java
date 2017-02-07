@@ -4,7 +4,7 @@ import android.content.res.AssetFileDescriptor;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -43,21 +43,27 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void unzip(String zipFilePath, String destDirectory, Callback callback) {
+  public void unzip(String zipFilePath, String destDirectory, Promise promise) {
     FileInputStream inputStream;
     File file;
     try {
       inputStream = new FileInputStream(zipFilePath);
       file = new File(zipFilePath);
     } catch (FileNotFoundException | NullPointerException e) {
-      callback.invoke(makeErrorPayload("Couldn't open file " + zipFilePath + ". ", e));
+      promise.reject(null, "Couldn't open file " + zipFilePath + ". ");
       return;
     }
-    unzipStream(zipFilePath, destDirectory, inputStream, file.length(), callback);
+    try {
+      unzipStream(zipFilePath, destDirectory, inputStream, file.length());
+    } catch (Exception ex) {
+      promise.reject(null, ex.getMessage());
+      return;
+    }
+    promise.resolve(destDirectory);
   }
 
   @ReactMethod
-  public void unzipAssets(String assetsPath, String destDirectory, Callback completionCallback) {
+  public void unzipAssets(String assetsPath, String destDirectory, Promise promise) {
     InputStream assetsInputStream;
     long size;
 
@@ -66,15 +72,21 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
       size = fileDescriptor.getLength();
     } catch (IOException e) {
-      completionCallback.invoke(makeErrorPayload(String.format("Asset file `%s` could not be opened", assetsPath), e));
+      promise.reject(null, String.format("Asset file `%s` could not be opened", assetsPath));
       return;
     }
 
-    unzipStream(assetsPath, destDirectory, assetsInputStream, size, completionCallback);
+    try {
+      unzipStream(assetsPath, destDirectory, assetsInputStream, size);
+    } catch (Exception ex) {
+      promise.reject(null, ex.getMessage());
+      return;
+    }
+    promise.resolve(destDirectory);
   }
 
   @ReactMethod
-  public void zip(String fileOrDirectory, String destDirectory, Callback callback) {
+  public void zip(String fileOrDirectory, String destDirectory, Promise promise) {
     List<String> filePaths = new ArrayList<>();
     File file;
     try {
@@ -92,14 +104,21 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         throw new FileNotFoundException(fileOrDirectory);
       }
     } catch (FileNotFoundException | NullPointerException e) {
-      callback.invoke(makeErrorPayload("Couldn't open file/directory " + fileOrDirectory + ". ", e));
+      promise.reject(null, "Couldn't open file/directory " + fileOrDirectory + ".");
       return;
     }
 
-    zipStream(filePaths.toArray(new String[filePaths.size()]), destDirectory, filePaths.size(), callback);
+    try {
+      zipStream(filePaths.toArray(new String[filePaths.size()]), destDirectory, filePaths.size());
+    } catch (Exception ex) {
+      promise.reject(null, ex.getMessage());
+      return;
+    }
+
+    promise.resolve(destDirectory);
   }
 
-  private void zipStream(String[] files, String destFile, long totalSize, Callback completionCallback) {
+  private void zipStream(String[] files, String destFile, long totalSize) throws Exception {
     try {
       if (destFile.contains("/")) {
         File destDir = new File(destFile.substring(0, destFile.lastIndexOf("/")));
@@ -136,11 +155,10 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       }
       updateProgress(1, 1, destFile); // force 100%
       out.close();
-      completionCallback.invoke(null, null);
     } catch (Exception ex) {
       ex.printStackTrace();
       updateProgress(0, 1, destFile); // force 0%
-      completionCallback.invoke(makeErrorPayload(String.format("Couldn't zip %s", destFile), ex));
+      throw new Exception(String.format("Couldn't zip %s", destFile));
     }
   }
 
@@ -161,7 +179,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     return fileList;
   }
 
-  private void unzipStream(String zipFilePath, String destDirectory, InputStream inputStream, long totalSize, Callback completionCallback) {
+  private void unzipStream(String zipFilePath, String destDirectory, InputStream inputStream, long totalSize) throws Exception {
     try {
       File destDir = new File(destDirectory);
       if (!destDir.exists()) {
@@ -176,17 +194,17 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
       updateProgress(0, 1, zipFilePath); // force 0%
       File fout=null;
-      while((entry = zipIn.getNextEntry())!=null){  
-        if(entry.isDirectory()) continue;  
+      while((entry = zipIn.getNextEntry())!=null){
+        if(entry.isDirectory()) continue;
         fout=new File(destDirectory, entry.getName());
         if(!fout.exists()){
-          (new File(fout.getParent())).mkdirs();  
-        }  
+          (new File(fout.getParent())).mkdirs();
+        }
         FileOutputStream out=new FileOutputStream(fout);
         BufferedOutputStream Bout=new BufferedOutputStream(out);
-        int b;  
+        int b;
         while((b=bin.read())!=-1){
-          Bout.write(b); 
+          Bout.write(b);
         }
         Bout.close();
         out.close();
@@ -195,14 +213,13 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       updateProgress(1, 1, zipFilePath); // force 100%
       bin.close();
       zipIn.close();
-      completionCallback.invoke(null, null);
     } catch (Exception ex) {
       ex.printStackTrace();
       updateProgress(0, 1, zipFilePath); // force 0%
-      completionCallback.invoke(makeErrorPayload(String.format("Couldn't extract %s", zipFilePath), ex));
+      throw new Exception(String.format("Couldn't extract %s", zipFilePath));
     }
   }
-  
+
   private void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
     double progress = (double) extractedBytes / (double) totalSize;
     Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
@@ -234,11 +251,5 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     bos.close();
 
     return size;
-  }
-
-  private WritableMap makeErrorPayload(String message, Exception ex) {
-    WritableMap error = Arguments.createMap();
-    error.putString("message", String.format("%s (%s)", message, ex.getMessage()));
-    return error;
   }
 }

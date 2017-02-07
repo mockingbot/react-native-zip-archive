@@ -4,11 +4,10 @@ var React = require('react-native')
 var { DeviceEventEmitter, NativeAppEventEmitter, Platform } = React
 
 var RNZipArchive = React.NativeModules.RNZipArchive
-var promisify = require("es6-promisify")
 
-var _unzip = promisify(RNZipArchive.unzip)
-var _zip = promisify(RNZipArchive.zip)
-var _unzipAssets = RNZipArchive.unzipAssets ? promisify(RNZipArchive.unzipAssets) : undefined
+var _unzip = RNZipArchive.unzip
+var _zip = RNZipArchive.zip
+var _unzipAssets = RNZipArchive.unzipAssets ? RNZipArchive.unzipAssets : undefined
 
 var _error = (err) => {
   throw err
