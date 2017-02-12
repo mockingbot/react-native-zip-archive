@@ -3,90 +3,49 @@
 Zip archive utility for react-native
 
 > ### Important
-> If you're using react-native after v0.40.0, please install this package via the `next` branch. Issues and PR are welcome to make it into master and released.
+> If you're using react-native after 0.40.0 on iOS, be sure to use > 0.1.0 of this package.
 
 ## Installation
 
 ```bash
 npm install react-native-zip-archive --save
+react-native link react-native-zip-archive
 ```
-
-## Getting started - iOS
-
-1. In Xcode, in the project navigator right click `Libraries` ➜ `Add Files to [your project's name]`
-2. Go to `node_modules` ➜ `react-native-zip-archive` and add `RNZipArchive.xcodeproj`
-3. Add `libRNZipArchive.a` (from 'Products' under RNZipArchive.xcodeproj) to your project's `Build Phases` ➜ `Link Binary With Libraries` phase
-4. Add the `libz` library to your target
-5. Look for Header Search Paths and make sure it contains both `$(SRCROOT)/../react-native/React` and `$(SRCROOT)/../../React` - mark both as recursive
-6. Run your project (`CMD+R`)
-
-Warning: If you're using [rnpm](https://github.com/rnpm/rnpm) to link this module, you also need manually link `libz` library to your target otherwise your project wouldn't compile.
-
-## Getting started - Android
-
-* Edit `android/settings.gradle` to look like this (without the +):
-
-  ```diff
-  rootProject.name = 'MyApp'
-
-  include ':app'
-
-  + include ':react-native-zip-archive'
-  + project(':react-native-zip-archive').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-zip-archive/android')
-  ```
-
-* Edit `android/app/build.gradle` (note: **app** folder) to look like this:
-
-  ```diff
-  apply plugin: 'com.android.application'
-
-  android {
-    ...
-  }
-
-  dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:23.0.0'
-    compile 'com.facebook.react:react-native:0.16.+'
-  + compile project(':react-native-zip-archive')
-  }
-  ```
-
-* Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
-
-  ```diff
-  package com.myapp;
-
-  + import com.rnziparchive.RNZipArchivePackage;
-
-  ....
-
-    @Override
-    protected List<ReactPackage> getPackages() {
-      return Arrays.<ReactPackage>asList(
-        new MainReactPackage(),
-  +     new RNZipArchivePackage()
-      );
-    }
-
-  }
-  ```
 
 ## Usage
 
-require it in your file
+import it into your code
 
 ```js
-const ZipArchive = require('react-native-zip-archive')
+import { zip, unzip, unzipAssets, subscribe } from 'react-native-zip-archive'
 ```
 
 you may also want to use something like [react-native-fs](https://github.com/johanneslumpe/react-native-fs) to access the file system (check its repo for more information)
 
 ```js
-const RNFS = require('react-native-fs')
+import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 ```
 
 ## API
+
+**zip(source: string, target: string): Promise**
+
+> zip source to target
+
+Example
+
+```js
+const targetPath = `${DocumentDirectoryPath}/myFile.zip`
+const sourcePath = DocumentDirectoryPath
+
+zip(sourcePath, targetPath)
+.then((path) => {
+  console.log(`unzip completed at ${path}`)
+})
+.catch((error) => {
+  console.log(error)
+})
+```
 
 **unzip(source: string, target: string): Promise**
 
@@ -95,12 +54,12 @@ const RNFS = require('react-native-fs')
 Example
 
 ```js
-let sourcePath = 'path_to_your_zip_file'
-let targetPath = RNFS.DocumentDirectoryPath
+const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
+const targetPath = DocumentDirectoryPath
 
-ZipArchive.unzip(sourcePath, targetPath)
-.then(() => {
-  console.log('unzip completed!')
+unzip(sourcePath, targetPath)
+.then((path) => {
+  console.log(`unzip completed at ${path}`)
 })
 .catch((error) => {
   console.log(error)
@@ -116,10 +75,10 @@ ZipArchive.unzip(sourcePath, targetPath)
 `assetPath` is the relative path to the file inside the pre-bundled assets folder, e.g. `folder/myFile.zip`. Do not pass an absolute directory.
 
 ```js
-const assetPath = 'folder/myFile.zip'
-const targetPath = RNFS.DocumentDirectoryPath
+const assetPath = `${DocumentDirectoryPath}/myFile.zip`
+const targetPath = DocumentDirectoryPath
 
-ZipArchive.unzipAssets(assetPath, targetPath)
+unzipAssets(assetPath, targetPath)
 .then(() => {
   console.log('unzip completed!')
 })
@@ -140,7 +99,7 @@ Your callback will be passed an object with the following fields:
 
 ```js
 componentWillMount() {
-  this.zipProgress = ZipArchive.subscribe((e) => {
+  this.zipProgress = subscribe((e) => {
     this.setState({ zipProgress: e.progress })
   })
 }
