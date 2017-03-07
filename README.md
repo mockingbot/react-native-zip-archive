@@ -2,9 +2,6 @@
 
 Zip archive utility for react-native
 
-> ### Important
-> If you're using react-native after 0.40.0 on iOS, be sure to use > 0.1.0 of this package.
-
 ## Installation
 
 ```bash
