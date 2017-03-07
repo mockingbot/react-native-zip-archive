@@ -7,11 +7,7 @@
 //
 
 
-#if __has_include("RCTBridgeModule.h")
-#import "RCTBridgeModule.h"
-#else
 #import <React/RCTBridgeModule.h>
-#endif
 #import "SSZipArchive/SSZipArchive.h"
 
 @interface RNZipArchive : NSObject<RCTBridgeModule, SSZipArchiveDelegate>
