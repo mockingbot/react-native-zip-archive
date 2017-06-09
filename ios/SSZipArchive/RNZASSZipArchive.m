@@ -5,7 +5,7 @@
 //  Created by Sam Soffes on 7/21/10.
 //  Copyright (c) Sam Soffes 2010-2015. All rights reserved.
 //
-#import "SSZipArchive.h"
+#import "RNZASSZipArchive.h"
 #include "unzip.h"
 #include "zip.h"
 #import "zlib.h"
@@ -15,11 +15,11 @@
 
 #define CHUNK 16384
 
-@interface SSZipArchive ()
+@interface RNZASSZipArchive ()
 + (NSDate *)_dateWithMSDOSFormat:(UInt32)msdosDateTime;
 @end
 
-@implementation SSZipArchive
+@implementation RNZASSZipArchive
 {
     NSString *_path;
     NSString *_filename;
@@ -71,12 +71,12 @@
     return [self unzipFileAtPath:path toDestination:destination preserveAttributes:YES overwrite:overwrite password:password error:error delegate:nil progressHandler:nil completionHandler:nil];
 }
 
-+ (BOOL)unzipFileAtPath:(NSString *)path toDestination:(NSString *)destination delegate:(nullable id<SSZipArchiveDelegate>)delegate
++ (BOOL)unzipFileAtPath:(NSString *)path toDestination:(NSString *)destination delegate:(nullable id<RNZASSZipArchiveDelegate>)delegate
 {
     return [self unzipFileAtPath:path toDestination:destination preserveAttributes:YES overwrite:YES password:nil error:nil delegate:delegate progressHandler:nil completionHandler:nil];
 }
 
-+ (BOOL)unzipFileAtPath:(NSString *)path toDestination:(NSString *)destination overwrite:(BOOL)overwrite password:(nullable NSString *)password error:(NSError **)error delegate:(nullable id<SSZipArchiveDelegate>)delegate
++ (BOOL)unzipFileAtPath:(NSString *)path toDestination:(NSString *)destination overwrite:(BOOL)overwrite password:(nullable NSString *)password error:(NSError **)error delegate:(nullable id<RNZASSZipArchiveDelegate>)delegate
 {
     return [self unzipFileAtPath:path toDestination:destination preserveAttributes:YES overwrite:overwrite password:password error:error delegate:delegate progressHandler:nil completionHandler:nil];
 }
@@ -105,7 +105,7 @@
               overwrite:(BOOL)overwrite
                password:(nullable NSString *)password
                   error:(NSError * *)error
-               delegate:(nullable id<SSZipArchiveDelegate>)delegate
+               delegate:(nullable id<RNZASSZipArchiveDelegate>)delegate
 {
     return [self unzipFileAtPath:path toDestination:destination preserveAttributes:preserveAttributes overwrite:overwrite password:password error:error delegate:delegate progressHandler:nil completionHandler:nil];
 }
@@ -116,7 +116,7 @@
               overwrite:(BOOL)overwrite
                password:(NSString *)password
                   error:(NSError **)error
-               delegate:(id<SSZipArchiveDelegate>)delegate
+               delegate:(id<RNZASSZipArchiveDelegate>)delegate
         progressHandler:(void (^)(NSString *entry, unz_file_info zipInfo, long entryNumber, long total))progressHandler
       completionHandler:(void (^)(NSString *path, BOOL succeeded, NSError *error))completionHandler
 {
@@ -125,7 +125,7 @@
     if (zip == NULL)
     {
         NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"failed to open zip file"};
-        NSError *err = [NSError errorWithDomain:@"SSZipArchiveErrorDomain" code:-1 userInfo:userInfo];
+        NSError *err = [NSError errorWithDomain:@"RNZASSZipArchiveErrorDomain" code:-1 userInfo:userInfo];
         if (error)
         {
             *error = err;
@@ -148,7 +148,7 @@
     if (unzGoToFirstFile(zip) != UNZ_OK)
     {
         NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"failed to open first file in zip file"};
-        NSError *err = [NSError errorWithDomain:@"SSZipArchiveErrorDomain" code:-2 userInfo:userInfo];
+        NSError *err = [NSError errorWithDomain:@"RNZASSZipArchiveErrorDomain" code:-2 userInfo:userInfo];
         if (error)
         {
             *error = err;
@@ -293,7 +293,7 @@
                     success = NO;
                     break;
                 }
-                NSLog(@"[SSZipArchive] Error: %@", err.localizedDescription);
+                NSLog(@"[RNZASSZipArchive] Error: %@", err.localizedDescription);
             }
             
             if ([fileManager fileExistsAtPath:fullPath] && !isDirectory && !overwrite) {
@@ -335,7 +335,7 @@
                             if (attr) {
                                 if ([fileManager setAttributes:attr ofItemAtPath:fullPath error:nil] == NO) {
                                     // Can't set attributes
-                                    NSLog(@"[SSZipArchive] Failed to set attributes - whilst setting modification date");
+                                    NSLog(@"[RNZASSZipArchive] Failed to set attributes - whilst setting modification date");
                                 }
                             }
                         }
@@ -355,7 +355,7 @@
                             // Update attributes
                             if ([fileManager setAttributes:attrs ofItemAtPath:fullPath error:nil] == NO) {
                                 // Unable to set the permissions attribute
-                                NSLog(@"[SSZipArchive] Failed to set attributes - whilst setting permissions");
+                                NSLog(@"[RNZASSZipArchive] Failed to set attributes - whilst setting permissions");
                             }
 
 #if !__has_feature(objc_arc)
@@ -434,10 +434,10 @@
         NSError * err = nil;
         for (NSDictionary * d in directoriesModificationDates) {
             if (![[NSFileManager defaultManager] setAttributes:@{NSFileModificationDate: d[@"modDate"]} ofItemAtPath:d[@"path"] error:&err]) {
-                NSLog(@"[SSZipArchive] Set attributes failed for directory: %@.", d[@"path"]);
+                NSLog(@"[RNZASSZipArchive] Set attributes failed for directory: %@.", d[@"path"]);
             }
             if (err) {
-                NSLog(@"[SSZipArchive] Error setting directory file modification date attribute: %@",err.localizedDescription);
+                NSLog(@"[RNZASSZipArchive] Error setting directory file modification date attribute: %@",err.localizedDescription);
             }
         }
 #if !__has_feature(objc_arc)
@@ -458,7 +458,7 @@
     if (crc_ret == UNZ_CRCERROR)
     {
         NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"crc check failed for file"};
-        retErr = [NSError errorWithDomain:@"SSZipArchiveErrorDomain" code:-3 userInfo:userInfo];
+        retErr = [NSError errorWithDomain:@"RNZASSZipArchiveErrorDomain" code:-3 userInfo:userInfo];
     }
     
     if (error) {
@@ -485,20 +485,20 @@
 #pragma mark - Zipping
 + (BOOL)createZipFileAtPath:(NSString *)path withFilesAtPaths:(NSArray *)paths
 {
-    return [SSZipArchive createZipFileAtPath:path withFilesAtPaths:paths withPassword:nil];
+    return [RNZASSZipArchive createZipFileAtPath:path withFilesAtPaths:paths withPassword:nil];
 }
 + (BOOL)createZipFileAtPath:(NSString *)path withContentsOfDirectory:(NSString *)directoryPath{
-    return [SSZipArchive createZipFileAtPath:path withContentsOfDirectory:directoryPath withPassword:nil];
+    return [RNZASSZipArchive createZipFileAtPath:path withContentsOfDirectory:directoryPath withPassword:nil];
 }
 
 + (BOOL)createZipFileAtPath:(NSString *)path withContentsOfDirectory:(NSString *)directoryPath keepParentDirectory:(BOOL)keepParentDirectory{
-    return [SSZipArchive createZipFileAtPath:path withContentsOfDirectory:directoryPath keepParentDirectory:keepParentDirectory withPassword:nil];
+    return [RNZASSZipArchive createZipFileAtPath:path withContentsOfDirectory:directoryPath keepParentDirectory:keepParentDirectory withPassword:nil];
 }
 
 + (BOOL)createZipFileAtPath:(NSString *)path withFilesAtPaths:(NSArray *)paths withPassword:(NSString *)password
 {
     BOOL success = NO;
-    SSZipArchive *zipArchive = [[SSZipArchive alloc] initWithPath:path];
+    RNZASSZipArchive *zipArchive = [[RNZASSZipArchive alloc] initWithPath:path];
     if ([zipArchive open]) {
         for (NSString *filePath in paths) {
             [zipArchive writeFile:filePath withPassword:password];
@@ -522,7 +522,7 @@
     BOOL success = NO;
     
     NSFileManager *fileManager = nil;
-    SSZipArchive *zipArchive = [[SSZipArchive alloc] initWithPath:path];
+    RNZASSZipArchive *zipArchive = [[RNZASSZipArchive alloc] initWithPath:path];
     
     if ([zipArchive open]) {
         // use a local filemanager (queue/thread compatibility)
@@ -745,7 +745,7 @@
 
 - (BOOL)close
 {
-    NSAssert((_zip != NULL), @"[SSZipArchive] Attempting to close an archive which was never opened");
+    NSAssert((_zip != NULL), @"[RNZASSZipArchive] Attempting to close an archive which was never opened");
     zipClose(_zip, NULL);
     return YES;
 }
@@ -795,7 +795,7 @@
     
     NSDateComponents *components = [[NSDateComponents alloc] init];
     
-    NSAssert(0xFFFFFFFF == (kYearMask | kMonthMask | kDayMask | kHourMask | kMinuteMask | kSecondMask), @"[SSZipArchive] MSDOS date masks don't add up");
+    NSAssert(0xFFFFFFFF == (kYearMask | kMonthMask | kDayMask | kHourMask | kMinuteMask | kSecondMask), @"[RNZASSZipArchive] MSDOS date masks don't add up");
     
     [components setYear:1980 + ((msdosDateTime & kYearMask) >> 25)];
     [components setMonth:(msdosDateTime & kMonthMask) >> 21];
