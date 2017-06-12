@@ -21,7 +21,7 @@
 		D02863C81E488F4600E15EE7 /* mztools.c in Sources */ = {isa = PBXBuildFile; fileRef = D02863B41E488F4600E15EE7 /* mztools.c */; };
 		D02863C91E488F4600E15EE7 /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = D02863B61E488F4600E15EE7 /* unzip.c */; };
 		D02863CA1E488F4600E15EE7 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = D02863B81E488F4600E15EE7 /* zip.c */; };
-		D02863CB1E488F4600E15EE7 /* SSZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = D02863BB1E488F4600E15EE7 /* SSZipArchive.m */; };
+		D02863CB1E488F4600E15EE7 /* RNZASSZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = D02863BB1E488F4600E15EE7 /* RNZASSZipArchive.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -69,9 +69,9 @@
 		D02863B71E488F4600E15EE7 /* unzip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unzip.h; sourceTree = "<group>"; };
 		D02863B81E488F4600E15EE7 /* zip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = zip.c; sourceTree = "<group>"; };
 		D02863B91E488F4600E15EE7 /* zip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zip.h; sourceTree = "<group>"; };
-		D02863BA1E488F4600E15EE7 /* SSZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSZipArchive.h; sourceTree = "<group>"; };
-		D02863BB1E488F4600E15EE7 /* SSZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSZipArchive.m; sourceTree = "<group>"; };
-		D02863BC1E488F4600E15EE7 /* SSZipCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSZipCommon.h; sourceTree = "<group>"; };
+		D02863BA1E488F4600E15EE7 /* RNZASSZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNZASSZipArchive.h; sourceTree = "<group>"; };
+		D02863BB1E488F4600E15EE7 /* RNZASSZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNZASSZipArchive.m; sourceTree = "<group>"; };
+		D02863BC1E488F4600E15EE7 /* RNZASSZipCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNZASSZipCommon.h; sourceTree = "<group>"; };
 		D061F22A1E4887C4000350B4 /* libRNZipArchive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNZipArchive.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -91,9 +91,9 @@
 			children = (
 				D028639A1E488F4600E15EE7 /* aes */,
 				D02863B01E488F4600E15EE7 /* minizip */,
-				D02863BA1E488F4600E15EE7 /* SSZipArchive.h */,
-				D02863BB1E488F4600E15EE7 /* SSZipArchive.m */,
-				D02863BC1E488F4600E15EE7 /* SSZipCommon.h */,
+				D02863BA1E488F4600E15EE7 /* RNZASSZipArchive.h */,
+				D02863BB1E488F4600E15EE7 /* RNZASSZipArchive.m */,
+				D02863BC1E488F4600E15EE7 /* RNZASSZipCommon.h */,
 			);
 			path = SSZipArchive;
 			sourceTree = "<group>";
@@ -228,7 +228,7 @@
 				D02863C11E488F4600E15EE7 /* entropy.c in Sources */,
 				D02863C41E488F4600E15EE7 /* prng.c in Sources */,
 				D02863C71E488F4600E15EE7 /* ioapi.c in Sources */,
-				D02863CB1E488F4600E15EE7 /* SSZipArchive.m in Sources */,
+				D02863CB1E488F4600E15EE7 /* RNZASSZipArchive.m in Sources */,
 				D02863CA1E488F4600E15EE7 /* zip.c in Sources */,
 				D02863C51E488F4600E15EE7 /* pwd2key.c in Sources */,
 				D02863BD1E488F4600E15EE7 /* RNZipArchive.m in Sources */,
