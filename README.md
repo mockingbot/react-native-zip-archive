@@ -37,7 +37,7 @@ const sourcePath = DocumentDirectoryPath
 
 zip(sourcePath, targetPath)
 .then((path) => {
-  console.log(`unzip completed at ${path}`)
+  console.log(`zip completed at ${path}`)
 })
 .catch((error) => {
   console.log(error)
@@ -69,7 +69,7 @@ unzip(sourcePath, targetPath)
 
 *Note: Android only.*
 
-`assetPath` is the relative path to the file inside the pre-bundled assets folder, e.g. `folder/myFile.zip`. Do not pass an absolute directory.
+`assetPath` is the relative path to the file inside the pre-bundled assets folder, e.g. `folder/myFile.zip`. ***Do not pass an absolute directory.***
 
 ```js
 const assetPath = `${DocumentDirectoryPath}/myFile.zip`
@@ -84,7 +84,7 @@ unzipAssets(assetPath, targetPath)
 })
 ```
 
-**subscribe(callback: ({progress: number})): EmitterSubscription**
+**subscribe(callback: ({ progress: number })): EmitterSubscription**
 
 > Subscribe to unzip progress callbacks. Useful for displaying a progress bar on your UI during the unzip process.
 
@@ -106,3 +106,7 @@ componentWillUnmount() {
   this.zipProgress.remove()
 }
 ```
+
+## Related Projects
+
+- [ZipArchive](https://github.com/ZipArchive/ZipArchive)
