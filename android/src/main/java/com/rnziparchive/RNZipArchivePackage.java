@@ -19,7 +19,7 @@ public class RNZipArchivePackage implements ReactPackage {
 
   @Override
   public List<Class<? extends JavaScriptModule>> createJSModules() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
