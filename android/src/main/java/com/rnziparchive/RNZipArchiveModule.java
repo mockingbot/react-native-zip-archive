@@ -1,10 +1,10 @@
 package com.rnziparchive;
 
 import android.content.res.AssetFileDescriptor;
+import android.os.Handler;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -12,17 +12,17 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -46,96 +46,126 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void unzip(String zipFilePath, String destDirectory, Promise promise) {
+  public void unzip(final String zipFilePath, final String destDirectory, final Promise promise) {
+    final Handler handler = new Handler();
 
-    // Check the file exists
-    FileInputStream inputStream = null;
-    try {
-      inputStream = new FileInputStream(zipFilePath);
-      new File(zipFilePath);
-    } catch (FileNotFoundException | NullPointerException e) {
-      if (inputStream != null) {
+    new Thread(new Runnable(){
+      @Override
+      public void run() {
+        // Check the file exists
+        FileInputStream inputStream = null;
         try {
-          inputStream.close();
-        } catch (IOException ignored) {
-        }
-      }
-      promise.reject(null, "Couldn't open file " + zipFilePath + ". ");
-      return;
-    }
-
-    try {
-      final long[] extractedBytes = {0};
-      final long totalUncompressedBytes = getUncompressedSize(zipFilePath);
-      final int[] lastPercentage = {0};
-
-      // Find the total uncompressed size of every file in the zip
-      File destDir = new File(destDirectory);
-      if (!destDir.exists()) {
-        destDir.mkdirs();
-      }
-
-      updateProgress(0, 1, zipFilePath); // force 0%
-
-      final ZipFile zipFile = new ZipFile(zipFilePath);
-      final Enumeration<? extends ZipEntry> entries = zipFile.entries();
-      Log.d(TAG, "Zip has " + zipFile.size() + " entries");
-      while (entries.hasMoreElements()) {
-        final ZipEntry entry = entries.nextElement();
-        if (entry.isDirectory()) continue;
-
-        StreamUtil.ProgressCallback cb = new StreamUtil.ProgressCallback() {
-          @Override
-          public void onCopyProgress(long bytesRead) {
-            extractedBytes[0] += bytesRead;
-
-            int lastTime = lastPercentage[0];
-            int percentDone = (int) ((double) extractedBytes[0] * 100 / (double) totalUncompressedBytes);
-
-            // update at most once per percent.
-            if (percentDone > lastTime) {
-              lastPercentage[0] = percentDone;
-              updateProgress(extractedBytes[0], totalUncompressedBytes, entry.getName());
+          inputStream = new FileInputStream(zipFilePath);
+          new File(zipFilePath);
+        } catch (FileNotFoundException | NullPointerException e) {
+          if (inputStream != null) {
+            try {
+              inputStream.close();
+            } catch (IOException ignored) {
             }
           }
-        };
-
-        File fout = new File(destDirectory, entry.getName());
-        if (!fout.exists()) {
-          (new File(fout.getParent())).mkdirs();
-        }
-        InputStream in = null;
-        BufferedOutputStream Bout = null;
-        try {
-          in = zipFile.getInputStream(entry);
-          Bout = new BufferedOutputStream(new FileOutputStream(fout));
-          StreamUtil.copy(in, Bout, cb);
-          Bout.close();
-          in.close();
-        } catch (IOException ex) {
-          if (in != null) {
-            try {
-              in.close();
-            } catch (Exception ignored) {
+          handler.post(new Runnable() {
+            @Override
+            public void run() {
+              promise.reject(null, "Couldn't open file " + zipFilePath + ". ");
             }
+          });
+          return;
+        }
+
+        try {
+          final long[] extractedBytes = {0};
+          final long totalUncompressedBytes = getUncompressedSize(zipFilePath);
+          final int[] lastPercentage = {0};
+
+          // Find the total uncompressed size of every file in the zip
+          File destDir = new File(destDirectory);
+          if (!destDir.exists()) {
+            destDir.mkdirs();
           }
-          if (Bout != null) {
+
+          handler.post(new Runnable() {
+            @Override
+            public void run() {
+              updateProgress(0, 1, zipFilePath); // force 0%
+            }
+          });
+
+          final ZipFile zipFile = new ZipFile(zipFilePath);
+          final Enumeration<? extends ZipEntry> entries = zipFile.entries();
+          Log.d(TAG, "Zip has " + zipFile.size() + " entries");
+          while (entries.hasMoreElements()) {
+            final ZipEntry entry = entries.nextElement();
+            if (entry.isDirectory()) continue;
+
+            StreamUtil.ProgressCallback cb = new StreamUtil.ProgressCallback() {
+              @Override
+              public void onCopyProgress(long bytesRead) {
+                extractedBytes[0] += bytesRead;
+
+                int lastTime = lastPercentage[0];
+                int percentDone = (int) ((double) extractedBytes[0] * 100 / (double) totalUncompressedBytes);
+
+                // update at most once per percent.
+                if (percentDone > lastTime) {
+                  lastPercentage[0] = percentDone;
+                  handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                      updateProgress(extractedBytes[0], totalUncompressedBytes, entry.getName());
+                    }
+                  });
+                }
+              }
+            };
+
+            File fout = new File(destDirectory, entry.getName());
+            if (!fout.exists()) {
+              (new File(fout.getParent())).mkdirs();
+            }
+            InputStream in = null;
+            BufferedOutputStream Bout = null;
             try {
+              in = zipFile.getInputStream(entry);
+              Bout = new BufferedOutputStream(new FileOutputStream(fout));
+              StreamUtil.copy(in, Bout, cb);
               Bout.close();
-            } catch (Exception ignored) {
+              in.close();
+            } catch (IOException ex) {
+              if (in != null) {
+                try {
+                  in.close();
+                } catch (Exception ignored) {
+                }
+              }
+              if (Bout != null) {
+                try {
+                  Bout.close();
+                } catch (Exception ignored) {
+                }
+              }
             }
           }
 
+          zipFile.close();
+          handler.post(new Runnable() {
+            @Override
+            public void run() {
+              updateProgress(1, 1, zipFilePath); // force 100%
+              promise.resolve(destDirectory);
+            }
+          });
+        } catch (final Exception ex) {
+          handler.post(new Runnable() {
+            @Override
+            public void run() {
+              updateProgress(0, 1, zipFilePath); // force 0%
+              promise.reject(null, "Failed to extract file " + ex.getLocalizedMessage());
+            }
+          });
         }
       }
-
-      zipFile.close();
-      updateProgress(1, 1, zipFilePath); // force 100%
-      promise.resolve(destDirectory);
-    } catch (Exception ex) {
-      updateProgress(0, 1, zipFilePath); // force 0%
-      promise.reject(null, "Failed to extract file " + ex.getLocalizedMessage());
-    }
+    }).start();
   }
 
   @ReactMethod
