@@ -242,7 +242,6 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void zip(String fileOrDirectory, String destDirectory, Promise promise) {
     List<String> filePaths = new ArrayList<>();
-    File file;
     try {
       File tmp = new File(fileOrDirectory);
       if (tmp.exists()) {
@@ -272,20 +271,22 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     promise.resolve(destDirectory);
   }
 
-  private void zipStream(String[] files, String destFile, long totalSize) throws Exception {
+  private void zipStream(String[] files, String destFile, @SuppressWarnings("UnusedParameters") long totalSize) throws Exception {
     try {
       if (destFile.contains("/")) {
         File destDir = new File(destFile.substring(0, destFile.lastIndexOf("/")));
         if (!destDir.exists()) {
+          //noinspection ResultOfMethodCallIgnored
           destDir.mkdirs();
         }
       }
 
       if (new File(destFile).exists()) {
+        //noinspection ResultOfMethodCallIgnored
         new File(destFile).delete();
       }
 
-      BufferedInputStream origin = null;
+      BufferedInputStream origin;
       FileOutputStream dest = new FileOutputStream(destFile);
 
       ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
@@ -344,7 +345,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
             .emit(PROGRESS_EVENT_NAME, map);
   }
-  
+
   /**
    * Return the uncompressed size of the ZipFile (only works for files on disk, not in assets)
    *
