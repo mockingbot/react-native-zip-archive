@@ -1,7 +1,6 @@
 package com.rnziparchive;
 
 import android.content.res.AssetFileDescriptor;
-import android.os.Handler;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -47,9 +46,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void unzip(final String zipFilePath, final String destDirectory, final Promise promise) {
-    final Handler handler = new Handler();
-
-    new Thread(new Runnable(){
+    new Thread(new Runnable() {
       @Override
       public void run() {
         // Check the file exists
@@ -64,32 +61,27 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             } catch (IOException ignored) {
             }
           }
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              promise.reject(null, "Couldn't open file " + zipFilePath + ". ");
-            }
-          });
+          promise.reject(null, "Couldn't open file " + zipFilePath + ". ");
           return;
         }
 
         try {
-          final long[] extractedBytes = {0};
+          // Find the total uncompressed size of every file in the zip, so we can
+          // get an accurate progress measurement
           final long totalUncompressedBytes = getUncompressedSize(zipFilePath);
-          final int[] lastPercentage = {0};
 
-          // Find the total uncompressed size of every file in the zip
           File destDir = new File(destDirectory);
           if (!destDir.exists()) {
+            //noinspection ResultOfMethodCallIgnored
             destDir.mkdirs();
           }
 
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              updateProgress(0, 1, zipFilePath); // force 0%
-            }
-          });
+          updateProgress(0, 1, zipFilePath); // force 0%
+
+          // We use arrays here so we can update values
+          // from inside the callback
+          final long[] extractedBytes = {0};
+          final int[] lastPercentage = {0};
 
           final ZipFile zipFile = new ZipFile(zipFilePath);
           final Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -109,18 +101,14 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
                 // update at most once per percent.
                 if (percentDone > lastTime) {
                   lastPercentage[0] = percentDone;
-                  handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                      updateProgress(extractedBytes[0], totalUncompressedBytes, entry.getName());
-                    }
-                  });
+                  updateProgress(extractedBytes[0], totalUncompressedBytes, entry.getName());
                 }
               }
             };
 
             File fout = new File(destDirectory, entry.getName());
             if (!fout.exists()) {
+              //noinspection ResultOfMethodCallIgnored
               (new File(fout.getParent())).mkdirs();
             }
             InputStream in = null;
@@ -148,47 +136,107 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           }
 
           zipFile.close();
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              updateProgress(1, 1, zipFilePath); // force 100%
-              promise.resolve(destDirectory);
-            }
-          });
-        } catch (final Exception ex) {
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              updateProgress(0, 1, zipFilePath); // force 0%
-              promise.reject(null, "Failed to extract file " + ex.getLocalizedMessage());
-            }
-          });
+          updateProgress(1, 1, zipFilePath); // force 100%
+          promise.resolve(destDirectory);
+        } catch (Exception ex) {
+          updateProgress(0, 1, zipFilePath); // force 0%
+          promise.reject(null, "Failed to extract file " + ex.getLocalizedMessage());
         }
       }
     }).start();
   }
 
+  /**
+   * Extract a zip held in the assets directory.
+   * <p>
+   * Note that the progress value isn't as accurate as when unzipping
+   * from a file. When reading a zip from a stream, we can't
+   * get accurate uncompressed sizes for files (ZipEntry#getCompressedSize() returns -1).
+   * <p>
+   * Instead, we compare the number of bytes extracted to the size of the compressed zip file.
+   * In most cases this means the progress 'stays on' 100% for a little bit (compressedSize < uncompressed size)
+   */
   @ReactMethod
-  public void unzipAssets(String assetsPath, String destDirectory, Promise promise) {
-    InputStream assetsInputStream;
-    long size;
+  public void unzipAssets(final String assetsPath, final String destDirectory, final Promise promise) {
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        InputStream assetsInputStream;
+        final long size;
 
-    try {
-      assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
-      AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
-      size = fileDescriptor.getLength();
-    } catch (IOException e) {
-      promise.reject(null, String.format("Asset file `%s` could not be opened", assetsPath));
-      return;
-    }
+        try {
+          assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
+          AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
+          size = fileDescriptor.getLength();
+        } catch (IOException e) {
+          promise.reject(null, String.format("Asset file `%s` could not be opened", assetsPath));
+          return;
+        }
 
-    try {
-      unzipStream(assetsPath, destDirectory, assetsInputStream, size);
-    } catch (Exception ex) {
-      promise.reject(null, ex.getMessage());
-      return;
-    }
-    promise.resolve(destDirectory);
+        try {
+          try {
+            File destDir = new File(destDirectory);
+            if (!destDir.exists()) {
+              //noinspection ResultOfMethodCallIgnored
+              destDir.mkdirs();
+            }
+            ZipInputStream zipIn = new ZipInputStream(assetsInputStream);
+            BufferedInputStream bin = new BufferedInputStream(zipIn);
+
+            ZipEntry entry;
+
+            final long[] extractedBytes = {0};
+            final int[] lastPercentage = {0};
+
+            updateProgress(0, 1, assetsPath); // force 0%
+            File fout;
+            while ((entry = zipIn.getNextEntry()) != null) {
+              if (entry.isDirectory()) continue;
+              fout = new File(destDirectory, entry.getName());
+              if (!fout.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                (new File(fout.getParent())).mkdirs();
+              }
+
+              final ZipEntry finalEntry = entry;
+              StreamUtil.ProgressCallback cb = new StreamUtil.ProgressCallback() {
+                @Override
+                public void onCopyProgress(long bytesRead) {
+                  extractedBytes[0] += bytesRead;
+
+                  int lastTime = lastPercentage[0];
+                  int percentDone = (int) ((double) extractedBytes[0] * 100 / (double) size);
+
+                  // update at most once per percent.
+                  if (percentDone > lastTime) {
+                    lastPercentage[0] = percentDone;
+                    updateProgress(extractedBytes[0], size, finalEntry.getName());
+                  }
+                }
+              };
+
+              FileOutputStream out = new FileOutputStream(fout);
+              BufferedOutputStream Bout = new BufferedOutputStream(out);
+              StreamUtil.copy(bin, Bout, cb);
+              Bout.close();
+              out.close();
+            }
+
+            updateProgress(1, 1, assetsPath); // force 100%
+            bin.close();
+            zipIn.close();
+          } catch (Exception ex) {
+            ex.printStackTrace();
+            updateProgress(0, 1, assetsPath); // force 0%
+            throw new Exception(String.format("Couldn't extract %s", assetsPath));
+          }
+        } catch (Exception ex) {
+          promise.reject(null, ex.getMessage());
+          return;
+        }
+        promise.resolve(destDirectory);
+      }
+    }).start();
   }
 
   @ReactMethod
@@ -285,49 +333,9 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     return fileList;
   }
 
-  private void unzipStream(String zipFilePath, String destDirectory, InputStream inputStream, long totalSize) throws Exception {
-    try {
-      File destDir = new File(destDirectory);
-      if (!destDir.exists()) {
-        destDir.mkdirs();
-      }
-      ZipInputStream zipIn = new ZipInputStream(inputStream);
-      BufferedInputStream bin = new BufferedInputStream(zipIn);
-
-      ZipEntry entry;
-
-      long extractedBytes = 0;
-
-      updateProgress(0, 1, zipFilePath); // force 0%
-      File fout=null;
-      while((entry = zipIn.getNextEntry())!=null){
-        if(entry.isDirectory()) continue;
-        fout=new File(destDirectory, entry.getName());
-        if(!fout.exists()){
-          (new File(fout.getParent())).mkdirs();
-        }
-        FileOutputStream out=new FileOutputStream(fout);
-        BufferedOutputStream Bout=new BufferedOutputStream(out);
-        int b;
-        while((b=bin.read())!=-1){
-          Bout.write(b);
-        }
-        Bout.close();
-        out.close();
-      }
-
-      updateProgress(1, 1, zipFilePath); // force 100%
-      bin.close();
-      zipIn.close();
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      updateProgress(0, 1, zipFilePath); // force 0%
-      throw new Exception(String.format("Couldn't extract %s", zipFilePath));
-    }
-  }
-
   private void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
-    double progress = (double) extractedBytes / (double) totalSize;
+    // Ensure progress can't overflow 1
+    double progress = Math.min((double) extractedBytes / (double) totalSize, 1);
     Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
 
     WritableMap map = Arguments.createMap();
@@ -336,29 +344,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
             .emit(PROGRESS_EVENT_NAME, map);
   }
-
-  /**
-   * Extracts a zip entry (file entry)
-   *
-   * @param zipIn
-   * @param filePath
-   * @throws IOException
-   * @return number of bytes extracted
-   */
-  private long extractFile(ZipInputStream zipIn, String filePath) throws IOException {
-    BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
-    long size = 0;
-    byte[] bytesIn = new byte[BUFFER_SIZE];
-    int read;
-    while ((read = zipIn.read(bytesIn)) != -1) {
-      bos.write(bytesIn, 0, read);
-      size += read;
-    }
-    bos.close();
-
-    return size;
-  }
-
+  
   /**
    * Return the uncompressed size of the ZipFile (only works for files on disk, not in assets)
    *
