@@ -4,14 +4,14 @@
   "description": "A little wrapper on ZipArchive for react-native",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:js": "eslint index.js"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com:plrthink/react-native-zip-archive.git"
   },
   "keywords": [
-    "react-component",
     "react-native",
     "ios",
     "android",
@@ -30,6 +30,12 @@
     }
   },
   "devDependencies": {
+    "eslint": "^4.7.2",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.1.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
     "react": "^15.4.2",
     "react-native": "^0.39.0"
   }
