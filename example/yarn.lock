@@ -3388,8 +3388,8 @@ react-native-cli@^2.0.1:
     semver "^5.0.3"
 
 react-native-fs@^2.5.2:
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/react-native-fs/-/react-native-fs-2.5.1.tgz#2f9b59652ead7aadc8739ea21336ef53826b9500"
+  version "2.5.2"
+  resolved "https://registry.yarnpkg.com/react-native-fs/-/react-native-fs-2.5.2.tgz#66022e6ca45daf9eea2d12e783f9db2669fb9202"
   dependencies:
     base-64 "^0.1.0"
     utf8 "^2.1.1"
