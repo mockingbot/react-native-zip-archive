@@ -138,7 +138,7 @@
     }
     
     NSDictionary * fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
-    unsigned long long fileSize = [fileAttributes[NSFileSize] unsignedLongLongValue];
+    NSInteger fileSize = [fileAttributes[NSFileSize] unsignedLongLongValue];
     unsigned long long currentPosition = 0;
     
     unz_global_info  globalInfo = {0ul, 0ul};
@@ -173,7 +173,7 @@
         [delegate zipArchiveWillUnzipArchiveAtPath:path zipInfo:globalInfo];
     }
     if ([delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:)]) {
-        [delegate zipArchiveProgressEvent:currentPosition total:fileSize];
+        [delegate zipArchiveProgressEvent:(NSInteger)currentPosition total:(NSInteger)fileSize];
     }
     
     NSInteger currentFileNumber = 0;
@@ -451,7 +451,7 @@
     }
     // final progress event = 100%
     if (!canceled && [delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:)]) {
-        [delegate zipArchiveProgressEvent:fileSize total:fileSize];
+        [delegate zipArchiveProgressEvent:(NSInteger)fileSize total:(NSInteger)fileSize];
     }
     
     NSError *retErr = nil;
