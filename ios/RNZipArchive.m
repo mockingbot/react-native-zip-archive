@@ -24,8 +24,7 @@ RCT_EXPORT_MODULE();
 RCT_EXPORT_METHOD(unzip:(NSString *)zipPath
                   destinationPath:(NSString *)destinationPath
                   resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
-{
+                  rejecter:(RCTPromiseRejectBlock)reject) {
 
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
@@ -44,8 +43,7 @@ RCT_EXPORT_METHOD(unzip:(NSString *)zipPath
 RCT_EXPORT_METHOD(zip:(NSString *)zipPath
                   destinationPath:(NSString *)destinationPath
                   resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
-{
+                  rejecter:(RCTPromiseRejectBlock)reject) {
 
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
@@ -59,6 +57,10 @@ RCT_EXPORT_METHOD(zip:(NSString *)zipPath
         NSError *error = nil;
         reject(@"zip_error", @"unable to zip", error);
     }
+}
+
+- (dispatch_queue_t)methodQueue {
+    return dispatch_queue_create("com.mockingbot.ReactNative.ZipArchiveQueue", DISPATCH_QUEUE_SERIAL);
 }
 
 - (void)zipArchiveProgressEvent:(NSInteger)loaded total:(NSInteger)total {
