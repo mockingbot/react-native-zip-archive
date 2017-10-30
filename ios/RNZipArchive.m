@@ -66,7 +66,7 @@ RCT_EXPORT_METHOD(zip:(NSString *)zipPath
 - (void)zipArchiveProgressEvent:(NSInteger)loaded total:(NSInteger)total filename:(NSString *)filename {
     [self.bridge.eventDispatcher sendAppEventWithName:@"zipArchiveProgressEvent" body:@{
         @"progress": @( (float)loaded / (float)total),
-        @"filename": zipPath
+        @"filename": filename
     }];
 }
 
