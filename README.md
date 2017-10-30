@@ -91,6 +91,10 @@ unzipAssets(assetPath, targetPath)
 Your callback will be passed an object with the following fields:
 
 - `progress` (number)  a value from 0 to 1 representing the progress of the unzip method. 1 is completed.
+- `filename` (string)  the zip file path of zipped or unzipped file.
+
+
+*Note: Remember to check the filename while processing progress, to be sure that the unzipped or zipped file is the right one, because the event is a global one.*
 
 *Note: Remember to unsubscribe! Run .remove() on the object returned by this method.*
 
