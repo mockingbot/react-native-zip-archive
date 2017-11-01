@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 
 import { readdir, copyFileAssets, MainBundlePath, DocumentDirectoryPath } from 'react-native-fs';
-import { unzip } from 'react-native-zip-archive';
+import { unzip, subscribe } from 'react-native-zip-archive';
 
 export default class App extends Component {
   constructor () {
@@ -14,6 +14,12 @@ export default class App extends Component {
     this.state = {
       uri: 'https://github.com/plrthink/react-native-zip-archive'
     }
+  }
+
+  componentWillMount () {
+    this.zipProgress = subscribe((progress, filePath) => {
+      console.log(progress, filePath);
+    });
   }
 
   componentDidMount () {
@@ -55,6 +61,10 @@ export default class App extends Component {
           console.log(error);
         });
     }
+  }
+
+  componentWillUnmount () {
+    this.zipProgress.remove();
   }
 
   render() {

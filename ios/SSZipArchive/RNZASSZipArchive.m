@@ -172,8 +172,8 @@
     if ([delegate respondsToSelector:@selector(zipArchiveWillUnzipArchiveAtPath:zipInfo:)]) {
         [delegate zipArchiveWillUnzipArchiveAtPath:path zipInfo:globalInfo];
     }
-    if ([delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:filename:)]) {
-        [delegate zipArchiveProgressEvent:currentPosition total:fileSize filename:path];
+    if ([delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:filePath:)]) {
+        [delegate zipArchiveProgressEvent:currentPosition total:fileSize filePath:path];
     }
     
     NSInteger currentFileNumber = 0;
@@ -218,8 +218,8 @@
                 [delegate zipArchiveWillUnzipFileAtIndex:currentFileNumber totalFiles:(NSInteger)globalInfo.number_entry
                                              archivePath:path fileInfo:fileInfo];
             }
-            if ([delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:filename:)]) {
-                [delegate zipArchiveProgressEvent:(NSInteger)currentPosition total:(NSInteger)fileSize filename:path];
+            if ([delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:filePath:)]) {
+                [delegate zipArchiveProgressEvent:(NSInteger)currentPosition total:(NSInteger)fileSize filePath:path];
             }
             
             char *filename = (char *)malloc(fileInfo.size_filename + 1);
@@ -450,8 +450,8 @@
         [delegate zipArchiveDidUnzipArchiveAtPath:path zipInfo:globalInfo unzippedPath:destination];
     }
     // final progress event = 100%
-    if (!canceled && [delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:filename:)]) {
-        [delegate zipArchiveProgressEvent:fileSize total:fileSize filename:path];
+    if (!canceled && [delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:filePath:)]) {
+        [delegate zipArchiveProgressEvent:fileSize total:fileSize filePath:path];
     }
     
     NSError *retErr = nil;
