@@ -21,16 +21,16 @@
 
 RCT_EXPORT_MODULE();
 
-RCT_EXPORT_METHOD(unzip:(NSString *)zipPath
+RCT_EXPORT_METHOD(unzip:(NSString *)from
                   destinationPath:(NSString *)destinationPath
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
 
-    [self zipArchiveProgressEvent:0 total:1]; // force 0%
+    [self zipArchiveProgressEvent:0 total:1 filePath:from]; // force 0%
 
-    BOOL success = [RNZASSZipArchive unzipFileAtPath:zipPath toDestination:destinationPath delegate:self];
+    BOOL success = [RNZASSZipArchive unzipFileAtPath:from toDestination:destinationPath delegate:self];
 
-    [self zipArchiveProgressEvent:1 total:1]; // force 100%
+    [self zipArchiveProgressEvent:1 total:1 filePath:from]; // force 100%
 
     if (success) {
         resolve(destinationPath);
@@ -40,16 +40,16 @@ RCT_EXPORT_METHOD(unzip:(NSString *)zipPath
     }
 }
 
-RCT_EXPORT_METHOD(zip:(NSString *)zipPath
+RCT_EXPORT_METHOD(zip:(NSString *)from
                   destinationPath:(NSString *)destinationPath
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
 
-    [self zipArchiveProgressEvent:0 total:1]; // force 0%
+    [self zipArchiveProgressEvent:0 total:1 filePath:destinationPath]; // force 0%
 
-    BOOL success = [RNZASSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:zipPath];
+    BOOL success = [RNZASSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from];
 
-    [self zipArchiveProgressEvent:1 total:1]; // force 100%
+    [self zipArchiveProgressEvent:1 total:1 filePath:destinationPath]; // force 100%
 
     if (success) {
         resolve(destinationPath);
@@ -63,15 +63,11 @@ RCT_EXPORT_METHOD(zip:(NSString *)zipPath
     return dispatch_queue_create("com.mockingbot.ReactNative.ZipArchiveQueue", DISPATCH_QUEUE_SERIAL);
 }
 
-- (void)zipArchiveProgressEvent:(NSInteger)loaded total:(NSInteger)total {
-    if (total == 0) {
-        return;
-    }
-
-    // TODO: should send the filename, just like the Android version
+- (void)zipArchiveProgressEvent:(NSInteger)loaded total:(NSInteger)total filePath:(NSString *)filePath {
     [self.bridge.eventDispatcher sendAppEventWithName:@"zipArchiveProgressEvent" body:@{
-                                                                                        @"progress": @( (float)loaded / (float)total )
-                                                                                        }];
+        @"progress": @((float)loaded / (float)total),
+        @"filePath": filePath
+    }];
 }
 
 @end

@@ -86,17 +86,21 @@ unzipAssets(assetPath, targetPath)
 
 **subscribe(callback: ({ progress: number })): EmitterSubscription**
 
-> Subscribe to unzip progress callbacks. Useful for displaying a progress bar on your UI during the unzip process.
+> Subscribe to the progress callbacks. Useful for displaying a progress bar on your UI during the process.
 
 Your callback will be passed an object with the following fields:
 
 - `progress` (number)  a value from 0 to 1 representing the progress of the unzip method. 1 is completed.
+- `filePath` (string)  the zip file path of zipped or unzipped file.
+
+
+*Note: Remember to check the filename while processing progress, to be sure that the unzipped or zipped file is the right one, because the event is global.*
 
 *Note: Remember to unsubscribe! Run .remove() on the object returned by this method.*
 
 ```js
 componentWillMount() {
-  this.zipProgress = subscribe((e) => {
+  this.zipProgress = subscribe(({ progress, filePath }) => {
     this.setState({ zipProgress: e.progress })
   })
 }
