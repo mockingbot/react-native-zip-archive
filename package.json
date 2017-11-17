@@ -21,6 +21,7 @@
     "unzip"
   ],
   "author": "Perry Poon <plrthink@gmail.com> (https://github.com/plrthink)",
+  "homepage": "https://github.com/mockingbot/react-native-zip-archive",
   "license": "MIT",
   "rnpm": {
     "ios": {
