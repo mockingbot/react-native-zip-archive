@@ -1,39 +1,32 @@
-'use strict'
+import ReactNative from 'react-native';
 
-var React = require('react-native')
-var { DeviceEventEmitter, NativeAppEventEmitter, Platform } = React
+const {
+  DeviceEventEmitter,
+  NativeAppEventEmitter,
+  Platform,
+  NativeModules,
+} = React;
 
-var RNZipArchive = React.NativeModules.RNZipArchive
+const RNZipArchive = NativeModules.RNZipArchive;
 
-var _unzip = RNZipArchive.unzip
-var _zip = RNZipArchive.zip
-var _unzipAssets = RNZipArchive.unzipAssets ? RNZipArchive.unzipAssets : undefined
-
-var _error = (err) => {
-  throw err
-}
-
-var ZipArchive = {
+const ZipArchive = {
   unzip (source, target) {
-    return _unzip(source, target)
-      .catch(_error)
+    return RNZipArchive.unzip(source, target)
   },
   zip (source, target) {
-    return _zip(source, target)
-      .catch(_error)
+    return RNZipArchive.zip(source, target)
   },
   unzipAssets (source, target) {
-    if (!_unzipAssets) {
+    if (!RNZipArchive.unzipAssets) {
       throw new Error('unzipAssets not supported on this platform')
     }
 
-    return _unzipAssets(source, target)
-      .catch(_error)
+    return RNZipArchive.unzipAssets(source, target)
   },
   subscribe (callback) {
     var emitter = Platform.OS === 'ios' ? NativeAppEventEmitter : DeviceEventEmitter
     return emitter.addListener('zipArchiveProgressEvent', callback)
   }
-}
+};
 
-module.exports = ZipArchive
+export default ZipArchive;
