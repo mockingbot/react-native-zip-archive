@@ -1,13 +1,13 @@
-import ReactNative from 'react-native';
+import ReactNative from 'react-native'
 
 const {
   DeviceEventEmitter,
   NativeAppEventEmitter,
   Platform,
-  NativeModules,
-} = React;
+  NativeModules
+} = ReactNative
 
-const RNZipArchive = NativeModules.RNZipArchive;
+const RNZipArchive = NativeModules.RNZipArchive
 
 const ZipArchive = {
   unzip (source, target) {
@@ -27,6 +27,6 @@ const ZipArchive = {
     var emitter = Platform.OS === 'ios' ? NativeAppEventEmitter : DeviceEventEmitter
     return emitter.addListener('zipArchiveProgressEvent', callback)
   }
-};
+}
 
-export default ZipArchive;
+export default ZipArchive
