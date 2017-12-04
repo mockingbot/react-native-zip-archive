@@ -14,7 +14,7 @@ react-native link react-native-zip-archive
 import it into your code
 
 ```js
-import { zip, unzip, unzipAssets, subscribe } from 'react-native-zip-archive'
+import ZipArchive from 'react-native-zip-archive';
 ```
 
 you may also want to use something like [react-native-fs](https://github.com/johanneslumpe/react-native-fs) to access the file system (check its repo for more information)
@@ -32,10 +32,11 @@ import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 Example
 
 ```js
+
 const targetPath = `${DocumentDirectoryPath}/myFile.zip`
 const sourcePath = DocumentDirectoryPath
 
-zip(sourcePath, targetPath)
+ZipArchive.zip(sourcePath, targetPath)
 .then((path) => {
   console.log(`zip completed at ${path}`)
 })
@@ -51,10 +52,11 @@ zip(sourcePath, targetPath)
 Example
 
 ```js
+
 const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
 const targetPath = DocumentDirectoryPath
 
-unzip(sourcePath, targetPath)
+ZipArchive.unzip(sourcePath, targetPath)
 .then((path) => {
   console.log(`unzip completed at ${path}`)
 })
@@ -75,7 +77,7 @@ unzip(sourcePath, targetPath)
 const assetPath = `${DocumentDirectoryPath}/myFile.zip`
 const targetPath = DocumentDirectoryPath
 
-unzipAssets(assetPath, targetPath)
+ZipArchive.unzipAssets(assetPath, targetPath)
 .then(() => {
   console.log('unzip completed!')
 })
@@ -99,8 +101,9 @@ Your callback will be passed an object with the following fields:
 *Note: Remember to unsubscribe! Run .remove() on the object returned by this method.*
 
 ```js
+
 componentWillMount() {
-  this.zipProgress = subscribe(({ progress, filePath }) => {
+  this.zipProgress = ZipArchive.subscribe(({ progress, filePath }) => {
     this.setState({ zipProgress: e.progress })
   })
 }
