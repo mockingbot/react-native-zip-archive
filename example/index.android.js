@@ -4,29 +4,29 @@
  * @flow
  */
 
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 import {
   AppRegistry,
   StyleSheet,
   View
-} from 'react-native';
-import App from './App';
+} from 'react-native'
+import App from './App'
 
 export default class example extends Component {
-  render() {
+  render () {
     return (
       <View style={styles.container}>
         <App />
       </View>
-    );
+    )
   }
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'stretch',
+    alignItems: 'stretch'
   }
-});
+})
 
-AppRegistry.registerComponent('example', () => example);
+AppRegistry.registerComponent('example', () => example)

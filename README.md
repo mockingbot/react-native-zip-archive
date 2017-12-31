@@ -84,7 +84,7 @@ unzipAssets(assetPath, targetPath)
 })
 ```
 
-**subscribe(callback: ({ progress: number })): EmitterSubscription**
+**subscribe(callback: ({ progress: number, filePath: string })): EmitterSubscription**
 
 > Subscribe to the progress callbacks. Useful for displaying a progress bar on your UI during the process.
 
