@@ -242,15 +242,19 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void zip(String fileOrDirectory, String destDirectory, Promise promise) {
     List<String> filePaths = new ArrayList<>();
+
+    String fromDirectory;
     try {
       File tmp = new File(fileOrDirectory);
       if (tmp.exists()) {
         if (tmp.isDirectory()) {
+          fromDirectory = fileOrDirectory;
           List<File> files = getSubFiles(tmp, true);
           for (int i = 0; i < files.size(); i++) {
             filePaths.add(files.get(i).getAbsolutePath());
           }
         } else {
+          fromDirectory = fileOrDirectory.substring(0, fileOrDirectory.lastIndexOf("/"));
           filePaths.add(fileOrDirectory);
         }
       } else {
@@ -262,7 +266,8 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     }
 
     try {
-      zipStream(filePaths.toArray(new String[filePaths.size()]), destDirectory, filePaths.size());
+      String[] filePathArray = filePaths.toArray(new String[filePaths.size()]);
+      zipStream(filePathArray, destDirectory, fromDirectory, filePaths.size());
     } catch (Exception ex) {
       promise.reject(null, ex.getMessage());
       return;
@@ -271,7 +276,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     promise.resolve(destDirectory);
   }
 
-  private void zipStream(String[] files, String destFile, @SuppressWarnings("UnusedParameters") long totalSize) throws Exception {
+  private void zipStream(String[] files, String destFile, String fromDirectory, @SuppressWarnings("UnusedParameters") long totalSize) throws Exception {
     try {
       if (destFile.contains("/")) {
         File destDir = new File(destFile.substring(0, destFile.lastIndexOf("/")));
@@ -295,11 +300,13 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
       updateProgress(0, 1, destFile); // force 0%
       for (int i = 0; i < files.length; i++) {
-        FileInputStream fi = new FileInputStream(files[i]);
-        String filename = files[i].substring(files[i].lastIndexOf("/") + 1);
-        ZipEntry entry = new ZipEntry(filename);
-        out.putNextEntry(entry);
-        if (!new File(files[i]).isDirectory()) {
+        String absoluteFilepath = files[i];
+
+        if (!new File(absoluteFilepath).isDirectory()) {
+          FileInputStream fi = new FileInputStream(absoluteFilepath);
+          String filename = absoluteFilepath.replace(fromDirectory, "");
+          ZipEntry entry = new ZipEntry(filename);
+          out.putNextEntry(entry);
           origin = new BufferedInputStream(fi, BUFFER_SIZE);
           int count;
           while ((count = origin.read(data, 0, BUFFER_SIZE)) != -1) {
