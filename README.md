@@ -99,7 +99,7 @@ Your callback will be passed an object with the following fields:
 *Note: Remember to unsubscribe! Run .remove() on the object returned by this method.*
 
 ```js
-componentWillMount() {
+UNSAFE_componentWillMount() {
   this.zipProgress = subscribe(({ progress, filePath }) => {
     this.setState({ zipProgress: e.progress })
   })
