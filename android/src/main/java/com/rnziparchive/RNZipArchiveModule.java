@@ -101,7 +101,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
                 // update at most once per percent.
                 if (percentDone > lastTime) {
                   lastPercentage[0] = percentDone;
-                  updateProgress(extractedBytes[0], totalUncompressedBytes, entry.getName());
+                  updateProgress(extractedBytes[0], totalUncompressedBytes, zipFilePath);
                 }
               }
             };
