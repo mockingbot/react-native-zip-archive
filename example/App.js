@@ -16,7 +16,7 @@ export default class App extends Component {
     }
   }
 
-  componentWillMount () {
+  UNSAFE_componentWillMount () {
     this.zipProgress = subscribe((progress, filePath) => {
       console.log(progress, filePath)
     })
