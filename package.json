@@ -1,6 +1,6 @@
 {
   "name": "react-native-zip-archive",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "description": "A little wrapper on ZipArchive for react-native",
   "main": "index.js",
   "scripts": {
