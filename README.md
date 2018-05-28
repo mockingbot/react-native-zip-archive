@@ -6,8 +6,71 @@ Zip archive utility for react-native
 
 ```bash
 npm install react-native-zip-archive --save
-react-native link react-native-zip-archive
 ```
+
+## Linking
+
+### Automatically
+
+````bash
+react-native link react-native-zip-archive
+````
+
+### Manually
+
+#### iOS
+
+refer to the [official guide](https://facebook.github.io/react-native/docs/linking-libraries-ios.html)
+
+#### Android
+
+* Edit `android/settings.gradle` to look like this (without the +):
+
+  ```diff
+  rootProject.name = 'MyApp'
+
+  include ':app'
+
+  + include ':react-native-zip-archive'
+  + project(':react-native-zip-archive').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-zip-archive/android')
+  ```
+
+* Edit `android/app/build.gradle` (note: **app** folder) to look like this:
+
+  ```diff
+  apply plugin: 'com.android.application'
+
+  android {
+    ...
+  }
+
+  dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:23.0.0'
+    compile 'com.facebook.react:react-native:0.16.+'
+  + compile project(':react-native-zip-archive')
+  }
+  ```
+
+* Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+
+  ```diff
+  package com.myapp;
+
+  + import com.rnziparchive.RNZipArchivePackage;
+
+  ....
+
+    @Override
+    protected List<ReactPackage> getPackages() {
+      return Arrays.<ReactPackage>asList(
+        new MainReactPackage(),
+  +     new RNZipArchivePackage()
+      );
+    }
+
+  }
+  ```
 
 ## Usage
 
