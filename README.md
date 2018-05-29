@@ -16,7 +16,7 @@ npm install react-native-zip-archive --save
 react-native link react-native-zip-archive
 ````
 
-### Manually
+### Manually
 
 #### iOS
 
