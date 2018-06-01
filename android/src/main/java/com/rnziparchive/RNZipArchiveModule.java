@@ -32,7 +32,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   private static final int BUFFER_SIZE = 4096;
   private static final String PROGRESS_EVENT_NAME = "zipArchiveProgressEvent";
-  private static final String EVENT_KEY_FILENAME = "filename";
+  private static final String EVENT_KEY_FILENAME = "filePath";
   private static final String EVENT_KEY_PROGRESS = "progress";
 
   public RNZipArchiveModule(ReactApplicationContext reactContext) {
