@@ -47,7 +47,15 @@ RCT_EXPORT_METHOD(zip:(NSString *)from
 
     [self zipArchiveProgressEvent:0 total:1 filePath:destinationPath]; // force 0%
 
-    BOOL success = [RNZASSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from];
+    NSFileManager *fileManager = [[NSFileManager alloc] init];
+    BOOL isDir;
+    BOOL success;
+    [fileManager fileExistsAtPath:from isDirectory:&isDir];
+    if (isDir) {
+        success = [RNZASSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from];
+    } else {
+        success = [RNZASSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:@[from]];
+    }
 
     [self zipArchiveProgressEvent:1 total:1 filePath:destinationPath]; // force 100%
 
