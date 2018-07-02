@@ -10,7 +10,7 @@ npm install react-native-zip-archive --save
 
 ## Linking
 
-### Automatically
+### Automatically (Recommend)
 
 ````bash
 react-native link react-native-zip-archive
@@ -52,7 +52,38 @@ refer to the [official guide](https://facebook.github.io/react-native/docs/linki
   }
   ```
 
-* Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+* For react-native blew 0.19.0
+  - Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+
+  ```diff
+  + import import com.rnziparchive.RNZipArchivePackage;
+
+  ....
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+      super.onCreate(savedInstanceState);
+      mReactRootView = new ReactRootView(this);
+
+      mReactInstanceManager = ReactInstanceManager.builder()
+        .setApplication(getApplication())
+        .setBundleAssetName("index.android.bundle")
+        .setJSMainModuleName("index.android")
+        .addPackage(new MainReactPackage())
+  +     .addPackage(new RNZipArchivePackage())
+        .setUseDeveloperSupport(BuildConfig.DEBUG)
+        .setInitialLifecycleState(LifecycleState.RESUMED)
+        .build();
+
+      mReactRootView.startReactApplication(mReactInstanceManager, "ExampleRN", null);
+
+      setContentView(mReactRootView);
+    }
+  ```
+
+* react-native 0.19.0 and higher
+
+  - Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
 
   ```diff
   package com.myapp;
@@ -70,6 +101,25 @@ refer to the [official guide](https://facebook.github.io/react-native/docs/linki
     }
 
   }
+  ```
+
+* For react-native 0.29.0 and higher ( in MainApplication.java )
+
+  - Edit your `MainApplication.java` (deep in `android/app/src/main/java/...`) to look like this (note **three** places to edit):
+
+  ```diff
+  + import com.rnziparchive.RNZipArchivePackage;
+
+  public class MainApplication extends Application implements ReactApplication {
+    ...
+      @Override
+      protected List<ReactPackage> getPackages() {
+        return Arrays.<ReactPackage>asList(
+  -       new MainReactPackage()
+  +       new MainReactPackage(),
+  +       new RNZipArchivePackage()
+        );
+      }
   ```
 
 ## Usage
