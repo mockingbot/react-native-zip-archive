@@ -10,7 +10,7 @@ npm install react-native-zip-archive --save
 
 ## Linking
 
-### Automatically (Recommend)
+### Automatically (Recommend)
 
 ````bash
 react-native link react-native-zip-archive
