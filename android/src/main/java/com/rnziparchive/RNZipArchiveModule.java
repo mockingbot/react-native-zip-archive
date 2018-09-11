@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -34,6 +36,9 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private static final String PROGRESS_EVENT_NAME = "zipArchiveProgressEvent";
   private static final String EVENT_KEY_FILENAME = "filePath";
   private static final String EVENT_KEY_PROGRESS = "progress";
+
+  private int inputFileSize;
+  private int bytesRead;
 
   public RNZipArchiveModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -267,61 +272,16 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
     try {
       String[] filePathArray = filePaths.toArray(new String[filePaths.size()]);
-      zipStream(filePathArray, destDirectory, fromDirectory, filePaths.size());
+      zipStream(filePathArray, destDirectory, fromDirectory, filePaths.size(), promise);
     } catch (Exception ex) {
       promise.reject(null, ex.getMessage());
       return;
     }
-
-    promise.resolve(destDirectory);
   }
 
-  private void zipStream(String[] files, String destFile, String fromDirectory, @SuppressWarnings("UnusedParameters") long totalSize) throws Exception {
-    try {
-      if (destFile.contains("/")) {
-        File destDir = new File(destFile.substring(0, destFile.lastIndexOf("/")));
-        if (!destDir.exists()) {
-          //noinspection ResultOfMethodCallIgnored
-          destDir.mkdirs();
-        }
-      }
-
-      if (new File(destFile).exists()) {
-        //noinspection ResultOfMethodCallIgnored
-        new File(destFile).delete();
-      }
-
-      BufferedInputStream origin;
-      FileOutputStream dest = new FileOutputStream(destFile);
-
-      ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
-
-      byte data[] = new byte[BUFFER_SIZE];
-
-      updateProgress(0, 1, destFile); // force 0%
-      for (int i = 0; i < files.length; i++) {
-        String absoluteFilepath = files[i];
-
-        if (!new File(absoluteFilepath).isDirectory()) {
-          FileInputStream fi = new FileInputStream(absoluteFilepath);
-          String filename = absoluteFilepath.replace(fromDirectory, "");
-          ZipEntry entry = new ZipEntry(filename);
-          out.putNextEntry(entry);
-          origin = new BufferedInputStream(fi, BUFFER_SIZE);
-          int count;
-          while ((count = origin.read(data, 0, BUFFER_SIZE)) != -1) {
-            out.write(data, 0, count);
-          }
-          origin.close();
-        }
-      }
-      updateProgress(1, 1, destFile); // force 100%
-      out.close();
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      updateProgress(0, 1, destFile); // force 0%
-      throw new Exception(String.format("Couldn't zip %s", destFile));
-    }
+  private void zipStream(String[] files, String destFile, String fromDirectory, @SuppressWarnings("UnusedParameters") long totalSize, Promise promise) throws Exception {
+    ZipTask task = new ZipTask(files, destFile, fromDirectory, promise, this);
+    task.zip();
   }
 
   private List<File> getSubFiles(File baseDir, boolean isContainFolder) {
@@ -341,7 +301,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     return fileList;
   }
 
-  private void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
+  void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
     // Ensure progress can't overflow 1
     double progress = Math.min((double) extractedBytes / (double) totalSize, 1);
     Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
