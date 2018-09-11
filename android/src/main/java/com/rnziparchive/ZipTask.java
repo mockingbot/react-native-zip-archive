@@ -1,7 +1,5 @@
 package com.rnziparchive;
 
-import android.util.Log;
-
 import com.facebook.react.bridge.Promise;
 
 import java.io.BufferedInputStream;

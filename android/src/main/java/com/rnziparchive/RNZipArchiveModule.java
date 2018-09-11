@@ -22,8 +22,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -36,9 +34,6 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private static final String PROGRESS_EVENT_NAME = "zipArchiveProgressEvent";
   private static final String EVENT_KEY_FILENAME = "filePath";
   private static final String EVENT_KEY_PROGRESS = "progress";
-
-  private int inputFileSize;
-  private int bytesRead;
 
   public RNZipArchiveModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -296,7 +291,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     return fileList;
   }
 
-  void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
+  protected void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
     // Ensure progress can't overflow 1
     double progress = Math.min((double) extractedBytes / (double) totalSize, 1);
     Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
