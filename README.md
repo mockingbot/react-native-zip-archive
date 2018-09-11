@@ -214,7 +214,7 @@ Your callback will be passed an object with the following fields:
 ```js
 componentDidMount() {
   this.zipProgress = subscribe(({ progress, filePath }) => {
-    this.setState({ zipProgress: e.progress })
+    this.setState({ zipProgress: progress })
   })
 }
 
