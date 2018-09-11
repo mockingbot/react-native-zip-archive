@@ -272,16 +272,11 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
     try {
       String[] filePathArray = filePaths.toArray(new String[filePaths.size()]);
-      zipStream(filePathArray, destDirectory, fromDirectory, filePaths.size(), promise);
+      new ZipTask(filePathArray, destDirectory, fromDirectory, promise, this).zip();
     } catch (Exception ex) {
       promise.reject(null, ex.getMessage());
       return;
     }
-  }
-
-  private void zipStream(String[] files, String destFile, String fromDirectory, @SuppressWarnings("UnusedParameters") long totalSize, Promise promise) throws Exception {
-    ZipTask task = new ZipTask(files, destFile, fromDirectory, promise, this);
-    task.zip();
   }
 
   private List<File> getSubFiles(File baseDir, boolean isContainFolder) {

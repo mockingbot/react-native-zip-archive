@@ -34,12 +34,10 @@ public class ZipTask {
     this.cb = cb;
   }
 
-
-
-  public void zip() throws Exception {
+  public void zip() {
     Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
       public void uncaughtException(Thread th, Throwable ex) {
-        promise.reject(null , "Uncaught exception: " + ex);
+        promise.reject(null , "Uncaught exception in ZipTask: " + ex);
       }
     };
 
