@@ -7,14 +7,10 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.Path;
 
 public class ZipTask {
   private final String destFile;
@@ -118,16 +114,12 @@ public class ZipTask {
    */
   private long getUncompressedSize(String[] files) {
     long totalSize = 0;
-    try {
-      for (int i = 0; i < files.length; i++) {
-        Path filePath = Paths.get(files[i]);
-        long fileSize = Files.size(filePath);
-        if (fileSize != -1) {
-          totalSize += fileSize;
-        }
+    for (int i = 0; i < files.length; i++) {
+      File file = new File(files[i]);
+      long fileSize = file.length();
+      if (fileSize != -1) {
+        totalSize += fileSize;
       }
-    } catch (IOException ignored) {
-      return -1;
     }
     return totalSize;
   }
