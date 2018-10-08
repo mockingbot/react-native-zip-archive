@@ -7,10 +7,14 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
 
 public class ZipTask {
   private final String destFile;
@@ -19,7 +23,7 @@ public class ZipTask {
   private final Promise promise;
   private static final int BUFFER_SIZE = 4096;
 
-  private int bytesRead = 0;
+  private long bytesRead = 0;
   private long totalSize;
   private RNZipArchiveModule cb;
   private String threadError;
@@ -55,6 +59,8 @@ public class ZipTask {
             new File(destFile).delete();
           }
 
+          final long totalUncompressedBytes = getUncompressedSize(files);
+
           BufferedInputStream origin;
           FileOutputStream dest = new FileOutputStream(destFile);
 
@@ -72,14 +78,13 @@ public class ZipTask {
               ZipEntry entry = new ZipEntry(filename);
               out.putNextEntry(entry);
               origin = new BufferedInputStream(fi, BUFFER_SIZE);
-              totalSize = origin.available();
               int count;
 
               Timer timer = new Timer();
               timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-                  cb.updateProgress(bytesRead, totalSize, destFile);
+                  cb.updateProgress(bytesRead, totalUncompressedBytes, destFile);
                 }
               }, 200, 200);
 
@@ -104,5 +109,26 @@ public class ZipTask {
 
     t.setUncaughtExceptionHandler(h);
     t.start();
+  }
+
+    /**
+   * Return the uncompressed size of the ZipFile (only works for files on disk, not in assets)
+   *
+   * @return -1 on failure
+   */
+  private long getUncompressedSize(String[] files) {
+    long totalSize = 0;
+    try {
+      for (int i = 0; i < files.length; i++) {
+        Path filePath = Paths.get(files[i]);
+        long fileSize = Files.size(filePath);
+        if (fileSize != -1) {
+          totalSize += fileSize;
+        }
+      }
+    } catch (IOException ignored) {
+      return -1;
+    }
+    return totalSize;
   }
 }
