@@ -19,7 +19,7 @@ public class ZipTask {
   private final Promise promise;
   private static final int BUFFER_SIZE = 4096;
 
-  private int bytesRead = 0;
+  private long bytesRead = 0;
   private long totalSize;
   private RNZipArchiveModule cb;
   private String threadError;
@@ -55,6 +55,8 @@ public class ZipTask {
             new File(destFile).delete();
           }
 
+          final long totalUncompressedBytes = getUncompressedSize(files);
+
           BufferedInputStream origin;
           FileOutputStream dest = new FileOutputStream(destFile);
 
@@ -72,14 +74,13 @@ public class ZipTask {
               ZipEntry entry = new ZipEntry(filename);
               out.putNextEntry(entry);
               origin = new BufferedInputStream(fi, BUFFER_SIZE);
-              totalSize = origin.available();
               int count;
 
               Timer timer = new Timer();
               timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-                  cb.updateProgress(bytesRead, totalSize, destFile);
+                  cb.updateProgress(bytesRead, totalUncompressedBytes, destFile);
                 }
               }, 200, 200);
 
@@ -104,5 +105,22 @@ public class ZipTask {
 
     t.setUncaughtExceptionHandler(h);
     t.start();
+  }
+
+    /**
+   * Return the uncompressed size of the ZipFile (only works for files on disk, not in assets)
+   *
+   * @return -1 on failure
+   */
+  private long getUncompressedSize(String[] files) {
+    long totalSize = 0;
+    for (int i = 0; i < files.length; i++) {
+      File file = new File(files[i]);
+      long fileSize = file.length();
+      if (fileSize != -1) {
+        totalSize += fileSize;
+      }
+    }
+    return totalSize;
   }
 }
