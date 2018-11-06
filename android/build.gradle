@@ -31,4 +31,5 @@ repositories {
 
 dependencies {
     compile "com.facebook.react:react-native:+"
+    compile files('libs/zip4j_1.3.2.jar')
 }

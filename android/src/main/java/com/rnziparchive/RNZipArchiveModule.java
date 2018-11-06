@@ -19,6 +19,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -26,6 +28,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.FileHeader;
+import net.lingala.zip4j.progress.ProgressMonitor;
 
 public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private static final String TAG = RNZipArchiveModule.class.getSimpleName();
@@ -42,6 +48,52 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   @Override
   public String getName() {
     return "RNZipArchive";
+  }
+
+  @ReactMethod
+  public void isPasswordProtected(final String zipFilePath, final Promise promise) {
+    try {
+      net.lingala.zip4j.core.ZipFile zipFile = new net.lingala.zip4j.core.ZipFile(zipFilePath);
+      promise.resolve(zipFile.isEncrypted());
+    } catch (ZipException ex) {
+      promise.reject(null, String.format("Unable to check for encryption due to: %s", getStackTrace(ex)));
+    }
+  }
+
+  @ReactMethod
+  public void unzip(final String zipFilePath, final String destDirectory,
+        final String password, final Promise promise) {
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          net.lingala.zip4j.core.ZipFile zipFile = new net.lingala.zip4j.core.ZipFile(zipFilePath);
+          if (zipFile.isEncrypted()) {
+            zipFile.setPassword(password);
+          } else {
+            promise.reject(null, String.format("Zip file: %s is not password protected", zipFilePath));
+          }
+
+          List fileHeaderList = zipFile.getFileHeaders();
+          List extractedFileNames = new ArrayList<>();
+          int totalFiles = fileHeaderList.size();
+
+          updateProgress(0, 1, zipFilePath); // force 0%
+          for (int i = 0; i < totalFiles; i++) {
+            FileHeader fileHeader = (FileHeader) fileHeaderList.get(i);
+            zipFile.extractFile(fileHeader, destDirectory);
+            if (!fileHeader.isDirectory()) {
+              extractedFileNames.add(fileHeader.getFileName());
+            }
+            updateProgress(i + 1, totalFiles, zipFilePath);
+          }
+          promise.resolve(Arguments.fromList(extractedFileNames));
+        } catch (ZipException ex) {
+          updateProgress(0, 1, zipFilePath); // force 0%
+          promise.reject(null, String.format("Failed to unzip file, due to: %s", getStackTrace(ex)));
+        }
+      }
+    }).start();
   }
 
   @ReactMethod
@@ -326,4 +378,15 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     }
     return totalSize;
   }
+
+  /**
+   * Returns the exception stack trace as a string
+   */
+  private String getStackTrace(Exception e) {
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    e.printStackTrace(pw);
+    return sw.toString();
+  }
+
 }

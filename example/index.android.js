@@ -11,15 +11,25 @@ import {
   View
 } from 'react-native'
 import App from './App'
+import UnzipApp from './UnzipApp'
 
 export default class example extends Component {
+
+  constructor() {
+    super()
+    this.state = {
+      unzipWithPassword: true
+    }
+  }
+
   render () {
     return (
       <View style={styles.container}>
-        <App />
+        {this.state.unzipWithPassword ? (<UnzipApp />) : (<App />)}
       </View>
     )
   }
+
 }
 
 const styles = StyleSheet.create({
