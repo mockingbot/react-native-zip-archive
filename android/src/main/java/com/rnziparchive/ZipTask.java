@@ -5,6 +5,8 @@ import com.facebook.react.bridge.Promise;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Timer;
@@ -70,7 +72,7 @@ public class ZipTask {
 
             if (!new File(absoluteFilepath).isDirectory()) {
               FileInputStream fi = new FileInputStream(absoluteFilepath);
-              String filename = absoluteFilepath.replace(fromDirectory, "");
+              String filename = Paths.get(fromDirectory).relativize(Paths.get(absoluteFilepath)).toString();
               ZipEntry entry = new ZipEntry(filename);
               out.putNextEntry(entry);
               origin = new BufferedInputStream(fi, BUFFER_SIZE);
