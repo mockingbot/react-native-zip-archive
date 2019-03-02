@@ -1,14 +1,14 @@
 import React, { Component } from 'react'
 import {
   StyleSheet, View,
-  Alert, WebView
+  Alert, WebView, Platform
 } from 'react-native'
 import {
   ANIMATIONS_SLIDE,
   CustomTabs
 } from 'react-native-custom-tabs'
 import AwesomeButtonRick from 'react-native-really-awesome-button/src/themes/rick'
-import { DocumentPicker, DocumentPickerUtil } from 'react-native-document-picker'
+import { DocumentPicker } from 'react-native-document-picker'
 import { copyFile, DocumentDirectoryPath } from 'react-native-fs'
 import { subscribe, unzipWithPassword, isPasswordProtected } from 'react-native-zip-archive'
 
@@ -40,7 +40,7 @@ export default class App extends Component {
    */
   browseFiles () {
     DocumentPicker.show({
-      filetype: [DocumentPickerUtil.allFiles()]
+      filetype: [(Platform.OS === 'android') ? "*/*" : "public.data"]
     }, (err, response) => {
       var fileDetails = {
         uri: response.uri,
@@ -56,7 +56,7 @@ export default class App extends Component {
   }
 
   componentDidMount () {
-    this.zipProgress = subscribe(({ progress, filePath }) => {
+    this.unzipProgress = subscribe(({ progress, filePath }) => {
       console.log('---- Progress update ----')
       console.log(filePath + ': ' + progress)
       console.log('-------------------------')
@@ -64,7 +64,7 @@ export default class App extends Component {
   }
 
   componentWillUnmount () {
-    this.zipProgress.remove()
+    this.unzipProgress.remove()
   }
 
   extractFile () {
@@ -80,7 +80,10 @@ export default class App extends Component {
     var filename = fileDetails.name
     var filePath = DocumentDirectoryPath + '/' + filename
     var unzipPath = DocumentDirectoryPath
-    copyFile(fileDetails.uri, filePath).then(() => {
+    copyFile(fileDetails.uri, filePath).catch((err) => {
+      console.log(err)
+      return Promise.resolve()
+    }).then(() => {
       return isPasswordProtected(filePath)
     }).then((isEncrypted) => {
       if (isEncrypted) {
@@ -108,6 +111,7 @@ export default class App extends Component {
         <WebView
           source={{uri: uri}}
           style={styles.webView}
+          originWhitelist={['http://*', 'https://*', 'file://*']}
           startInLoadingState={true}
           scalesPageToFit={true}
           allowFileAccess={true}

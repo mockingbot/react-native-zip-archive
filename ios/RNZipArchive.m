@@ -21,14 +21,23 @@
 
 RCT_EXPORT_MODULE();
 
+RCT_EXPORT_METHOD(isPasswordProtected:(NSString *)file
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+
+    BOOL isPasswordProtected = [RNZASSZipArchive isFilePasswordProtectedAtPath:file];
+    resolve([NSNumber numberWithBool:isPasswordProtected]);
+}
+
 RCT_EXPORT_METHOD(unzip:(NSString *)from
                   destinationPath:(NSString *)destinationPath
+                  password:(NSString *)password
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
 
     [self zipArchiveProgressEvent:0 total:1 filePath:from]; // force 0%
 
-    BOOL success = [RNZASSZipArchive unzipFileAtPath:from toDestination:destinationPath delegate:self];
+    BOOL success = [RNZASSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:password error:nil delegate:self];
 
     [self zipArchiveProgressEvent:1 total:1 filePath:from]; // force 100%
 
@@ -73,9 +82,9 @@ RCT_EXPORT_METHOD(zip:(NSString *)from
 
 - (void)zipArchiveProgressEvent:(unsigned long long)loaded total:(unsigned long long)total filePath:(NSString *)filePath {
     [self.bridge.eventDispatcher sendAppEventWithName:@"zipArchiveProgressEvent" body:@{
-        @"progress": @((float)loaded / (float)total),
-        @"filePath": filePath
-    }];
+                                                                                        @"progress": @((float)loaded / (float)total),
+                                                                                        @"filePath": filePath
+                                                                                        }];
 }
 
 @end

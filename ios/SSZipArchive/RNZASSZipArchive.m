@@ -34,7 +34,7 @@
     if (zip == NULL) {
         return NO;
     }
-    
+
     int ret = unzGoToFirstFile(zip);
     if (ret == UNZ_OK) {
         do {
@@ -49,13 +49,13 @@
             } else if((fileInfo.flag & 1) == 1) {
                 return YES;
             }
-            
+
             unzCloseCurrentFile(zip);
             ret = unzGoToNextFile(zip);
         } while( ret==UNZ_OK && UNZ_OK!=UNZ_END_OF_LIST_OF_FILE );
-        
+
     }
-    
+
     return NO;
 }
 
@@ -136,14 +136,14 @@
         }
         return NO;
     }
-    
+
     NSDictionary * fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
     unsigned long long fileSize = [fileAttributes[NSFileSize] unsignedLongLongValue];
     unsigned long long currentPosition = 0;
-    
+
     unz_global_info  globalInfo = {0ul, 0ul};
     unzGetGlobalInfo(zip, &globalInfo);
-    
+
     // Begin unzipping
     if (unzGoToFirstFile(zip) != UNZ_OK)
     {
@@ -159,7 +159,7 @@
         }
         return NO;
     }
-    
+
     BOOL success = YES;
     BOOL canceled = NO;
     int ret = 0;
@@ -167,7 +167,7 @@
     unsigned char buffer[4096] = {0};
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSMutableArray *directoriesModificationDates = [[NSMutableArray alloc] init];
-    
+
     // Message delegate
     if ([delegate respondsToSelector:@selector(zipArchiveWillUnzipArchiveAtPath:zipInfo:)]) {
         [delegate zipArchiveWillUnzipArchiveAtPath:path zipInfo:globalInfo];
@@ -175,7 +175,7 @@
     if ([delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:filePath:)]) {
         [delegate zipArchiveProgressEvent:currentPosition total:fileSize filePath:path];
     }
-    
+
     NSInteger currentFileNumber = 0;
     NSError *unzippingError;
     do {
@@ -185,25 +185,25 @@
             } else {
                 ret = unzOpenCurrentFilePassword(zip, [password cStringUsingEncoding:NSASCIIStringEncoding]);
             }
-            
+
             if (ret != UNZ_OK) {
                 success = NO;
                 break;
             }
-            
+
             // Reading data and write to file
             unz_file_info fileInfo;
             memset(&fileInfo, 0, sizeof(unz_file_info));
-            
+
             ret = unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
             if (ret != UNZ_OK) {
                 success = NO;
                 unzCloseCurrentFile(zip);
                 break;
             }
-            
+
             currentPosition += fileInfo.compressed_size;
-            
+
             // Message delegate
             if ([delegate respondsToSelector:@selector(zipArchiveShouldUnzipFileAtIndex:totalFiles:archivePath:fileInfo:)]) {
                 if (![delegate zipArchiveShouldUnzipFileAtIndex:currentFileNumber
@@ -221,16 +221,16 @@
             if ([delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:filePath:)]) {
                 [delegate zipArchiveProgressEvent:(NSInteger)currentPosition total:(NSInteger)fileSize filePath:path];
             }
-            
+
             char *filename = (char *)malloc(fileInfo.size_filename + 1);
             if (filename == NULL)
             {
                 return NO;
             }
-            
+
             unzGetCurrentFileInfo(zip, &fileInfo, filename, fileInfo.size_filename + 1, NULL, 0, NULL, 0);
             filename[fileInfo.size_filename] = '\0';
-            
+
             //
             // Determine whether this is a symbolic link:
             // - File is stored with 'version made by' value of UNIX (3),
@@ -245,12 +245,12 @@
             const uLong ZipUNIXVersion = 3;
             const uLong BSD_SFMT = 0170000;
             const uLong BSD_IFLNK = 0120000;
-            
+
             BOOL fileIsSymbolicLink = NO;
             if (((fileInfo.version >> 8) == ZipUNIXVersion) && BSD_IFLNK == (BSD_SFMT & (fileInfo.external_fa >> 16))) {
                 fileIsSymbolicLink = YES;
             }
-            
+
             // Check if it contains directory
             //            NSString * strPath = @(filename);
             NSString * strPath = [NSString stringWithCString:filename encoding:NSUTF8StringEncoding];
@@ -260,18 +260,18 @@
                 strPath = [NSString  stringWithCString:filename encoding:enc];
             }
             //end by skyfox
-            
+
             BOOL isDirectory = NO;
             if (filename[fileInfo.size_filename-1] == '/' || filename[fileInfo.size_filename-1] == '\\') {
                 isDirectory = YES;
             }
             free(filename);
-            
+
             // Contains a path
             if ([strPath rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"/\\"]].location != NSNotFound) {
                 strPath = [strPath stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
             }
-            
+
             NSString *fullPath = [destination stringByAppendingPathComponent:strPath];
             NSError *err = nil;
             NSDictionary *directoryAttr;
@@ -295,26 +295,26 @@
                 }
                 NSLog(@"[RNZASSZipArchive] Error: %@", err.localizedDescription);
             }
-            
+
             if ([fileManager fileExistsAtPath:fullPath] && !isDirectory && !overwrite) {
                 //FIXME: couldBe CRC Check?
                 unzCloseCurrentFile(zip);
                 ret = unzGoToNextFile(zip);
                 continue;
             }
-            
+
             if (!fileIsSymbolicLink) {
                 FILE *fp = fopen((const char*)[fullPath UTF8String], "wb");
                 while (fp) {
                     int readBytes = unzReadCurrentFile(zip, buffer, 4096);
-                    
+
                     if (readBytes > 0) {
                         fwrite(buffer, readBytes, 1, fp );
                     } else {
                         break;
                     }
                 }
-                
+
                 if (fp) {
                     if ([[[fullPath pathExtension] lowercaseString] isEqualToString:@"zip"]) {
                         NSLog(@"Unzipping nested .zip file:  %@", [fullPath lastPathComponent]);
@@ -322,11 +322,11 @@
                             [[NSFileManager defaultManager] removeItemAtPath:fullPath error:nil];
                         }
                     }
-                    
+
                     fclose(fp);
-                    
+
                     if (preserveAttributes) {
-                        
+
                         // Set the original datetime property
                         if (fileInfo.dosDate != 0) {
                             NSDate *orgDate = [[self class] _dateWithMSDOSFormat:(UInt32)fileInfo.dosDate];
@@ -339,7 +339,7 @@
                                 }
                             }
                         }
-                        
+
                         // Set the original permissions on the file
                         uLong permissions = fileInfo.external_fa >> 16;
                         if (permissions != 0) {
@@ -388,17 +388,17 @@
                     buffer[bytesRead] = (int)0;
                     [destinationPath appendString:@((const char*)buffer)];
                 }
-                
+
                 // Create the symbolic link (making sure it stays relative if it was relative before)
                 int symlinkError = symlink([destinationPath cStringUsingEncoding:NSUTF8StringEncoding],
                                            [fullPath cStringUsingEncoding:NSUTF8StringEncoding]);
-                
+
                 if(symlinkError != 0)
                 {
                     NSLog(@"Failed to create symbolic link at \"%@\" to \"%@\". symlink() error code: %d", fullPath, destinationPath, errno);
                 }
             }
-            
+
             crc_ret = unzCloseCurrentFile( zip );
             if (crc_ret == UNZ_CRCERROR) {
                 //CRC ERROR
@@ -406,7 +406,7 @@
                 break;
             }
             ret = unzGoToNextFile( zip );
-            
+
             // Message delegate
             if ([delegate respondsToSelector:@selector(zipArchiveDidUnzipFileAtIndex:totalFiles:archivePath:fileInfo:)]) {
                 [delegate zipArchiveDidUnzipFileAtIndex:currentFileNumber totalFiles:(NSInteger)globalInfo.number_entry
@@ -415,7 +415,7 @@
                 [delegate zipArchiveDidUnzipFileAtIndex: currentFileNumber totalFiles: (NSInteger)globalInfo.number_entry
                                             archivePath:path unzippedFilePath: fullPath];
             }
-            
+
             currentFileNumber++;
             if (progressHandler)
             {
@@ -423,10 +423,10 @@
             }
         }
     } while(ret == UNZ_OK && ret != UNZ_END_OF_LIST_OF_FILE);
-    
+
     // Close
     unzClose(zip);
-    
+
     // The process of decompressing the .zip archive causes the modification times on the folders
     // to be set to the present time. So, when we are done, they need to be explicitly set.
     // set the modification date on all of the directories.
@@ -444,7 +444,7 @@
         [directoriesModificationDates release];
 #endif
     }
-    
+
     // Message delegate
     if (success && [delegate respondsToSelector:@selector(zipArchiveDidUnzipArchiveAtPath:zipInfo:unzippedPath:)]) {
         [delegate zipArchiveDidUnzipArchiveAtPath:path zipInfo:globalInfo unzippedPath:destination];
@@ -453,14 +453,14 @@
     if (!canceled && [delegate respondsToSelector:@selector(zipArchiveProgressEvent:total:filePath:)]) {
         [delegate zipArchiveProgressEvent:fileSize total:fileSize filePath:path];
     }
-    
+
     NSError *retErr = nil;
     if (crc_ret == UNZ_CRCERROR)
     {
         NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"crc check failed for file"};
         retErr = [NSError errorWithDomain:@"RNZASSZipArchiveErrorDomain" code:-3 userInfo:userInfo];
     }
-    
+
     if (error) {
         if (unzippingError) {
             *error = unzippingError;
@@ -505,11 +505,11 @@
         }
         success = [zipArchive close];
     }
-    
+
 #if !__has_feature(objc_arc)
     [zipArchive release];
 #endif
-    
+
     return success;
 }
 
@@ -520,10 +520,10 @@
 
 + (BOOL)createZipFileAtPath:(NSString *)path withContentsOfDirectory:(NSString *)directoryPath keepParentDirectory:(BOOL)keepParentDirectory withPassword:(nullable NSString *)password{
     BOOL success = NO;
-    
+
     NSFileManager *fileManager = nil;
     RNZASSZipArchive *zipArchive = [[RNZASSZipArchive alloc] initWithPath:path];
-    
+
     if ([zipArchive open]) {
         // use a local filemanager (queue/thread compatibility)
         fileManager = [[NSFileManager alloc] init];
@@ -533,12 +533,12 @@
             BOOL isDir;
             NSString *fullFilePath = [directoryPath stringByAppendingPathComponent:fileName];
             [fileManager fileExistsAtPath:fullFilePath isDirectory:&isDir];
-            
+
             if (keepParentDirectory)
             {
                 fileName = [[directoryPath lastPathComponent] stringByAppendingPathComponent:fileName];
             }
-            
+
             if (!isDir) {
                 [zipArchive writeFileAtPath:fullFilePath withFileName:fileName withPassword:password];
             }
@@ -554,12 +554,12 @@
         }
         success = [zipArchive close];
     }
-    
+
 #if !__has_feature(objc_arc)
     [fileManager release];
     [zipArchive release];
 #endif
-    
+
     return success;
 }
 
@@ -610,9 +610,9 @@
 - (BOOL)writeFolderAtPath:(NSString *)path withFolderName:(NSString *)folderName withPassword:(nullable NSString *)password
 {
     NSAssert((_zip != NULL), @"Attempting to write to an archive which was never opened");
-    
+
     zip_fileinfo zipInfo = {{0}};
-    
+
     NSDictionary *attr = [[NSFileManager defaultManager] attributesOfItemAtPath:path error: nil];
     if( attr )
     {
@@ -621,25 +621,25 @@
         {
             [self zipInfo:&zipInfo setDate: fileDate ];
         }
-        
+
         // Write permissions into the external attributes, for details on this see here: http://unix.stackexchange.com/a/14727
         // Get the permissions value from the files attributes
         NSNumber *permissionsValue = (NSNumber *)attr[NSFilePosixPermissions];
         if (permissionsValue) {
             // Get the short value for the permissions
             short permissionsShort = permissionsValue.shortValue;
-            
+
             // Convert this into an octal by adding 010000, 010000 being the flag for a regular file
             NSInteger permissionsOctal = 0100000 + permissionsShort;
-            
+
             // Convert this into a long value
             uLong permissionsLong = @(permissionsOctal).unsignedLongValue;
-            
+
             // Store this into the external file attributes once it has been shifted 16 places left to form part of the second from last byte
             zipInfo.external_fa = permissionsLong << 16L;
         }
     }
-    
+
     unsigned int len = 0;
     zipOpenNewFileInZip3(_zip, [[folderName stringByAppendingString:@"/"] UTF8String], &zipInfo, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_NO_COMPRESSION, 0, -MAX_WBITS, DEF_MEM_LEVEL,
                          Z_DEFAULT_STRATEGY, [password UTF8String], 0);
@@ -659,12 +659,12 @@
 - (BOOL)writeFileAtPath:(NSString *)path withFileName:(nullable NSString *)fileName withPassword:(nullable NSString *)password
 {
     NSAssert((_zip != NULL), @"Attempting to write to an archive which was never opened");
-    
+
     FILE *input = fopen([path UTF8String], "r");
     if (NULL == input) {
         return NO;
     }
-    
+
     const char *afileName;
     if (!fileName) {
         afileName = [path.lastPathComponent UTF8String];
@@ -672,9 +672,9 @@
     else {
         afileName = [fileName UTF8String];
     }
-    
+
     zip_fileinfo zipInfo = {{0}};
-    
+
     NSDictionary *attr = [[NSFileManager defaultManager] attributesOfItemAtPath:path error: nil];
     if( attr )
     {
@@ -683,25 +683,25 @@
         {
             [self zipInfo:&zipInfo setDate: fileDate ];
         }
-        
+
         // Write permissions into the external attributes, for details on this see here: http://unix.stackexchange.com/a/14727
         // Get the permissions value from the files attributes
         NSNumber *permissionsValue = (NSNumber *)attr[NSFilePosixPermissions];
         if (permissionsValue) {
             // Get the short value for the permissions
             short permissionsShort = permissionsValue.shortValue;
-            
+
             // Convert this into an octal by adding 010000, 010000 being the flag for a regular file
             NSInteger permissionsOctal = 0100000 + permissionsShort;
-            
+
             // Convert this into a long value
             uLong permissionsLong = @(permissionsOctal).unsignedLongValue;
-            
+
             // Store this into the external file attributes once it has been shifted 16 places left to form part of the second from last byte
             zipInfo.external_fa = permissionsLong << 16L;
         }
     }
-    
+
     void *buffer = malloc(CHUNK);
     if (buffer == NULL)
     {
@@ -710,13 +710,13 @@
 
     zipOpenNewFileInZip3(_zip, afileName, &zipInfo, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, [password UTF8String], 0);
     unsigned int len = 0;
-    
+
     while(!feof(input) && !ferror(input))
     {
         len = (unsigned int) fread(buffer, 1, CHUNK, input);
         zipWriteInFileInZip(_zip, buffer, len);
     }
-    
+
     zipCloseFileInZip(_zip);
     free(buffer);
     fclose(input);
@@ -733,11 +733,11 @@
     }
     zip_fileinfo zipInfo = {{0,0,0,0,0,0},0,0,0};
     [self zipInfo:&zipInfo setDate:[NSDate date]];
-    
+
     zipOpenNewFileInZip3(_zip, [filename UTF8String], &zipInfo, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, [password UTF8String], 0);
-    
+
     zipWriteInFileInZip(_zip, data.bytes, (unsigned int)data.length);
-    
+
     zipCloseFileInZip(_zip);
     return YES;
 }
@@ -782,7 +782,7 @@
     static const UInt32 kHourMask = 0xF800;
     static const UInt32 kMinuteMask = 0x7E0;
     static const UInt32 kSecondMask = 0x1F;
-    
+
     static NSCalendar *gregorian;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -792,24 +792,24 @@
         gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
 #endif
     });
-    
+
     NSDateComponents *components = [[NSDateComponents alloc] init];
-    
+
     NSAssert(0xFFFFFFFF == (kYearMask | kMonthMask | kDayMask | kHourMask | kMinuteMask | kSecondMask), @"[RNZASSZipArchive] MSDOS date masks don't add up");
-    
+
     [components setYear:1980 + ((msdosDateTime & kYearMask) >> 25)];
     [components setMonth:(msdosDateTime & kMonthMask) >> 21];
     [components setDay:(msdosDateTime & kDayMask) >> 16];
     [components setHour:(msdosDateTime & kHourMask) >> 11];
     [components setMinute:(msdosDateTime & kMinuteMask) >> 5];
     [components setSecond:(msdosDateTime & kSecondMask) * 2];
-    
+
     NSDate *date = [NSDate dateWithTimeInterval:0 sinceDate:[gregorian dateFromComponents:components]];
-    
+
 #if !__has_feature(objc_arc)
     [components release];
 #endif
-    
+
     return date;
 }
 

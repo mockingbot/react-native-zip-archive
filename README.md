@@ -176,6 +176,26 @@ unzip(sourcePath, targetPath)
 })
 ```
 
+**unzipWithPassword(source: string, target: string, passowrd: string): Promise**
+
+> unzip from source to target
+
+Example
+
+```js
+const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
+const targetPath = DocumentDirectoryPath
+const password = 'password'
+
+unzipWithPassword(sourcePath, targetPath, password)
+.then((path) => {
+  console.log(`unzip completed at ${path}`)
+})
+.catch((error) => {
+  console.log(error)
+})
+```
+
 **unzipAssets(assetPath: string, target: string): Promise**
 
 > unzip file from Android `assets` folder to target path
