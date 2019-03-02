@@ -5,8 +5,6 @@ import com.facebook.react.bridge.Promise;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Timer;
@@ -29,7 +27,7 @@ public class ZipTask {
   public ZipTask(String[] files, String destFile, String fromDirectory, Promise promise, RNZipArchiveModule cb) {
     this.destFile = destFile;
     this.files = files;
-    this.fromDirectory = fromDirectory;
+    this.fromDirectory = fromDirectory.endsWith("/") ? fromDirectory : fromDirectory + "/";
     this.promise = promise;
     this.cb = cb;
   }
@@ -72,7 +70,7 @@ public class ZipTask {
 
             if (!new File(absoluteFilepath).isDirectory()) {
               FileInputStream fi = new FileInputStream(absoluteFilepath);
-              String filename = Paths.get(fromDirectory).relativize(Paths.get(absoluteFilepath)).toString();
+              String filename = absoluteFilepath.replace(fromDirectory, "");
               ZipEntry entry = new ZipEntry(filename);
               out.putNextEntry(entry);
               origin = new BufferedInputStream(fi, BUFFER_SIZE);

@@ -1,24 +1,20 @@
 import React, { Component } from 'react'
 import {
-  StyleSheet, Text, View,
-  Alert, Button, WebView
+  StyleSheet, View,
+  Alert, WebView
 } from 'react-native'
 import {
   ANIMATIONS_SLIDE,
-  ANIMATIONS_FADE,
   CustomTabs
 } from 'react-native-custom-tabs'
 import AwesomeButtonRick from 'react-native-really-awesome-button/src/themes/rick'
 import { DocumentPicker, DocumentPickerUtil } from 'react-native-document-picker'
 import { copyFile, DocumentDirectoryPath } from 'react-native-fs'
-import { subscribe, unzipWithPassword, isPasswordProtected, unzip} from 'react-native-zip-archive'
+import { subscribe, unzipWithPassword, isPasswordProtected } from 'react-native-zip-archive'
 
-type Props = {}
-
-export default class App extends Component<Props> {
-
-  constructor(props) {
-    super(props);
+export default class App extends Component {
+  constructor (props) {
+    super(props)
     this.state = {
       fileDetails: {}, // no browsed file yet
       uri: '' // the extracted file will be used as a uri
@@ -28,8 +24,8 @@ export default class App extends Component<Props> {
   /**
    * Dropbox to download a sample password protected html file
    */
-  openLink() {
-    let url = "https://www.dropbox.com/s/xnlyviv5x3g2jzp/static_password.zip?dl=0"
+  openLink () {
+    let url = 'https://app.box.com/s/2szqk4fzsq7brrbcnuk6z2tdl6jq2rts'
     CustomTabs.openURL(url, {
       toolbarColor: '#607D8B',
       enableUrlBarHiding: true,
@@ -42,9 +38,9 @@ export default class App extends Component<Props> {
   /**
    * Used to pick the downloaded file
    */
-  browseFiles() {
+  browseFiles () {
     DocumentPicker.show({
-      filetype: [DocumentPickerUtil.allFiles()],
+      filetype: [DocumentPickerUtil.allFiles()]
     }, (err, response) => {
       var fileDetails = {
         uri: response.uri,
@@ -54,36 +50,35 @@ export default class App extends Component<Props> {
       }
       this.setState({
         ...this.state,
-        fileDetails: fileDetails,
+        fileDetails: fileDetails
       })
     })
   }
 
-  componentDidMount() {
+  componentDidMount () {
     this.zipProgress = subscribe(({ progress, filePath }) => {
-      console.log("---- Progress update ----")
-      console.log(filePath + ": " + progress)
-      console.log("-------------------------")
-    });
+      console.log('---- Progress update ----')
+      console.log(filePath + ': ' + progress)
+      console.log('-------------------------')
+    })
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     this.zipProgress.remove()
   }
 
-  extractFile() {
-
+  extractFile () {
     var fileDetails = this.state.fileDetails
     if (Object.keys(fileDetails).length === 0) {
-      Alert.alert("No file selected!")
+      Alert.alert('No file selected!')
       return
     }
 
     // password for the dropbox sample zip file
-    var password = "helloworld"
+    var password = 'helloworld'
 
     var filename = fileDetails.name
-    var filePath = DocumentDirectoryPath + "/" + filename
+    var filePath = DocumentDirectoryPath + '/' + filename
     var unzipPath = DocumentDirectoryPath
     copyFile(fileDetails.uri, filePath).then(() => {
       return isPasswordProtected(filePath)
@@ -91,10 +86,10 @@ export default class App extends Component<Props> {
       if (isEncrypted) {
         return unzipWithPassword(filePath, unzipPath, password)
       } else {
-        throw "Not password protected!"
+        throw 'Not password protected!'
       }
     }).then((response) => {
-      console.log("Successfully unzipped files")
+      console.log('Successfully unzipped files')
       console.log(response)
       this.setState({
         ...this.state,
@@ -103,12 +98,11 @@ export default class App extends Component<Props> {
     }).catch((err) => {
       console.log(err)
     })
-
   }
 
-  render() {
+  render () {
     const { uri } = this.state
-    if (uri !== "") {
+    if (uri !== '') {
       // render the extracted html file
       return (
         <WebView
@@ -116,45 +110,46 @@ export default class App extends Component<Props> {
           style={styles.webView}
           startInLoadingState={true}
           scalesPageToFit={true}
+          allowFileAccess={true}
         />
       )
     }
 
     return (
       <View style={styles.contentContainer}>
-          <AwesomeButtonRick
-            borderRadius={8}
-            width={300}
-            textSize={22}
-            type="primary"
-            onPress = {() => this.openLink()}>
+        <AwesomeButtonRick
+          borderRadius={8}
+          width={300}
+          textSize={22}
+          type="primary"
+          onPress = {() => this.openLink()}>
             Download Sample Zip file
-          </AwesomeButtonRick>
+        </AwesomeButtonRick>
 
-          <View style = {styles.lineStyle} />
+        <View style = {styles.lineStyle} />
 
-          <AwesomeButtonRick
-            borderRadius={8}
-            width={300}
-            textSize={22}
-            onPress = {() => this.browseFiles()}
-            type="secondary">
+        <AwesomeButtonRick
+          borderRadius={8}
+          width={300}
+          textSize={22}
+          onPress = {() => this.browseFiles()}
+          type="secondary">
             Browse files
-          </AwesomeButtonRick>
+        </AwesomeButtonRick>
 
-          <View style = {styles.lineStyle} />
+        <View style = {styles.lineStyle} />
 
-          <AwesomeButtonRick
-            width={300}
-            borderRadius={8}
-            textSize={22}
-            onPress = {() => this.extractFile()}
-            type="anchor">
+        <AwesomeButtonRick
+          width={300}
+          borderRadius={8}
+          textSize={22}
+          onPress = {() => this.extractFile()}
+          type="anchor">
             Extract
-          </AwesomeButtonRick>
+        </AwesomeButtonRick>
       </View>
 
-    );
+    )
   }
 }
 
@@ -163,15 +158,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#F5FCFF'
   },
-  lineStyle:{
+  lineStyle: {
     borderWidth: 0.5,
-    borderColor:'black',
-    margin:10,
+    borderColor: 'black',
+    margin: 10
   },
   webView: {
     flex: 1,
     marginTop: 20
   }
-});
+})

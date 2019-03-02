@@ -3,10 +3,10 @@ package com.example;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.reactnativedocumentpicker.ReactNativeDocumentPicker;
-import com.github.droibit.android.reactnative.customtabs.CustomTabsPackage;
 import com.rnziparchive.RNZipArchivePackage;
 import com.rnfs.RNFSPackage;
+import com.reactnativedocumentpicker.ReactNativeDocumentPicker;
+import com.github.droibit.android.reactnative.customtabs.CustomTabsPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -27,11 +27,16 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-          new ReactNativeDocumentPicker(),
-          new CustomTabsPackage(),
-          new RNZipArchivePackage(),
-          new RNFSPackage()
+            new RNZipArchivePackage(),
+            new RNFSPackage(),
+            new ReactNativeDocumentPicker(),
+            new CustomTabsPackage()
       );
+    }
+
+    @Override
+    protected String getJSMainModuleName() {
+      return "index";
     }
   };
 
