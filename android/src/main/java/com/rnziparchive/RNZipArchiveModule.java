@@ -61,7 +61,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void unzip(final String zipFilePath, final String destDirectory,
+  public void unzipWithPassword(final String zipFilePath, final String destDirectory,
         final String password, final Promise promise) {
     new Thread(new Runnable() {
       @Override

@@ -9,8 +9,8 @@ import {
 } from 'react-native-custom-tabs'
 import AwesomeButtonRick from 'react-native-really-awesome-button/src/themes/rick'
 import { DocumentPicker } from 'react-native-document-picker'
-import { copyFile, DocumentDirectoryPath } from 'react-native-fs'
-import { subscribe, unzipWithPassword, isPasswordProtected } from 'react-native-zip-archive'
+import { copyFile, DocumentDirectoryPath, unlink } from 'react-native-fs'
+import { subscribe, unzip, unzipWithPassword, isPasswordProtected } from 'react-native-zip-archive'
 
 export default class App extends Component {
   constructor (props) {
@@ -22,10 +22,10 @@ export default class App extends Component {
   }
 
   /**
-   * Dropbox to download a sample password protected html file
+   * box to download a sample password protected html file
    */
-  openLink () {
-    let url = 'https://app.box.com/s/2szqk4fzsq7brrbcnuk6z2tdl6jq2rts'
+  openLink (isPasswordProtected) {
+    let url = isPasswordProtected ? 'https://app.box.com/s/2szqk4fzsq7brrbcnuk6z2tdl6jq2rts' : 'https://app.box.com/s/ndkn0exa9zmuh9ki7qpjgakvbkrn98q7'
     CustomTabs.openURL(url, {
       toolbarColor: '#607D8B',
       enableUrlBarHiding: true,
@@ -40,8 +40,11 @@ export default class App extends Component {
    */
   browseFiles () {
     DocumentPicker.show({
-      filetype: [(Platform.OS === 'android') ? "*/*" : "public.data"]
+      filetype: [(Platform.OS === 'android') ? '*/*' : 'public.data']
     }, (err, response) => {
+      if (err) {
+        console.error(err)
+      }
       var fileDetails = {
         uri: response.uri,
         name: response.fileName,
@@ -80,23 +83,25 @@ export default class App extends Component {
     var filename = fileDetails.name
     var filePath = DocumentDirectoryPath + '/' + filename
     var unzipPath = DocumentDirectoryPath
-    copyFile(fileDetails.uri, filePath).catch((err) => {
+    unlink(filePath).catch(err => {
       console.log(err)
       return Promise.resolve()
+    }).then(() => {
+      return copyFile(fileDetails.uri, filePath)
     }).then(() => {
       return isPasswordProtected(filePath)
     }).then((isEncrypted) => {
       if (isEncrypted) {
         return unzipWithPassword(filePath, unzipPath, password)
       } else {
-        throw 'Not password protected!'
+        return unzip(filePath, unzipPath)
       }
     }).then((response) => {
       console.log('Successfully unzipped files')
       console.log(response)
       this.setState({
         ...this.state,
-        uri: `file://${unzipPath}/static_password/index.html`
+        uri: `file://${filePath.split('.').slice(0, -1).join('.')}/index.html`
       })
     }).catch((err) => {
       console.log(err)
@@ -124,10 +129,21 @@ export default class App extends Component {
         <AwesomeButtonRick
           borderRadius={8}
           width={300}
-          textSize={22}
+          textSize={14}
           type="primary"
-          onPress = {() => this.openLink()}>
-            Download Sample Zip file
+          onPress = {() => this.openLink(true)}>
+            Download Sample Zip file with password
+        </AwesomeButtonRick>
+
+        <View style = {styles.lineStyle} />
+
+        <AwesomeButtonRick
+          borderRadius={8}
+          width={300}
+          textSize={14}
+          type="primary"
+          onPress = {() => this.openLink(false)}>
+            Download Sample Zip file without password
         </AwesomeButtonRick>
 
         <View style = {styles.lineStyle} />
