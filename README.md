@@ -2,6 +2,11 @@
 
 Zip archive utility for react-native
 
+# IMPORTANT
+
+For react-native < 0.58, use react-native-zip-archive@3.0.1
+For react-native >= 0.58, use react-native-zip-archive@4.0.0
+
 ## Installation
 
 ```bash
