@@ -25,7 +25,8 @@ react-native link react-native-zip-archive
 
 #### iOS
 
-refer to the [official guide](https://facebook.github.io/react-native/docs/linking-libraries-ios.html)
+refer to the [official guide](https://facebook.github.io/react-native/docs/linking-libraries-ios.html),
+remember to also link `libz` to the project.
 
 #### Android
 
