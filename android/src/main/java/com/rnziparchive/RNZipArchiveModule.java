@@ -349,11 +349,11 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             if (encParts[0].equals("AES")) {
               parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_AES);
               if (encParts[1].equals("128")) {
-                Log.d(TAG, "Encryption AES Strength 128-bit");
                 parameters.setAesKeyStrength(Zip4jConstants.AES_STRENGTH_128);
-              } else {
-                Log.d(TAG, "Encryption AES Strength 256-bit");
+              } else if (encParts[1].equals("256")) {
                 parameters.setAesKeyStrength(Zip4jConstants.AES_STRENGTH_256);
+              } else {
+                parameters.setAesKeyStrength(Zip4jConstants.ENC_METHOD_STANDARD);
               }
             } else if (encyptionMethod.equals("STANDARD")) {
               parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
@@ -362,7 +362,6 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
               parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
               Log.d(TAG, "Encryption type not supported default to Standard Encryption");
             }
-
             parameters.setPassword(password);
           } else {
             promise.reject(null, "Password is empty");
