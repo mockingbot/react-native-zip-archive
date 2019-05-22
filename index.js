@@ -17,6 +17,10 @@ export const unzipWithPassword = (source, target, password) => {
   return RNZipArchive.unzipWithPassword(source, target, password)
 }
 
+export const zipWithPassword = (source, target, password, encyptionMethod) => {
+  return RNZipArchive.zipWithPassword(source, target, password, encyptionMethod)
+}
+
 export const isPasswordProtected = (source) => {
   return RNZipArchive.isPasswordProtected(source).then(isEncrypted => !!isEncrypted)
 }
