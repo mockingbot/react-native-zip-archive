@@ -42,7 +42,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private static final String PROGRESS_EVENT_NAME = "zipArchiveProgressEvent";
   private static final String EVENT_KEY_FILENAME = "filePath";
   private static final String EVENT_KEY_PROGRESS = "progress";
-    
+
   public RNZipArchiveModule(ReactApplicationContext reactContext) {
     super(reactContext);
   }
@@ -371,9 +371,9 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
           File f = new File(fileOrDirectory);
 
-          int totalFiles = 0;          
+          int totalFiles = 0;
           int fileCounter = 0;
-          
+
           if (f.exists()) {
             if (f.isDirectory()) {
 
@@ -386,23 +386,21 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
               updateProgress(fileCounter, totalFiles, destDirectory);
               for (int i = 0; i < files.size(); i++) {
                 if (files.get(i).isDirectory()) {
-                  zipFile.addFolder(f.getAbsolutePath(), parameters);
-                  fileCounter += 1;
-                  updateProgress(fileCounter, totalFiles, destDirectory);
+                  zipFile.addFolder(files.get(i).getAbsolutePath(), parameters);
                 }
                 else {
                   zipFile.addFile(files.get(i), parameters);
-                  fileCounter += 1;
-                  updateProgress(fileCounter, totalFiles, destDirectory);
                 }
+                fileCounter += 1;
+                updateProgress(fileCounter, totalFiles, destDirectory);
               }
 
-              } else {
-                totalFiles = 1;
-                zipFile.addFile(f, parameters);
-                fileCounter += 1;
-                updateProgress(fileCounter, totalFiles, destDirectory);                
-              }
+            } else {
+              totalFiles = 1;
+              zipFile.addFile(f, parameters);
+              fileCounter += 1;
+              updateProgress(fileCounter, totalFiles, destDirectory);
+            }
           }
           else {
             promise.reject(null, "File or folder does not exist");
