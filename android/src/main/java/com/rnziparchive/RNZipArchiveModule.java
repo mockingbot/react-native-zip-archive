@@ -377,13 +377,9 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           if (f.exists()) {
             if (f.isDirectory()) {
 
-              zipFile.addFolder(f.getAbsolutePath(), parameters);
-              fileCounter += 1;
-
               List<File> files = getSubFiles(f, true);
 
-              totalFiles = files.size() + 1;
-              updateProgress(fileCounter, totalFiles, destDirectory);
+              totalFiles = files.size();
               for (int i = 0; i < files.size(); i++) {
                 if (files.get(i).isDirectory()) {
                   zipFile.addFolder(files.get(i).getAbsolutePath(), parameters);
