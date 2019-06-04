@@ -5,7 +5,6 @@
 	};
 	objectVersion = 46;
 	objects = {
-
 /* Begin PBXBuildFile section */
 		00C302E51ABCBA2D00DB3ED1 /* libRCTActionSheet.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C302AC1ABCB8CE00DB3ED1 /* libRCTActionSheet.a */; };
 		00C302E71ABCBA2D00DB3ED1 /* libRCTGeolocation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C302BA1ABCB90400DB3ED1 /* libRCTGeolocation.a */; };
@@ -24,11 +23,11 @@
 		1521892E0DC34ED8B39572BC /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 092148306BC145E5A5DFA6A0 /* libz.tbd */; };
 		832341BD1AAA6AB300B99B32 /* libRCTText.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 832341B51AAA6A8300B99B32 /* libRCTText.a */; };
 		ADBDB9381DFEBF1600ED6528 /* libRCTBlob.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ADBDB9271DFEBF0700ED6528 /* libRCTBlob.a */; };
-		B19666C0B76C458E880F3061 /* libDBCustomTabs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F99C94F502CA4D2B9F66A55A /* libDBCustomTabs.a */; };
 		B1E02DAFC3244F4492E73632 /* libRNFS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A8A06B3CBFF4903BA59A99D /* libRNFS.a */; };
 		D70F33A64E71488992F0571A /* libRNDocumentPicker.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21124052BD1C42B29932C41E /* libRNDocumentPicker.a */; };
 		E0CDCAA4E49345679D245D75 /* libRNZipArchive.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B002C38E4184BA89B596A48 /* libRNZipArchive.a */; };
 		ED297163215061F000B7C4FE /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ED297162215061F000B7C4FE /* JavaScriptCore.framework */; };
+		319494D9F49D461984CA7D2B /* libDBCustomTabs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02563868580D41E0AC0F0BD0 /* libDBCustomTabs.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -291,13 +290,6 @@
 			remoteGlobalIDString = ED296FEE214C9CF800B7C4FE;
 			remoteInfo = "jsiexecutor-tvOS";
 		};
-		D0257100222AFA9000FCA22C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = ACF59FB5EA87437CB8D11A80 /* ReactNativeCustomTabs.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = DA7118681CC9158A0087DF95;
-			remoteInfo = DBCustomTabs;
-		};
 		D0257103222AFA9000FCA22C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E30BF4840B534983B566B463 /* RNDocumentPicker.xcodeproj */;
@@ -355,13 +347,13 @@
 		832341B01AAA6A8300B99B32 /* RCTText.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTText.xcodeproj; path = "../node_modules/react-native/Libraries/Text/RCTText.xcodeproj"; sourceTree = "<group>"; };
 		8A8A06B3CBFF4903BA59A99D /* libRNFS.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNFS.a; sourceTree = "<group>"; };
 		910349A9C5884E88B21C0558 /* RNFS.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNFS.xcodeproj; path = "../node_modules/react-native-fs/RNFS.xcodeproj"; sourceTree = "<group>"; };
-		ACF59FB5EA87437CB8D11A80 /* ReactNativeCustomTabs.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = ReactNativeCustomTabs.xcodeproj; path = "../node_modules/react-native-custom-tabs/ios/ReactNativeCustomTabs.xcodeproj"; sourceTree = "<group>"; };
 		ADBDB91F1DFEBF0600ED6528 /* RCTBlob.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTBlob.xcodeproj; path = "../node_modules/react-native/Libraries/Blob/RCTBlob.xcodeproj"; sourceTree = "<group>"; };
 		D025710E222AFAC400FCA22C /* example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = example.entitlements; path = example/example.entitlements; sourceTree = "<group>"; };
 		E30BF4840B534983B566B463 /* RNDocumentPicker.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNDocumentPicker.xcodeproj; path = "../node_modules/react-native-document-picker/ios/RNDocumentPicker.xcodeproj"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
-		F99C94F502CA4D2B9F66A55A /* libDBCustomTabs.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libDBCustomTabs.a; sourceTree = "<group>"; };
+		62380DDADCCE4A5EBF5806C9 /* ReactNativeCustomTabs.xcodeproj */ = {isa = PBXFileReference; name = "ReactNativeCustomTabs.xcodeproj"; path = "../node_modules/react-native-custom-tabs/ios/ReactNativeCustomTabs.xcodeproj"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = wrapper.pb-project; explicitFileType = undefined; includeInIndex = 0; };
+		02563868580D41E0AC0F0BD0 /* libDBCustomTabs.a */ = {isa = PBXFileReference; name = "libDBCustomTabs.a"; path = "libDBCustomTabs.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -382,11 +374,11 @@
 				832341BD1AAA6AB300B99B32 /* libRCTText.a in Frameworks */,
 				00C302EA1ABCBA2D00DB3ED1 /* libRCTVibration.a in Frameworks */,
 				139FDEF61B0652A700C62182 /* libRCTWebSocket.a in Frameworks */,
-				B19666C0B76C458E880F3061 /* libDBCustomTabs.a in Frameworks */,
 				D70F33A64E71488992F0571A /* libRNDocumentPicker.a in Frameworks */,
 				B1E02DAFC3244F4492E73632 /* libRNFS.a in Frameworks */,
 				E0CDCAA4E49345679D245D75 /* libRNZipArchive.a in Frameworks */,
 				1521892E0DC34ED8B39572BC /* libz.tbd in Frameworks */,
+				319494D9F49D461984CA7D2B /* libDBCustomTabs.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -537,10 +529,10 @@
 				832341B01AAA6A8300B99B32 /* RCTText.xcodeproj */,
 				00C302DF1ABCB9EE00DB3ED1 /* RCTVibration.xcodeproj */,
 				139FDEE61B06529A00C62182 /* RCTWebSocket.xcodeproj */,
-				ACF59FB5EA87437CB8D11A80 /* ReactNativeCustomTabs.xcodeproj */,
 				E30BF4840B534983B566B463 /* RNDocumentPicker.xcodeproj */,
 				910349A9C5884E88B21C0558 /* RNFS.xcodeproj */,
 				0B3D178E544E488F8D7872E2 /* RNZipArchive.xcodeproj */,
+				62380DDADCCE4A5EBF5806C9 /* ReactNativeCustomTabs.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -594,14 +586,6 @@
 				2B002C38E4184BA89B596A48 /* libRNZipArchive.a */,
 			);
 			name = "Recovered References";
-			sourceTree = "<group>";
-		};
-		D02570F7222AFA8E00FCA22C /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				D0257101222AFA9000FCA22C /* libDBCustomTabs.a */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		D02570F9222AFA8F00FCA22C /* Products */ = {
@@ -728,10 +712,6 @@
 				{
 					ProductGroup = 146834001AC3E56700842450 /* Products */;
 					ProjectRef = 146833FF1AC3E56700842450 /* React.xcodeproj */;
-				},
-				{
-					ProductGroup = D02570F7222AFA8E00FCA22C /* Products */;
-					ProjectRef = ACF59FB5EA87437CB8D11A80 /* ReactNativeCustomTabs.xcodeproj */;
 				},
 				{
 					ProductGroup = D02570F9222AFA8F00FCA22C /* Products */;
@@ -1013,13 +993,6 @@
 			remoteRef = D02570F5222AFA8E00FCA22C /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		D0257101222AFA9000FCA22C /* libDBCustomTabs.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libDBCustomTabs.a;
-			remoteRef = D0257100222AFA9000FCA22C /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		D0257104222AFA9000FCA22C /* libRNDocumentPicker.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1114,10 +1087,10 @@
 				DEVELOPMENT_TEAM = YMUB8PUSZ5;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/../node_modules/react-native-custom-tabs/ios/ReactNativeCustomTabs",
 					"$(SRCROOT)/../node_modules/react-native-document-picker/ios/RNDocumentPicker",
 					"$(SRCROOT)/../node_modules/react-native-fs/**",
 					"$(SRCROOT)/../node_modules/react-native-zip-archive/ios/**",
+					"$(SRCROOT)/../node_modules/react-native-custom-tabs/ios/ReactNativeCustomTabs",
 				);
 				INFOPLIST_FILE = example/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -1129,6 +1102,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.mockingbot.rnza.example;
 				PRODUCT_NAME = example;
 				VERSIONING_SYSTEM = "apple-generic";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/example\"",
+				);
 			};
 			name = Debug;
 		};
@@ -1141,10 +1118,10 @@
 				DEVELOPMENT_TEAM = YMUB8PUSZ5;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/../node_modules/react-native-custom-tabs/ios/ReactNativeCustomTabs",
 					"$(SRCROOT)/../node_modules/react-native-document-picker/ios/RNDocumentPicker",
 					"$(SRCROOT)/../node_modules/react-native-fs/**",
 					"$(SRCROOT)/../node_modules/react-native-zip-archive/ios/**",
+					"$(SRCROOT)/../node_modules/react-native-custom-tabs/ios/ReactNativeCustomTabs",
 				);
 				INFOPLIST_FILE = example/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -1156,6 +1133,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.mockingbot.rnza.example;
 				PRODUCT_NAME = example;
 				VERSIONING_SYSTEM = "apple-generic";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/example\"",
+				);
 			};
 			name = Release;
 		};
