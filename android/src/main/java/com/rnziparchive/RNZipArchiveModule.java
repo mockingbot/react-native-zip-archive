@@ -159,6 +159,12 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             };
 
             File fout = new File(destDirectory, entry.getName());
+            String destDirCanonicalPath = (new File(destDirectory)).getCanonicalPath();
+            String canonicalPath = fout.getCanonicalPath();
+            if (!canonicalPath.startsWith(destDirCanonicalPath)) {
+              throw new Exception(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
+            }
+
             if (!fout.exists()) {
               //noinspection ResultOfMethodCallIgnored
               (new File(fout.getParent())).mkdirs();
@@ -245,6 +251,13 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             while ((entry = zipIn.getNextEntry()) != null) {
               if (entry.isDirectory()) continue;
               fout = new File(destDirectory, entry.getName());
+
+              String destDirCanonicalPath = (new File(destDirectory)).getCanonicalPath();
+              String canonicalPath = fout.getCanonicalPath();
+              if (!canonicalPath.startsWith(destDirCanonicalPath)) {
+                throw new Exception(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
+              }
+
               if (!fout.exists()) {
                 //noinspection ResultOfMethodCallIgnored
                 (new File(fout.getParent())).mkdirs();
