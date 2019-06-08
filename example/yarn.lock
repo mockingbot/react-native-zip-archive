@@ -4630,7 +4630,7 @@ react-native-really-awesome-button@^0.8.3:
   integrity sha1-gbnxl3XQ8JRGdVDsRYR2Lx+92EE=
 
 "react-native-zip-archive@file:..":
-  version "4.0.1"
+  version "4.0.3"
 
 react-native@0.58.6:
   version "0.58.6"
