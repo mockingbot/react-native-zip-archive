@@ -12,8 +12,8 @@
 #else
 #import "RCTBridgeModule.h"
 #endif
-#import "SSZipArchive/RNZASSZipArchive.h"
+#import "SSZipArchive/SSZipArchive.h"
 
-@interface RNZipArchive : NSObject<RCTBridgeModule, RNZASSZipArchiveDelegate>
+@interface RNZipArchive : NSObject<RCTBridgeModule, SSZipArchiveDelegate>
 
 @end

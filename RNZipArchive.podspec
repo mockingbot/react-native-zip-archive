@@ -22,7 +22,7 @@ Pod::Spec.new do |s|
     ss.public_header_files = ['ios/RNZipArchive.h']
   end
 
-  s.subspec 'RNZASSZipArchive' do |ss|
+  s.subspec 'SSZipArchive' do |ss|
     ss.source_files = 'ios/SSZipArchive/*.{h,m}', 'ios/SSZipArchive/aes/*.{h,c}', 'ios/SSZipArchive/minizip/*.{h,c}'
     ss.private_header_files = 'ios/SSZipArchive/*.h', 'ios/SSZipArchive/aes/*.h', 'ios/SSZipArchive/minizip/*.h'
   end
