@@ -26,7 +26,8 @@
   "rnpm": {
     "ios": {
       "sharedLibraries": [
-        "libz"
+        "libz",
+        "libiconv"
       ]
     }
   },
