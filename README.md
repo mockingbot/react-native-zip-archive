@@ -163,6 +163,27 @@ zip(sourcePath, targetPath)
 })
 ```
 
+**zipWithPassword(source: string, target: string, password: string, encryptionType: string): Promise**
+
+> zip source to target
+
+Example
+
+```js
+const targetPath = `${DocumentDirectoryPath}/myFile.zip`
+const sourcePath = DocumentDirectoryPath
+const password = 'password'
+const encryptionType = 'STANDARD'; //possible values: AES-256, AES-128, STANDARD. default is STANDARD
+
+zipWithPassword(sourcePath, targetPath, password, encryptionType)
+.then((path) => {
+  console.log(`zip completed at ${path}`)
+})
+.catch((error) => {
+  console.log(error)
+})
+```
+
 **unzip(source: string, target: string): Promise**
 
 > unzip from source to target
@@ -182,7 +203,7 @@ unzip(sourcePath, targetPath)
 })
 ```
 
-**unzipWithPassword(source: string, target: string, passowrd: string): Promise**
+**unzipWithPassword(source: string, target: string, password: string): Promise**
 
 > unzip from source to target
 

@@ -32,6 +32,8 @@ import java.util.zip.ZipOutputStream;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.progress.ProgressMonitor;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.util.Zip4jConstants;
 
 public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private static final String TAG = RNZipArchiveModule.class.getSimpleName();
@@ -337,6 +339,91 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       promise.reject(null, ex.getMessage());
       return;
     }
+  }
+
+  @ReactMethod
+  public void zipWithPassword(final String fileOrDirectory, final String destDirectory, final String password,
+      final String encyptionMethod, final Promise promise) {
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+
+        try {
+          net.lingala.zip4j.core.ZipFile zipFile = new net.lingala.zip4j.core.ZipFile(destDirectory);
+
+          ZipParameters parameters = new ZipParameters();
+          parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+          parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+
+          String encParts[] = encyptionMethod.split("-");
+
+          if (password != null && !password.isEmpty()) {
+            parameters.setEncryptFiles(true);
+            if (encParts[0].equals("AES")) {
+              parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_AES);
+              if (encParts[1].equals("128")) {
+                parameters.setAesKeyStrength(Zip4jConstants.AES_STRENGTH_128);
+              } else if (encParts[1].equals("256")) {
+                parameters.setAesKeyStrength(Zip4jConstants.AES_STRENGTH_256);
+              } else {
+                parameters.setAesKeyStrength(Zip4jConstants.ENC_METHOD_STANDARD);
+              }
+            } else if (encyptionMethod.equals("STANDARD")) {
+              parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
+              Log.d(TAG, "Standard Encryption");
+            } else {
+              parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
+              Log.d(TAG, "Encryption type not supported default to Standard Encryption");
+            }
+            parameters.setPassword(password);
+          } else {
+            promise.reject(null, "Password is empty");
+          }
+
+          updateProgress(0, 100, destDirectory);
+
+          File f = new File(fileOrDirectory);
+
+          int totalFiles = 0;
+          int fileCounter = 0;
+
+          if (f.exists()) {
+            if (f.isDirectory()) {
+
+              List<File> files = getSubFiles(f, true);
+
+              totalFiles = files.size();
+              for (int i = 0; i < files.size(); i++) {
+                if (files.get(i).isDirectory()) {
+                  zipFile.addFolder(files.get(i).getAbsolutePath(), parameters);
+                }
+                else {
+                  zipFile.addFile(files.get(i), parameters);
+                }
+                fileCounter += 1;
+                updateProgress(fileCounter, totalFiles, destDirectory);
+              }
+
+            } else {
+              totalFiles = 1;
+              zipFile.addFile(f, parameters);
+              fileCounter += 1;
+              updateProgress(fileCounter, totalFiles, destDirectory);
+            }
+          }
+          else {
+            promise.reject(null, "File or folder does not exist");
+          }
+
+          updateProgress(1, 1, destDirectory); // force 100%
+          promise.resolve(destDirectory);
+
+        } catch (Exception ex) {
+          promise.reject(null, ex.getMessage());
+          return;
+        }
+      }
+    }).start();
   }
 
   private List<File> getSubFiles(File baseDir, boolean isContainFolder) {
