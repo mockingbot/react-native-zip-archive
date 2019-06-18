@@ -1,0 +1,11 @@
+//
+//  Config.xcconfig
+//  RNZipArchive
+//
+//  Created by Pan Rui on 2019/6/18.
+//  Copyright © 2019 plrthink. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+GCC_PREPROCESSOR_DEFINITIONS = HAVE_INTTYPES_H HAVE_PKCRYPT HAVE_STDINT_H HAVE_WZAES HAVE_ZLIB MZ_ZIP_NO_SIGNING $(inherited)
