@@ -25,7 +25,7 @@ RCT_EXPORT_METHOD(isPasswordProtected:(NSString *)file
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
 
-    BOOL isPasswordProtected = [SSZipArchive isFilePasswordProtectedAtPath:file];
+    BOOL isPasswordProtected = [RNZASSZipArchive isFilePasswordProtectedAtPath:file];
     resolve([NSNumber numberWithBool:isPasswordProtected]);
 }
 
@@ -36,7 +36,7 @@ RCT_EXPORT_METHOD(unzip:(NSString *)from
 
     [self zipArchiveProgressEvent:0 total:1 filePath:from]; // force 0%
 
-    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:nil error:nil delegate:self];
+    BOOL success = [RNZASSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:nil error:nil delegate:self];
 
     [self zipArchiveProgressEvent:1 total:1 filePath:from]; // force 100%
 
@@ -56,7 +56,7 @@ RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
 
     [self zipArchiveProgressEvent:0 total:1 filePath:from]; // force 0%
 
-    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:password error:nil delegate:self];
+    BOOL success = [RNZASSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:password error:nil delegate:self];
 
     [self zipArchiveProgressEvent:1 total:1 filePath:from]; // force 100%
 
@@ -80,9 +80,9 @@ RCT_EXPORT_METHOD(zip:(NSString *)from
     BOOL success;
     [fileManager fileExistsAtPath:from isDirectory:&isDir];
     if (isDir) {
-        success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from];
+        success = [RNZASSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from];
     } else {
-        success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:@[from]];
+        success = [RNZASSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:@[from]];
     }
 
     [self zipArchiveProgressEvent:1 total:1 filePath:destinationPath]; // force 100%

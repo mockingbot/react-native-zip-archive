@@ -137,8 +137,8 @@ android {
 }
 
 dependencies {
-    implementation project(':react-native-zip-archive')
     implementation project(':react-native-custom-tabs')
+    implementation project(':react-native-zip-archive')
     implementation project(':react-native-fs')
     implementation project(':react-native-document-picker')
     implementation fileTree(dir: "libs", include: ["*.jar"])

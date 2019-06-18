@@ -3,8 +3,8 @@ package com.example;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.rnziparchive.RNZipArchivePackage;
 import com.github.droibit.android.reactnative.customtabs.CustomTabsPackage;
+import com.rnziparchive.RNZipArchivePackage;
 import com.rnfs.RNFSPackage;
 import com.reactnativedocumentpicker.ReactNativeDocumentPicker;
 import com.facebook.react.ReactNativeHost;
@@ -27,8 +27,8 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new RNZipArchivePackage(),
             new CustomTabsPackage(),
+            new RNZipArchivePackage(),
             new RNFSPackage(),
             new ReactNativeDocumentPicker()
       );
