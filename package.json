@@ -27,7 +27,8 @@
     "ios": {
       "sharedLibraries": [
         "libz",
-        "libiconv"
+        "libiconv",
+        "Security.framework"
       ]
     }
   },
