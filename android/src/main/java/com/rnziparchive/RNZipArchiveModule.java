@@ -343,13 +343,13 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void zipWithPassword(final String fileOrDirectory, final String destDirectory, final String password,
-      final String encyptionMethod, final Promise promise) {
+      final String encryptionMethod, final Promise promise) {
     new Thread(new Runnable() {
       @Override
       public void run() {
-        String _encyptionMethod = encyptionMethod;
-        if (_encyptionMethod == null) {
-          _encyptionMethod = "STANDARD";
+        String _encryptionMethod = encryptionMethod;
+        if (_encryptionMethod == null) {
+          _encryptionMethod = "STANDARD";
         }
 
         try {
@@ -359,7 +359,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
           parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 
-          String encParts[] = _encyptionMethod.split("-");
+          String encParts[] = _encryptionMethod.split("-");
 
           if (password != null && !password.isEmpty()) {
             parameters.setEncryptFiles(true);
@@ -372,7 +372,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
               } else {
                 parameters.setAesKeyStrength(Zip4jConstants.ENC_METHOD_STANDARD);
               }
-            } else if (_encyptionMethod.equals("STANDARD")) {
+            } else if (_encryptionMethod.equals("STANDARD")) {
               parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
               Log.d(TAG, "Standard Encryption");
             } else {
