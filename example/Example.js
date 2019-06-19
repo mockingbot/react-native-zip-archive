@@ -10,7 +10,7 @@ import {
 import AwesomeButtonRick from 'react-native-really-awesome-button/src/themes/rick'
 import { DocumentPicker } from 'react-native-document-picker'
 import { copyFile, DocumentDirectoryPath, unlink } from 'react-native-fs'
-import { subscribe, unzip, unzipWithPassword, isPasswordProtected } from 'react-native-zip-archive'
+import { subscribe, unzip, unzipWithPassword, isPasswordProtected, zipWithPassword } from 'react-native-zip-archive'
 
 export default class App extends Component {
   constructor (props) {
@@ -25,7 +25,9 @@ export default class App extends Component {
    * box to download a sample password protected html file
    */
   openLink (isPasswordProtected) {
-    let url = isPasswordProtected ? 'https://app.box.com/s/2szqk4fzsq7brrbcnuk6z2tdl6jq2rts' : 'https://app.box.com/s/ndkn0exa9zmuh9ki7qpjgakvbkrn98q7'
+    const url = isPasswordProtected
+      ? 'https://app.box.com/s/2szqk4fzsq7brrbcnuk6z2tdl6jq2rts'
+      : 'https://app.box.com/s/ndkn0exa9zmuh9ki7qpjgakvbkrn98q7'
     CustomTabs.openURL(url, {
       toolbarColor: '#607D8B',
       enableUrlBarHiding: true,
@@ -45,7 +47,7 @@ export default class App extends Component {
       if (err) {
         console.error(err)
       }
-      var fileDetails = {
+      const fileDetails = {
         uri: response.uri,
         name: response.fileName,
         size: response.fileSize,
@@ -71,19 +73,19 @@ export default class App extends Component {
   }
 
   extractFile () {
-    var fileDetails = this.state.fileDetails
+    const fileDetails = this.state.fileDetails
     if (Object.keys(fileDetails).length === 0) {
       Alert.alert('No file selected!')
       return
     }
 
     // password for the dropbox sample zip file
-    var password = 'helloworld'
+    const password = 'helloworld'
 
-    var filename = fileDetails.name
-    var filePath = DocumentDirectoryPath + '/' + filename
-    var unzipPath = DocumentDirectoryPath
-    unlink(filePath).catch(err => {
+    const filename = fileDetails.name
+    const filePath = DocumentDirectoryPath + '/' + filename
+    const unzipPath = DocumentDirectoryPath
+    return unlink(filePath).catch(err => {
       console.log(err)
       return Promise.resolve()
     }).then(() => {
@@ -99,12 +101,41 @@ export default class App extends Component {
     }).then((response) => {
       console.log('Successfully unzipped files')
       console.log(response)
-      this.setState({
-        ...this.state,
-        uri: `file://${filePath.split('.').slice(0, -1).join('.')}/index.html`
+      return filePath
+    }).catch((err) => {
+      console.log(err)
+    })
+  }
+
+  archiveFolder () {
+    this.extractFile().then((filePath) => {
+      return unlink(filePath).then(() => {
+        // password for the dropbox sample zip file
+        const password = 'helloworld'
+
+        return zipWithPassword(
+          filePath.split('.').slice(0, -1).join('.'),
+          filePath,
+          password
+        ).then((response) => {
+          console.log('Successfully archived the folder')
+          console.log(response)
+        }).catch((err) => {
+          console.log(err)
+        })
+      }).catch((err) => {
+        console.log(err)
       })
     }).catch((err) => {
       console.log(err)
+    })
+  }
+
+  extractFileAndShow () {
+    this.extractFile().then(filePath => {
+      this.setState({
+        uri: `file://${filePath.split('.').slice(0, -1).join('.')}/index.html`
+      })
     })
   }
 
@@ -163,9 +194,20 @@ export default class App extends Component {
           width={300}
           borderRadius={8}
           textSize={22}
-          onPress = {() => this.extractFile()}
+          onPress = {() => this.extractFileAndShow()}
           type="anchor">
             Extract
+        </AwesomeButtonRick>
+
+        <View style = {styles.lineStyle} />
+
+        <AwesomeButtonRick
+          width={300}
+          borderRadius={8}
+          textSize={22}
+          onPress = {() => this.archiveFolder()}
+          type="anchor">
+            Archive
         </AwesomeButtonRick>
       </View>
 

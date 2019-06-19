@@ -10,13 +10,13 @@ import {
   StyleSheet,
   View
 } from 'react-native'
-import UnzipApp from './UnzipApp'
+import Example from './Example'
 
-export default class Example extends Component {
+export default class App extends Component {
   render () {
     return (
       <View style={styles.container}>
-        <UnzipApp />
+        <Example />
       </View>
     )
   }
@@ -29,4 +29,4 @@ const styles = StyleSheet.create({
   }
 })
 
-AppRegistry.registerComponent('example', () => Example)
+AppRegistry.registerComponent('app', () => App)
