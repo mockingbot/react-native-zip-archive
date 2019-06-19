@@ -95,6 +95,35 @@ RCT_EXPORT_METHOD(zip:(NSString *)from
     }
 }
 
+
+RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
+                  destinationPath:(NSString *)destinationPath
+                  password:(NSString *)password
+                  encryptionType:(NSString *)encryptionType
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+    [self zipArchiveProgressEvent:0 total:1 filePath:destinationPath]; // force 0%
+    
+    NSFileManager *fileManager = [[NSFileManager alloc] init];
+    BOOL isDir;
+    BOOL success;
+    [fileManager fileExistsAtPath:from isDirectory:&isDir];
+    if (isDir) {
+        success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from withPassword:password];
+    } else {
+        success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:@[from] withPassword:password];
+    }
+    
+    [self zipArchiveProgressEvent:1 total:1 filePath:destinationPath]; // force 100%
+    
+    if (success) {
+        resolve(destinationPath);
+    } else {
+        NSError *error = nil;
+        reject(@"zip_error", @"unable to zip", error);
+    }
+}
+
 - (dispatch_queue_t)methodQueue {
     return dispatch_queue_create("com.mockingbot.ReactNative.ZipArchiveQueue", DISPATCH_QUEUE_SERIAL);
 }

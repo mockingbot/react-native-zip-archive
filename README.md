@@ -26,7 +26,7 @@ react-native link react-native-zip-archive
 #### iOS
 
 refer to the [official guide](https://facebook.github.io/react-native/docs/linking-libraries-ios.html),
-remember to also link `libz` to the project.
+remember to also link `libz`, `libiconv` and `Security` to your target.(You can follow the tutorial on [this](http://docs.onemobilesdk.aol.com/ios-ad-sdk/adding-frameworks-xcode.html))
 
 #### Android
 
@@ -166,6 +166,8 @@ zip(sourcePath, targetPath)
 **zipWithPassword(source: string, target: string, password: string, encryptionType: string): Promise**
 
 > zip source to target
+
+*NOTE: encryptionType is not supported on iOS yet, so it would be igonred on that platform.*
 
 Example
 
