@@ -27,18 +27,15 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
-import net.lingala.zip4j.progress.ProgressMonitor;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
 
 public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private static final String TAG = RNZipArchiveModule.class.getSimpleName();
 
-  private static final int BUFFER_SIZE = 4096;
   private static final String PROGRESS_EVENT_NAME = "zipArchiveProgressEvent";
   private static final String EVENT_KEY_FILENAME = "filePath";
   private static final String EVENT_KEY_PROGRESS = "progress";
@@ -83,6 +80,10 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           updateProgress(0, 1, zipFilePath); // force 0%
           for (int i = 0; i < totalFiles; i++) {
             FileHeader fileHeader = (FileHeader) fileHeaderList.get(i);
+
+            File fout = new File(destDirectory, fileHeader.getFileName());
+            ensureZipPathSafety(fout, destDirectory);
+
             zipFile.extractFile(fileHeader, destDirectory);
             if (!fileHeader.isDirectory()) {
               extractedFileNames.add(fileHeader.getFileName());
@@ -90,7 +91,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             updateProgress(i + 1, totalFiles, zipFilePath);
           }
           promise.resolve(Arguments.fromList(extractedFileNames));
-        } catch (ZipException ex) {
+        } catch (Exception ex) {
           updateProgress(0, 1, zipFilePath); // force 0%
           promise.reject(null, String.format("Failed to unzip file, due to: %s", getStackTrace(ex)));
         }
@@ -161,11 +162,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             };
 
             File fout = new File(destDirectory, entry.getName());
-            String destDirCanonicalPath = (new File(destDirectory)).getCanonicalPath();
-            String canonicalPath = fout.getCanonicalPath();
-            if (!canonicalPath.startsWith(destDirCanonicalPath)) {
-              throw new Exception(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
-            }
+            ensureZipPathSafety(fout, destDirectory);
 
             if (!fout.exists()) {
               //noinspection ResultOfMethodCallIgnored
@@ -254,11 +251,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
               if (entry.isDirectory()) continue;
               fout = new File(destDirectory, entry.getName());
 
-              String destDirCanonicalPath = (new File(destDirectory)).getCanonicalPath();
-              String canonicalPath = fout.getCanonicalPath();
-              if (!canonicalPath.startsWith(destDirCanonicalPath)) {
-                throw new Exception(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
-              }
+              ensureZipPathSafety(fout, destDirectory);
 
               if (!fout.exists()) {
                 //noinspection ResultOfMethodCallIgnored
@@ -491,6 +484,14 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     PrintWriter pw = new PrintWriter(sw);
     e.printStackTrace(pw);
     return sw.toString();
+  }
+
+  private void ensureZipPathSafety(final File fout, final String destDirectory) throws Exception {
+    String destDirCanonicalPath = (new File(destDirectory)).getCanonicalPath();
+    String canonicalPath = fout.getCanonicalPath();
+    if (!canonicalPath.startsWith(destDirCanonicalPath)) {
+      throw new Exception(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
+    }
   }
 
 }
