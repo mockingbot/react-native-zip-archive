@@ -5196,7 +5196,7 @@ react-native-webview@^6.3.1:
     invariant "2.2.4"
 
 "react-native-zip-archive@file:..":
-  version "4.1.4"
+  version "5.0.0-alpha.0"
 
 react-native@0.60.4:
   version "0.60.4"

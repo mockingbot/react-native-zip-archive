@@ -89,11 +89,11 @@ PODS:
     - React-fishhook (= 0.60.4)
   - RNFS (2.13.3):
     - React
-  - RNZipArchive (4.1.4):
+  - RNZipArchive (5.0.0-alpha.0):
     - React
-    - RNZipArchive/Core (= 4.1.4)
+    - RNZipArchive/Core (= 5.0.0-alpha.0)
     - SSZipArchive (= 2.2.2)
-  - RNZipArchive/Core (4.1.4):
+  - RNZipArchive/Core (5.0.0-alpha.0):
     - React
     - SSZipArchive (= 2.2.2)
   - SSZipArchive (2.2.2)
@@ -111,7 +111,7 @@ DEPENDENCIES:
   - React-jsi (from `../node_modules/react-native/ReactCommon/jsi`)
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
-  - react-native-custom-tabs (from `../node_modules/react-native-custom-tabs/ios`)
+  - react-native-custom-tabs (from `../node_modules/react-native-custom-tabs`)
   - react-native-document-picker (from `../node_modules/react-native-document-picker`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
@@ -157,7 +157,7 @@ EXTERNAL SOURCES:
   React-jsinspector:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   react-native-custom-tabs:
-    :path: "../node_modules/react-native-custom-tabs/ios"
+    :path: "../node_modules/react-native-custom-tabs"
   react-native-document-picker:
     :path: "../node_modules/react-native-document-picker"
   react-native-webview:
@@ -202,7 +202,7 @@ SPEC CHECKSUMS:
   React-jsi: 21d3153b1153fbf6510a92b6b11e33e725cb7432
   React-jsiexecutor: 7549641e48bafae7bfee3f3ea19bf4901639c5de
   React-jsinspector: 73f24a02fa684ed6a2b828ba116874a2191ded88
-  react-native-custom-tabs: 4fda3ad34c1bfb312d77527fda38199251ddd652
+  react-native-custom-tabs: e2847b68f7988fd8b209a5f69683955e45e965c2
   react-native-document-picker: 8508bfda34be6c24a2cbecbe515b15108658c183
   react-native-webview: 830d41c90141f3e997ddb271fa93c19f3a619ccc
   React-RCTActionSheet: 9f71d7ae3e8fb10e08d162cbf14c621349dbfab3
@@ -216,7 +216,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: 0bea40cd51bd089bd591a8f74c86e91fdf2666c5
   React-RCTWebSocket: 163873f4cdd5f1058a9483443404fc3801581cb6
   RNFS: c9bbde46b0d59619f8e7b735991c60e0f73d22c1
-  RNZipArchive: 6caa9fddb8776eaddee5b95d2c42ca451e0dec8f
+  RNZipArchive: 22c3f2444cfe4a3a72ea331890eb0eb22ed58f6e
   SSZipArchive: fa16b8cc4cdeceb698e5e5d9f67e9558532fbf23
   yoga: c2c050f6ae6e222534760cc82f559b89214b67e2
 
