@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
 import {
   StyleSheet, View,
-  Alert, WebView, Platform
+  Alert, Platform
 } from 'react-native'
+import WebView from 'react-native-webview'
 import {
   ANIMATIONS_SLIDE,
   CustomTabs
