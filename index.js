@@ -9,6 +9,10 @@ const {
 
 const RNZipArchive = NativeModules.RNZipArchive
 
+export const isPasswordProtected = (source) => {
+  return RNZipArchive.isPasswordProtected(source).then(isEncrypted => !!isEncrypted)
+}
+
 export const unzip = (source, target) => {
   return RNZipArchive.unzip(source, target)
 }
@@ -17,16 +21,12 @@ export const unzipWithPassword = (source, target, password) => {
   return RNZipArchive.unzipWithPassword(source, target, password)
 }
 
-export const zipWithPassword = (source, target, password, encryptionMethod) => {
-  return RNZipArchive.zipWithPassword(source, target, password, encryptionMethod)
-}
-
-export const isPasswordProtected = (source) => {
-  return RNZipArchive.isPasswordProtected(source).then(isEncrypted => !!isEncrypted)
-}
-
 export const zip = (source, target) => {
   return RNZipArchive.zip(source, target)
+}
+
+export const zipWithPassword = (source, target, password, encryptionMethod) => {
+  return RNZipArchive.zipWithPassword(source, target, password, encryptionMethod)
 }
 
 export const unzipAssets = (source, target) => {

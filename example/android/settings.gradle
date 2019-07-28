@@ -1,11 +1,6 @@
 rootProject.name = 'example'
-include ':react-native-zip-archive'
-project(':react-native-zip-archive').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-zip-archive/android')
-include ':react-native-custom-tabs'
-project(':react-native-custom-tabs').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-custom-tabs/android')
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
 include ':react-native-fs'
 project(':react-native-fs').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-fs/android')
-include ':react-native-document-picker'
-project(':react-native-document-picker').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-document-picker/android')
 
 include ':app'
