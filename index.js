@@ -9,8 +9,8 @@ const {
 
 const RNZipArchive = NativeModules.RNZipArchive
 
-export const unzip = (source, target) => {
-  return RNZipArchive.unzip(source, target)
+export const unzip = (source, target, charset = 'UTF-8') => {
+  return RNZipArchive.unzip(source, target, charset)
 }
 
 export const unzipWithPassword = (source, target, password) => {
@@ -39,6 +39,6 @@ export const unzipAssets = (source, target) => {
 
 export const subscribe = callback => {
   const emitter =
-    Platform.OS === 'ios' ? NativeAppEventEmitter : DeviceEventEmitter
+      Platform.OS === 'ios' ? NativeAppEventEmitter : DeviceEventEmitter
   return emitter.addListener('zipArchiveProgressEvent', callback)
 }

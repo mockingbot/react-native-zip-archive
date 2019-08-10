@@ -31,6 +31,7 @@ RCT_EXPORT_METHOD(isPasswordProtected:(NSString *)file
 
 RCT_EXPORT_METHOD(unzip:(NSString *)from
                   destinationPath:(NSString *)destinationPath
+                  charset:(NSString *)charset
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
 
