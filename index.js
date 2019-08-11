@@ -9,8 +9,8 @@ const {
 
 const RNZipArchive = NativeModules.RNZipArchive
 
-export const unzip = (source, target) => {
-  return RNZipArchive.unzip(source, target)
+export const unzip = (source, target, charset = 'UTF-8') => {
+  return RNZipArchive.unzip(source, target, charset)
 }
 
 export const unzipWithPassword = (source, target, password) => {

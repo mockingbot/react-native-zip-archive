@@ -195,8 +195,11 @@ Example
 ```js
 const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
 const targetPath = DocumentDirectoryPath
+const charset = 'UTF-8' 
+// charset possible values: UTF-8, GBK, US-ASCII and so on. If none was passed, default value is UTF-8
 
-unzip(sourcePath, targetPath)
+
+unzip(sourcePath, targetPath, charset)
 .then((path) => {
   console.log(`unzip completed at ${path}`)
 })

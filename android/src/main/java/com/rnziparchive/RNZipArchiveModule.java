@@ -33,6 +33,8 @@ import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
 
+import java.nio.charset.Charset;
+
 public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private static final String TAG = RNZipArchiveModule.class.getSimpleName();
 
@@ -100,7 +102,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void unzip(final String zipFilePath, final String destDirectory, final Promise promise) {
+  public void unzip(final String zipFilePath, final String destDirectory, final String charset, final Promise promise) {
     new Thread(new Runnable() {
       @Override
       public void run() {
@@ -123,7 +125,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         try {
           // Find the total uncompressed size of every file in the zip, so we can
           // get an accurate progress measurement
-          final long totalUncompressedBytes = getUncompressedSize(zipFilePath);
+          final long totalUncompressedBytes = getUncompressedSize(zipFilePath, charset);
 
           File destDir = new File(destDirectory);
           if (!destDir.exists()) {
@@ -138,7 +140,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           final long[] extractedBytes = {0};
           final int[] lastPercentage = {0};
 
-          final ZipFile zipFile = new ZipFile(zipFilePath);
+          final ZipFile zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
           final Enumeration<? extends ZipEntry> entries = zipFile.entries();
           Log.d(TAG, "Zip has " + zipFile.size() + " entries");
           while (entries.hasMoreElements()) {
@@ -457,10 +459,10 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
    *
    * @return -1 on failure
    */
-  private long getUncompressedSize(String zipFilePath) {
+  private long getUncompressedSize(String zipFilePath, String charset) {
     long totalSize = 0;
     try {
-      ZipFile zipFile = new ZipFile(zipFilePath);
+      ZipFile zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {
         ZipEntry entry = entries.nextElement();
