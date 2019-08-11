@@ -39,6 +39,6 @@ export const unzipAssets = (source, target) => {
 
 export const subscribe = callback => {
   const emitter =
-      Platform.OS === 'ios' ? NativeAppEventEmitter : DeviceEventEmitter
+    Platform.OS === 'ios' ? NativeAppEventEmitter : DeviceEventEmitter
   return emitter.addListener('zipArchiveProgressEvent', callback)
 }

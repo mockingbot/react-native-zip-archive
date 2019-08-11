@@ -102,7 +102,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void unzip(final String zipFilePath, final String destDirectory,final String charset, final Promise promise) {
+  public void unzip(final String zipFilePath, final String destDirectory, final String charset, final Promise promise) {
     new Thread(new Runnable() {
       @Override
       public void run() {
@@ -125,7 +125,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         try {
           // Find the total uncompressed size of every file in the zip, so we can
           // get an accurate progress measurement
-          final long totalUncompressedBytes = getUncompressedSize(zipFilePath,charset);
+          final long totalUncompressedBytes = getUncompressedSize(zipFilePath, charset);
 
           File destDir = new File(destDirectory);
           if (!destDir.exists()) {
@@ -140,7 +140,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           final long[] extractedBytes = {0};
           final int[] lastPercentage = {0};
 
-          final ZipFile zipFile = new ZipFile(zipFilePath,Charset.forName(charset));
+          final ZipFile zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
           final Enumeration<? extends ZipEntry> entries = zipFile.entries();
           Log.d(TAG, "Zip has " + zipFile.size() + " entries");
           while (entries.hasMoreElements()) {
@@ -459,10 +459,10 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
    *
    * @return -1 on failure
    */
-  private long getUncompressedSize(String zipFilePath,String charset) {
+  private long getUncompressedSize(String zipFilePath, String charset) {
     long totalSize = 0;
     try {
-      ZipFile zipFile = new ZipFile(zipFilePath,Charset.forName(charset));
+      ZipFile zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {
         ZipEntry entry = entries.nextElement();
