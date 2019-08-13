@@ -1,11 +1,16 @@
-# React Native Zip Archive [![npm](https://img.shields.io/npm/dm/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive) [![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive)
+# React Native Zip Archive [![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive)
 
 Zip archive utility for react-native
 
-# IMPORTANT
 
-For react-native < 0.58, use react-native-zip-archive@3.0.1
-For react-native >= 0.58, use react-native-zip-archive@4.0.0
+## Compatibility
+
+| react-native version | react-native-zip-archive version |
+| --- | --- |
+| ^0.60 | ^5.0.0 |
+| ^0.58 | ^4.0.0 |
+| <0.58 | ^3.0.0 |
+
 
 ## Installation
 
@@ -13,120 +18,17 @@ For react-native >= 0.58, use react-native-zip-archive@4.0.0
 npm install react-native-zip-archive --save
 ```
 
+
 ## Linking
 
-### Automatically (Recommend)
+For iOS, run the command below in you app's root folder once the package has been installed
 
 ````bash
-react-native link react-native-zip-archive
+cd ./ios && pod install
 ````
 
-### Manually
+For Andriod, it's ready to go.
 
-#### iOS
-
-refer to the [official guide](https://facebook.github.io/react-native/docs/linking-libraries-ios.html),
-remember to also link `libz`, `libiconv` and `Security` to your target.(You can follow the tutorial on [this](http://docs.onemobilesdk.aol.com/ios-ad-sdk/adding-frameworks-xcode.html))
-
-#### Android
-
-* Edit `android/settings.gradle` to look like this (without the +):
-
-  ```diff
-  rootProject.name = 'MyApp'
-
-  include ':app'
-
-  + include ':react-native-zip-archive'
-  + project(':react-native-zip-archive').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-zip-archive/android')
-  ```
-
-* Edit `android/app/build.gradle` (note: **app** folder) to look like this:
-
-  ```diff
-  apply plugin: 'com.android.application'
-
-  android {
-    ...
-  }
-
-  dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:23.0.0'
-    compile 'com.facebook.react:react-native:0.16.+'
-  + compile project(':react-native-zip-archive')
-  }
-  ```
-
-* For react-native blew 0.19.0
-  - Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
-
-  ```diff
-  + import import com.rnziparchive.RNZipArchivePackage;
-
-  ....
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
-      mReactRootView = new ReactRootView(this);
-
-      mReactInstanceManager = ReactInstanceManager.builder()
-        .setApplication(getApplication())
-        .setBundleAssetName("index.android.bundle")
-        .setJSMainModuleName("index.android")
-        .addPackage(new MainReactPackage())
-  +     .addPackage(new RNZipArchivePackage())
-        .setUseDeveloperSupport(BuildConfig.DEBUG)
-        .setInitialLifecycleState(LifecycleState.RESUMED)
-        .build();
-
-      mReactRootView.startReactApplication(mReactInstanceManager, "ExampleRN", null);
-
-      setContentView(mReactRootView);
-    }
-  ```
-
-* react-native 0.19.0 and higher
-
-  - Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
-
-  ```diff
-  package com.myapp;
-
-  + import com.rnziparchive.RNZipArchivePackage;
-
-  ....
-
-    @Override
-    protected List<ReactPackage> getPackages() {
-      return Arrays.<ReactPackage>asList(
-        new MainReactPackage(),
-  +     new RNZipArchivePackage()
-      );
-    }
-
-  }
-  ```
-
-* For react-native 0.29.0 and higher ( in MainApplication.java )
-
-  - Edit your `MainApplication.java` (deep in `android/app/src/main/java/...`) to look like this (note **three** places to edit):
-
-  ```diff
-  + import com.rnziparchive.RNZipArchivePackage;
-
-  public class MainApplication extends Application implements ReactApplication {
-    ...
-      @Override
-      protected List<ReactPackage> getPackages() {
-        return Arrays.<ReactPackage>asList(
-  -       new MainReactPackage()
-  +       new MainReactPackage(),
-  +       new RNZipArchivePackage()
-        );
-      }
-  ```
 
 ## Usage
 
@@ -142,9 +44,10 @@ you may also want to use something like [react-native-fs](https://github.com/joh
 import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 ```
 
+
 ## API
 
-**zip(source: string, target: string): Promise**
+**`zip(source: string, target: string): Promise<string>`**
 
 > zip source to target
 
@@ -163,7 +66,7 @@ zip(sourcePath, targetPath)
 })
 ```
 
-**zipWithPassword(source: string, target: string, password: string, encryptionType: string): Promise**
+**`zipWithPassword(source: string, target: string, password: string, encryptionType: string): Promise<string>`**
 
 > zip source to target
 
@@ -195,7 +98,7 @@ Example
 ```js
 const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
 const targetPath = DocumentDirectoryPath
-const charset = 'UTF-8' 
+const charset = 'UTF-8'
 // charset possible values: UTF-8, GBK, US-ASCII and so on. If none was passed, default value is UTF-8
 
 
@@ -208,7 +111,7 @@ unzip(sourcePath, targetPath, charset)
 })
 ```
 
-**unzipWithPassword(source: string, target: string, password: string): Promise**
+**`unzipWithPassword(source: string, target: string, password: string): Promise<string>`**
 
 > unzip from source to target
 
@@ -228,7 +131,7 @@ unzipWithPassword(sourcePath, targetPath, password)
 })
 ```
 
-**unzipAssets(assetPath: string, target: string): Promise**
+**`unzipAssets(assetPath: string, target: string): Promise<string>`**
 
 > unzip file from Android `assets` folder to target path
 
@@ -237,7 +140,7 @@ unzipWithPassword(sourcePath, targetPath, password)
 `assetPath` is the relative path to the file inside the pre-bundled assets folder, e.g. `folder/myFile.zip`. ***Do not pass an absolute directory.***
 
 ```js
-const assetPath = `${DocumentDirectoryPath}/myFile.zip`
+const assetPath = './myFile.zip'
 const targetPath = DocumentDirectoryPath
 
 unzipAssets(assetPath, targetPath)
@@ -249,7 +152,7 @@ unzipAssets(assetPath, targetPath)
 })
 ```
 
-**subscribe(callback: ({ progress: number, filePath: string })): EmitterSubscription**
+**`subscribe(callback: ({ progress: number, filePath: string }) => void): EmitterSubscription`**
 
 > Subscribe to the progress callbacks. Useful for displaying a progress bar on your UI during the process.
 
@@ -276,6 +179,8 @@ componentWillUnmount() {
 }
 ```
 
+
 ## Related Projects
 
 - [ZipArchive](https://github.com/ZipArchive/ZipArchive)
+- [zip4j](https://github.com/srikanth-lingala/zip4j)
