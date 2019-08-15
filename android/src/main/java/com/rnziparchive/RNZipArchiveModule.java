@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -303,33 +304,14 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void zip(String fileOrDirectory, String destDirectory, Promise promise) {
-    List<String> filePaths = new ArrayList<>();
+    try{
 
-    String fromDirectory;
-    try {
-      File tmp = new File(fileOrDirectory);
-      if (tmp.exists()) {
-        if (tmp.isDirectory()) {
-          fromDirectory = fileOrDirectory;
-          List<File> files = getSubFiles(tmp, true);
-          for (int i = 0; i < files.size(); i++) {
-            filePaths.add(files.get(i).getAbsolutePath());
-          }
-        } else {
-          fromDirectory = fileOrDirectory.substring(0, fileOrDirectory.lastIndexOf("/"));
-          filePaths.add(fileOrDirectory);
-        }
-      } else {
-        throw new FileNotFoundException(fileOrDirectory);
-      }
-    } catch (FileNotFoundException | NullPointerException e) {
-      promise.reject(null, "Couldn't open file/directory " + fileOrDirectory + ".");
-      return;
-    }
+      ZipParameters parameters = new ZipParameters();
+      parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+      parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 
-    try {
-      String[] filePathArray = filePaths.toArray(new String[filePaths.size()]);
-      new ZipTask(filePathArray, destDirectory, fromDirectory, promise, this).zip();
+      processZip(fileOrDirectory, destDirectory, parameters, promise);
+
     } catch (Exception ex) {
       promise.reject(null, ex.getMessage());
       return;
@@ -337,47 +319,54 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void zipWithPassword(final String fileOrDirectory, final String destDirectory, final String password,
-      final String encryptionMethod, final Promise promise) {
+  public void zipWithPassword(String fileOrDirectory, String destDirectory, String password,
+      String encryptionMethod, Promise promise) {
+    try{
+
+      ZipParameters parameters = new ZipParameters();
+      parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+      parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+
+      String encParts[] = _encryptionMethod.split("-");
+
+      if (password != null && !password.isEmpty()) {
+        parameters.setEncryptFiles(true);
+        if (encParts[0].equals("AES")) {
+          parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_AES);
+          if (encParts[1].equals("128")) {
+            parameters.setAesKeyStrength(Zip4jConstants.AES_STRENGTH_128);
+          } else if (encParts[1].equals("256")) {
+            parameters.setAesKeyStrength(Zip4jConstants.AES_STRENGTH_256);
+          } else {
+            parameters.setAesKeyStrength(Zip4jConstants.ENC_METHOD_STANDARD);
+          }
+        } else if (_encryptionMethod.equals("STANDARD")) {
+          parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
+          Log.d(TAG, "Standard Encryption");
+        } else {
+          parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
+          Log.d(TAG, "Encryption type not supported default to Standard Encryption");
+        }
+        parameters.setPassword(password);
+      } else {
+        promise.reject(null, "Password is empty");
+      }
+
+      processZip(fileOrDirectory, destDirectory, parameters, promise);
+
+    } catch (Exception ex) {
+      promise.reject(null, ex.getMessage());
+      return;
+    }
+
+  }
+
+  private void processZip(final String fileOrDirectory, final String destDirectory, final ZipParameters parameters, final Promise promise) {
     new Thread(new Runnable() {
       @Override
       public void run() {
-        String _encryptionMethod = encryptionMethod;
-        if (_encryptionMethod == null) {
-          _encryptionMethod = "STANDARD";
-        }
-
         try {
           net.lingala.zip4j.core.ZipFile zipFile = new net.lingala.zip4j.core.ZipFile(destDirectory);
-
-          ZipParameters parameters = new ZipParameters();
-          parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
-          parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-
-          String encParts[] = _encryptionMethod.split("-");
-
-          if (password != null && !password.isEmpty()) {
-            parameters.setEncryptFiles(true);
-            if (encParts[0].equals("AES")) {
-              parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_AES);
-              if (encParts[1].equals("128")) {
-                parameters.setAesKeyStrength(Zip4jConstants.AES_STRENGTH_128);
-              } else if (encParts[1].equals("256")) {
-                parameters.setAesKeyStrength(Zip4jConstants.AES_STRENGTH_256);
-              } else {
-                parameters.setAesKeyStrength(Zip4jConstants.ENC_METHOD_STANDARD);
-              }
-            } else if (_encryptionMethod.equals("STANDARD")) {
-              parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
-              Log.d(TAG, "Standard Encryption");
-            } else {
-              parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
-              Log.d(TAG, "Encryption type not supported default to Standard Encryption");
-            }
-            parameters.setPassword(password);
-          } else {
-            promise.reject(null, "Password is empty");
-          }
 
           updateProgress(0, 100, destDirectory);
 
@@ -389,7 +378,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           if (f.exists()) {
             if (f.isDirectory()) {
 
-              List<File> files = getSubFiles(f, true);
+              List<File> files = Arrays.asList(f.listFiles());
 
               totalFiles = files.size();
               for (int i = 0; i < files.size(); i++) {
@@ -423,23 +412,6 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         }
       }
     }).start();
-  }
-
-  private List<File> getSubFiles(File baseDir, boolean isContainFolder) {
-    List<File> fileList = new ArrayList<>();
-    File[] tmpList = baseDir.listFiles();
-    for (File file : tmpList) {
-      if (file.isFile()) {
-        fileList.add(file);
-      }
-      if (file.isDirectory()) {
-        if (isContainFolder) {
-          fileList.add(file); //key code
-        }
-        fileList.addAll(getSubFiles(file, isContainFolder));
-      }
-    }
-    return fileList;
   }
 
   protected void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
