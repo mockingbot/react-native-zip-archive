@@ -310,7 +310,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
       parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 
-      ProcessZip(fileOrDirectory, destDirectory, parameters, promise);
+      processZip(fileOrDirectory, destDirectory, parameters, promise);
 
     } catch (Exception ex) {
       promise.reject(null, ex.getMessage());
@@ -352,7 +352,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         promise.reject(null, "Password is empty");
       }
 
-      ProcessZip(fileOrDirectory, destDirectory, parameters, promise);
+      processZip(fileOrDirectory, destDirectory, parameters, promise);
 
     } catch (Exception ex) {
       promise.reject(null, ex.getMessage());
@@ -361,7 +361,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   }
 
-  private void ProcessZip(final String fileOrDirectory, final String destDirectory, final ZipParameters parameters, final Promise promise) {
+  private void processZip(final String fileOrDirectory, final String destDirectory, final ZipParameters parameters, final Promise promise) {
     new Thread(new Runnable() {
       @Override
       public void run() {
