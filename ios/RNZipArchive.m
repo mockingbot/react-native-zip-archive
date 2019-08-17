@@ -37,15 +37,16 @@ RCT_EXPORT_METHOD(unzip:(NSString *)from
 
     [self zipArchiveProgressEvent:0 total:1 filePath:from]; // force 0%
 
-    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:nil error:nil delegate:self];
+    NSError *error = nil;
+
+    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:nil error:&error delegate:self];
 
     [self zipArchiveProgressEvent:1 total:1 filePath:from]; // force 100%
 
     if (success) {
         resolve(destinationPath);
     } else {
-        NSError *error = nil;
-        reject(@"unzip_error", @"unable to unzip", error);
+        reject(@"unzip_error", [error localizedDescription], error);
     }
 }
 
@@ -57,14 +58,15 @@ RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
 
     [self zipArchiveProgressEvent:0 total:1 filePath:from]; // force 0%
 
-    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:password error:nil delegate:self];
+    NSError *error = nil;
+
+    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:password error:&error delegate:self];
 
     [self zipArchiveProgressEvent:1 total:1 filePath:from]; // force 100%
 
     if (success) {
         resolve(destinationPath);
     } else {
-        NSError *error = nil;
         reject(@"unzip_error", @"unable to unzip", error);
     }
 }
@@ -104,7 +106,7 @@ RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
     [self zipArchiveProgressEvent:0 total:1 filePath:destinationPath]; // force 0%
-    
+
     NSFileManager *fileManager = [[NSFileManager alloc] init];
     BOOL isDir;
     BOOL success;
@@ -114,9 +116,9 @@ RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
     } else {
         success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:@[from] withPassword:password];
     }
-    
+
     [self zipArchiveProgressEvent:1 total:1 filePath:destinationPath]; // force 100%
-    
+
     if (success) {
         resolve(destinationPath);
     } else {
