@@ -33,6 +33,7 @@
     }
   },
   "devDependencies": {
+    "@babel/core": "*",
     "eslint": "^4.8.12",
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-import": "^2.7.0",
@@ -41,11 +42,11 @@
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-react": "^7.5.1",
     "eslint-plugin-standard": "^3.0.1",
-    "react": "^16.2.0",
-    "react-native": ">=0.51.0 <1.0.0"
+    "react": "<=16.8.3",
+    "react-native": ">=0.51.0 <0.60.0"
   },
   "peerDependencies": {
-    "react": "^16.2.0",
-    "react-native": ">=0.51.0 <1.0.0"
+    "react": "<=16.8.3",
+    "react-native": ">=0.51.0 <0.60.0"
   }
 }
