@@ -327,7 +327,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
       parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 
-      String encParts[] = _encryptionMethod.split("-");
+      String encParts[] = encryptionMethod.split("-");
 
       if (password != null && !password.isEmpty()) {
         parameters.setEncryptFiles(true);
@@ -340,7 +340,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           } else {
             parameters.setAesKeyStrength(Zip4jConstants.ENC_METHOD_STANDARD);
           }
-        } else if (_encryptionMethod.equals("STANDARD")) {
+        } else if (encryptionMethod.equals("STANDARD")) {
           parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD);
           Log.d(TAG, "Standard Encryption");
         } else {
