@@ -3,18 +3,19 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "start": "react-native start",
     "test": "jest",
     "postinstall": "node ./scripts/postinstall.js"
   },
   "dependencies": {
-    "react": "16.6.3",
-    "react-native": "0.58.6",
+    "react": "16.8.6",
+    "react-native": "0.60.4",
     "react-native-cli": "^2.0.1",
-    "react-native-custom-tabs": "^0.1.7",
+    "react-native-custom-tabs": "git://github.com/droibit/react-native-custom-tabs.git#63d2e75a27441cd492d6dcfa8df35cce0391b620",
     "react-native-document-picker": "^2.1.0",
     "react-native-fs": "^2.9.12",
     "react-native-really-awesome-button": "^0.8.3",
+    "react-native-webview": "^6.3.1",
     "react-native-zip-archive": "file:../"
   },
   "devDependencies": {
