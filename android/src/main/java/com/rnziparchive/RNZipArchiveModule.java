@@ -1,6 +1,7 @@
 package com.rnziparchive;
 
 import android.content.res.AssetFileDescriptor;
+import android.os.Build;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -141,7 +142,13 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           final long[] extractedBytes = {0};
           final int[] lastPercentage = {0};
 
-          final ZipFile zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
+          ZipFile zipFile = null;
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
+          } else {
+            zipFile = new ZipFile(zipFilePath);
+          }
+
           final Enumeration<? extends ZipEntry> entries = zipFile.entries();
           Log.d(TAG, "Zip has " + zipFile.size() + " entries");
           while (entries.hasMoreElements()) {
@@ -434,7 +441,12 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private long getUncompressedSize(String zipFilePath, String charset) {
     long totalSize = 0;
     try {
-      ZipFile zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
+      ZipFile zipFile = null;
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
+      } else {
+        zipFile = new ZipFile(zipFilePath);
+      }
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {
         ZipEntry entry = entries.nextElement();
