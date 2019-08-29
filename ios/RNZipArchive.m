@@ -18,6 +18,8 @@
 @implementation RNZipArchive
 
 @synthesize bridge = _bridge;
+@synthesize unzipProgress;
+@synthesize unzippedFilePath;
 
 RCT_EXPORT_MODULE();
 
@@ -34,14 +36,16 @@ RCT_EXPORT_METHOD(unzip:(NSString *)from
                   charset:(NSString *)charset
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
-
-    [self zipArchiveProgressEvent:0 total:1 filePath:from]; // force 0%
+    self.unzipProgress = 0.0;
+    self.unzippedFilePath = @"";
+    [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
     NSError *error = nil;
 
     BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:nil error:&error delegate:self];
 
-    [self zipArchiveProgressEvent:1 total:1 filePath:from]; // force 100%
+    self.unzipProgress = 1.0;
+    [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
     if (success) {
         resolve(destinationPath);
@@ -55,14 +59,16 @@ RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
                   password:(NSString *)password
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
-
-    [self zipArchiveProgressEvent:0 total:1 filePath:from]; // force 0%
+    self.unzipProgress = 0.0;
+    self.unzippedFilePath = @"";
+    [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
     NSError *error = nil;
 
     BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:password error:&error delegate:self];
 
-    [self zipArchiveProgressEvent:1 total:1 filePath:from]; // force 100%
+    self.unzipProgress = 1.0;
+    [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
     if (success) {
         resolve(destinationPath);
@@ -75,8 +81,9 @@ RCT_EXPORT_METHOD(zip:(NSString *)from
                   destinationPath:(NSString *)destinationPath
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
-
-    [self zipArchiveProgressEvent:0 total:1 filePath:destinationPath]; // force 0%
+    self.unzipProgress = 0.0;
+    self.unzippedFilePath = @"";
+    [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
     NSFileManager *fileManager = [[NSFileManager alloc] init];
     BOOL isDir;
@@ -88,7 +95,8 @@ RCT_EXPORT_METHOD(zip:(NSString *)from
         success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:@[from]];
     }
 
-    [self zipArchiveProgressEvent:1 total:1 filePath:destinationPath]; // force 100%
+    self.unzipProgress = 1.0;
+    [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
     if (success) {
         resolve(destinationPath);
@@ -105,7 +113,9 @@ RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
                   encryptionType:(NSString *)encryptionType
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
-    [self zipArchiveProgressEvent:0 total:1 filePath:destinationPath]; // force 0%
+    self.unzipProgress = 0.0;
+    self.unzippedFilePath = @"";
+    [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
     NSFileManager *fileManager = [[NSFileManager alloc] init];
     BOOL isDir;
@@ -117,7 +127,8 @@ RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
         success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:@[from] withPassword:password];
     }
 
-    [self zipArchiveProgressEvent:1 total:1 filePath:destinationPath]; // force 100%
+    self.unzipProgress = 1.0;
+    [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
     if (success) {
         resolve(destinationPath);
@@ -131,10 +142,20 @@ RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
     return dispatch_queue_create("com.mockingbot.ReactNative.ZipArchiveQueue", DISPATCH_QUEUE_SERIAL);
 }
 
-- (void)zipArchiveProgressEvent:(unsigned long long)loaded total:(unsigned long long)total filePath:(NSString *)filePath {
+- (void)zipArchiveProgressEvent:(unsigned long long)loaded total:(unsigned long long)total  {
+    self.unzipProgress = (float)loaded / (float)total;
+    [self dispatchProgessEvent:self.unzipProgress unzippedFilePath:self.unzippedFilePath];
+}
+
+- (void)zipArchiveDidUnzipFileAtIndex:(NSInteger)fileIndex totalFiles:(NSInteger)totalFiles archivePath:(NSString *)archivePath unzippedFilePath:(NSString *)unzippedFilePath {
+    self.unzippedFilePath = unzippedFilePath;
+    [self dispatchProgessEvent:self.unzipProgress unzippedFilePath:self.unzippedFilePath];
+}
+
+- (void)dispatchProgessEvent:(float)progress unzippedFilePath:(NSString *)unzippedFilePath {
     [self.bridge.eventDispatcher sendAppEventWithName:@"zipArchiveProgressEvent" body:@{
-                                                                                        @"progress": @((float)loaded / (float)total),
-                                                                                        @"filePath": filePath
+                                                                                        @"progress": @(progress),
+                                                                                        @"filePath": unzippedFilePath
                                                                                         }];
 }
 

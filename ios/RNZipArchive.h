@@ -14,6 +14,12 @@
 #endif
 #import "SSZipArchive/SSZipArchive.h"
 
-@interface RNZipArchive : NSObject<RCTBridgeModule, SSZipArchiveDelegate>
+@interface RNZipArchive : NSObject<RCTBridgeModule, SSZipArchiveDelegate>{
+    NSString *unzippedFilePath;
+    float unzipProgress;
+}
+
+@property (nonatomic) NSString *unzippedFilePath;
+@property (nonatomic) float unzipProgress;
 
 @end
