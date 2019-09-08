@@ -31,3 +31,7 @@ npm-debug.log
 /*.tgz
 example/
 yarn.lock
+
+# windows
+windows/.vs/
+windows/ARM/

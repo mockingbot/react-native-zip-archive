@@ -123,3 +123,12 @@ captures/
 
 # npm pack output
 /*.tgz
+
+# windows
+windows/.vs/
+windows/ARM/
+windows/x64/
+windows/x86/
+windows/RNZipArchive/Backup/
+windows/RNZipArchive/bin/
+windows/RNZipArchive/obj/
