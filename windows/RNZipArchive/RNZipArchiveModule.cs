@@ -55,7 +55,7 @@ namespace RNZipArchive
         }
 
         [ReactMethod]
-        public void unzip(string source, string target, string charset, JObject options, IPromise promise)
+        public void unzip(string source, string target, string charset, IPromise promise)
         {
             try
             {
@@ -88,7 +88,7 @@ namespace RNZipArchive
         }
 
         [ReactMethod]
-        public void unzipWithPassword(string source, string target, string password, JObject options, IPromise promise)
+        public void unzipWithPassword(string source, string target, string password, IPromise promise)
         {
             try
             {
@@ -113,7 +113,7 @@ namespace RNZipArchive
         }
 
         [ReactMethod]
-        public void zip(string source, string target, JObject options, IPromise promise)
+        public void zip(string source, string target, IPromise promise)
         {
             try
             {
@@ -137,7 +137,7 @@ namespace RNZipArchive
         }
 
         [ReactMethod]
-        public void zipWithPassword(string source, string target, string password, string encryptionMethod, JObject options, IPromise promise)
+        public void zipWithPassword(string source, string target, string password, string encryptionMethod, IPromise promise)
         {
             try
             {
@@ -162,7 +162,7 @@ namespace RNZipArchive
         }
 
         [ReactMethod]
-        public void isPasswordProtected(string source, JObject options, IPromise promise)
+        public void isPasswordProtected(string source, IPromise promise)
         {
             try
             {
