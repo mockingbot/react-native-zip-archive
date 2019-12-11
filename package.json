@@ -25,13 +25,8 @@
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "*",
-    "eslint": "^6.1.0",
-    "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-node": "^9.1.0",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-react": "^7.14.3",
-    "eslint-plugin-standard": "^3.0.1",
+    "@react-native-community/eslint-config": "^0.0.5",
+    "eslint": "^6.7.2",
     "react": "^16.8.6",
     "react-native": "^0.60.0"
   },
