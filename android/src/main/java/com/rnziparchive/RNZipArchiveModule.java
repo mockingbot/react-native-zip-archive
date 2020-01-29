@@ -153,6 +153,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           Log.d(TAG, "Zip has " + zipFile.size() + " entries");
           while (entries.hasMoreElements()) {
             final ZipEntry entry = entries.nextElement();
+            ensureZipPathSafety(new File(new File(zipFilePath).getParent() + "/" + entry.getName()), destDirectory);
             if (entry.isDirectory()) continue;
 
             StreamUtil.ProgressCallback cb = new StreamUtil.ProgressCallback() {
