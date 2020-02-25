@@ -6,20 +6,14 @@
 //  Copyright (c) 2015 Perry Poon. All rights reserved.
 //
 
-
-#if __has_include(<React/RCTBridgeModule.h>)
-#import <React/RCTBridgeModule.h>
-#else
-#import "RCTBridgeModule.h"
-#endif
 #import "SSZipArchive/SSZipArchive.h"
+#import <React/RCTBridgeModule.h>
+#import <React/RCTEventEmitter.h>
 
-@interface RNZipArchive : NSObject<RCTBridgeModule, SSZipArchiveDelegate>{
-    NSString *unzippedFilePath;
-    float unzipProgress;
-}
+@interface RNZipArchive : RCTEventEmitter<RCTBridgeModule, SSZipArchiveDelegate>
 
-@property (nonatomic) NSString *unzippedFilePath;
-@property (nonatomic) float unzipProgress;
+@property (nonatomic) NSString *processedFilePath;
+@property (nonatomic) float progress;
+@property (nonatomic, copy) void (^progressHandler)(NSUInteger entryNumber, NSUInteger total);
 
 @end

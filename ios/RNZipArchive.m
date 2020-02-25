@@ -18,10 +18,13 @@
 @implementation RNZipArchive
 
 @synthesize bridge = _bridge;
-@synthesize unzipProgress;
-@synthesize unzippedFilePath;
 
 RCT_EXPORT_MODULE();
+
+- (NSArray<NSString *> *)supportedEvents
+{
+  return @[@"zipArchiveProgressEvent"];
+}
 
 RCT_EXPORT_METHOD(isPasswordProtected:(NSString *)file
                   resolver:(RCTPromiseResolveBlock)resolve
@@ -36,15 +39,15 @@ RCT_EXPORT_METHOD(unzip:(NSString *)from
                   charset:(NSString *)charset
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
-    self.unzipProgress = 0.0;
-    self.unzippedFilePath = @"";
+    self.progress = 0.0;
+    self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
     NSError *error = nil;
 
     BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:nil error:&error delegate:self];
 
-    self.unzipProgress = 1.0;
+    self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
     if (success) {
@@ -59,15 +62,15 @@ RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
                   password:(NSString *)password
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
-    self.unzipProgress = 0.0;
-    self.unzippedFilePath = @"";
+    self.progress = 0.0;
+    self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
     NSError *error = nil;
 
     BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:password error:&error delegate:self];
 
-    self.unzipProgress = 1.0;
+    self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
     if (success) {
@@ -81,21 +84,15 @@ RCT_EXPORT_METHOD(zip:(NSString *)from
                   destinationPath:(NSString *)destinationPath
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
-    self.unzipProgress = 0.0;
-    self.unzippedFilePath = @"";
+    self.progress = 0.0;
+    self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
-    NSFileManager *fileManager = [[NSFileManager alloc] init];
-    BOOL isDir;
     BOOL success;
-    [fileManager fileExistsAtPath:from isDirectory:&isDir];
-    if (isDir) {
-        success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from];
-    } else {
-        success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:@[from]];
-    }
+    [self setProgressHandler];
+    success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from keepParentDirectory:NO withPassword:nil andProgressHandler:self.progressHandler];
 
-    self.unzipProgress = 1.0;
+    self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
     if (success) {
@@ -113,21 +110,15 @@ RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
                   encryptionType:(NSString *)encryptionType
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
-    self.unzipProgress = 0.0;
-    self.unzippedFilePath = @"";
+    self.progress = 0.0;
+    self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
-    NSFileManager *fileManager = [[NSFileManager alloc] init];
-    BOOL isDir;
     BOOL success;
-    [fileManager fileExistsAtPath:from isDirectory:&isDir];
-    if (isDir) {
-        success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from withPassword:password];
-    } else {
-        success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:@[from] withPassword:password];
-    }
+    [self setProgressHandler];
+    success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from keepParentDirectory:NO withPassword:password andProgressHandler:self.progressHandler];
 
-    self.unzipProgress = 1.0;
+    self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
     if (success) {
@@ -143,20 +134,24 @@ RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
 }
 
 - (void)zipArchiveProgressEvent:(unsigned long long)loaded total:(unsigned long long)total  {
-    self.unzipProgress = (float)loaded / (float)total;
-    [self dispatchProgessEvent:self.unzipProgress unzippedFilePath:self.unzippedFilePath];
+    self.progress = (float)loaded / (float)total;
+    [self dispatchProgessEvent:self.progress processedFilePath:self.processedFilePath];
 }
 
-- (void)zipArchiveDidUnzipFileAtIndex:(NSInteger)fileIndex totalFiles:(NSInteger)totalFiles archivePath:(NSString *)archivePath unzippedFilePath:(NSString *)unzippedFilePath {
-    self.unzippedFilePath = unzippedFilePath;
-    [self dispatchProgessEvent:self.unzipProgress unzippedFilePath:self.unzippedFilePath];
+- (void)zipArchiveDidUnzipFileAtIndex:(NSInteger)fileIndex totalFiles:(NSInteger)totalFiles archivePath:(NSString *)archivePath unzippedFilePath:(NSString *)processedFilePath {
+    self.processedFilePath = processedFilePath;
+    [self dispatchProgessEvent:self.progress processedFilePath:self.processedFilePath];
 }
 
-- (void)dispatchProgessEvent:(float)progress unzippedFilePath:(NSString *)unzippedFilePath {
-    [self.bridge.eventDispatcher sendAppEventWithName:@"zipArchiveProgressEvent" body:@{
-                                                                                        @"progress": @(progress),
-                                                                                        @"filePath": unzippedFilePath
-                                                                                        }];
+- (void)setProgressHandler {
+    __weak RNZipArchive *weakSelf = self;
+    self.progressHandler = ^(NSUInteger entryNumber, NSUInteger total) {
+        [weakSelf zipArchiveProgressEvent:entryNumber total:total];
+    };
+}
+
+- (void)dispatchProgessEvent:(float)progress processedFilePath:(NSString *)processedFilePath {
+    [self sendEventWithName:@"zipArchiveProgressEvent" body:@{@"progress": @(progress), @"filePath": processedFilePath}];
 }
 
 @end
