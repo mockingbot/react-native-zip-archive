@@ -51,6 +51,8 @@ import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 
 > zip source to target
 
+***NOTE: only support zip folder, not file entries***
+
 Example
 
 ```js
@@ -62,7 +64,7 @@ zip(sourcePath, targetPath)
   console.log(`zip completed at ${path}`)
 })
 .catch((error) => {
-  console.log(error)
+  console.error(error)
 })
 ```
 
@@ -70,7 +72,9 @@ zip(sourcePath, targetPath)
 
 > zip source to target
 
-*NOTE: encryptionType is not supported on iOS yet, so it would be igonred on that platform.*
+***NOTE: only support zip folder, not file entries***
+
+***NOTE: encryptionType is not supported on iOS yet, so it would be igonred on that platform.***
 
 Example
 
@@ -85,11 +89,11 @@ zipWithPassword(sourcePath, targetPath, password, encryptionType)
   console.log(`zip completed at ${path}`)
 })
 .catch((error) => {
-  console.log(error)
+  console.error(error)
 })
 ```
 
-**unzip(source: string, target: string): Promise**
+**`unzip(source: string, target: string): Promise<string>`**
 
 > unzip from source to target
 
@@ -107,7 +111,7 @@ unzip(sourcePath, targetPath, charset)
   console.log(`unzip completed at ${path}`)
 })
 .catch((error) => {
-  console.log(error)
+  console.error(error)
 })
 ```
 
@@ -127,7 +131,7 @@ unzipWithPassword(sourcePath, targetPath, password)
   console.log(`unzip completed at ${path}`)
 })
 .catch((error) => {
-  console.log(error)
+  console.error(error)
 })
 ```
 
@@ -135,7 +139,7 @@ unzipWithPassword(sourcePath, targetPath, password)
 
 > unzip file from Android `assets` folder to target path
 
-*Note: Android only.*
+***Note: Android only.***
 
 `assetPath` is the relative path to the file inside the pre-bundled assets folder, e.g. `folder/myFile.zip`. ***Do not pass an absolute directory.***
 
@@ -144,11 +148,11 @@ const assetPath = './myFile.zip'
 const targetPath = DocumentDirectoryPath
 
 unzipAssets(assetPath, targetPath)
-.then(() => {
-  console.log('unzip completed!')
+.then((path) => {
+  console.log(`unzip completed at ${path}`)
 })
 .catch((error) => {
-  console.log(error)
+  console.error(error)
 })
 ```
 
@@ -162,14 +166,15 @@ Your callback will be passed an object with the following fields:
 - `filePath` (string)  the zip file path of zipped or unzipped file.
 
 
-*Note: Remember to check the filename while processing progress, to be sure that the unzipped or zipped file is the right one, because the event is global.*
+***Note: Remember to check the filename while processing progress, to be sure that the unzipped or zipped file is the right one, because the event is global.***
 
-*Note: Remember to unsubscribe! Run .remove() on the object returned by this method.*
+***Note: Remember to unsubscribe! Run .remove() on the object returned by this method.***
 
 ```js
 componentDidMount() {
   this.zipProgress = subscribe(({ progress, filePath }) => {
-    this.setState({ zipProgress: progress })
+    // the filePath is always empty on iOS for zipping.
+    console.log(`progress: ${progress}\nprocessed at: ${filePath}`)
   })
 }
 
@@ -178,6 +183,9 @@ componentWillUnmount() {
   this.zipProgress.remove()
 }
 ```
+
+## Example App
+You can use this repo, https://github.com/plrthink/RNZATestApp, for testing and contribution. For more information please refer to its README.
 
 
 ## Related Projects
