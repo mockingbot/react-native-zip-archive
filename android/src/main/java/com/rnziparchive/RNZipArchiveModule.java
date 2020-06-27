@@ -10,6 +10,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.io.BufferedInputStream;
@@ -324,23 +325,33 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void zip(String fileOrDirectory, String destDirectory, Promise promise) {
-    try{
-
-      ZipParameters parameters = new ZipParameters();
-      parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
-      parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-
-      processZip(fileOrDirectory, destDirectory, parameters, promise);
-
-    } catch (Exception ex) {
-      promise.reject(null, ex.getMessage());
-      return;
-    }
+  public void zipFiles(final ReadableArray files, final String destDirectory, final Promise promise) {
+    zip(files.toArrayList(), destDirectory, promise);
   }
 
   @ReactMethod
-  public void zipWithPassword(String fileOrDirectory, String destDirectory, String password,
+  public void zipFolder(final String folder, final String destFile, final Promise promise) {
+    ArrayList<Object> folderAsArrayList = new ArrayList<>();
+    folderAsArrayList.add(folder);
+    zip(folderAsArrayList, destFile, promise);
+  }
+
+  @ReactMethod
+  public void zipFilesWithPassword(final ReadableArray files, final String destFile, final String password,
+                              String encryptionMethod, Promise promise) {
+    zipWithPassword(files.toArrayList(), destFile, password, encryptionMethod, promise);
+  }
+
+
+  @ReactMethod
+  public void zipFolderWithPassword(final String folder, final String destFile, final String password,
+                                   String encryptionMethod, Promise promise) {
+    ArrayList<Object> folderAsArrayList = new ArrayList<>();
+    folderAsArrayList.add(folder);
+    zipWithPassword(folderAsArrayList, destFile, password, encryptionMethod, promise);
+  }
+
+  private void zipWithPassword(final ArrayList<Object> filesOrDirectory, final String destFile, final String password,
       String encryptionMethod, Promise promise) {
     try{
 
@@ -373,7 +384,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         promise.reject(null, "Password is empty");
       }
 
-      processZip(fileOrDirectory, destDirectory, parameters, promise);
+      processZip(filesOrDirectory, destFile, parameters, promise);
 
     } catch (Exception ex) {
       promise.reject(null, ex.getMessage());
@@ -382,51 +393,67 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   }
 
-  private void processZip(final String fileOrDirectory, final String destDirectory, final ZipParameters parameters, final Promise promise) {
+  private void zip(final ArrayList<Object> filesOrDirectory, final String destFile, final Promise promise) {
+    try{
+
+      ZipParameters parameters = new ZipParameters();
+      parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+      parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+
+      processZip(filesOrDirectory, destFile, parameters, promise);
+
+    } catch (Exception ex) {
+      promise.reject(null, ex.getMessage());
+      return;
+    }
+  }
+
+  private void processZip(final ArrayList<Object> entries, final String destFile, final ZipParameters parameters, final Promise promise) {
     new Thread(new Runnable() {
       @Override
       public void run() {
         try {
-          net.lingala.zip4j.core.ZipFile zipFile = new net.lingala.zip4j.core.ZipFile(destDirectory);
+          net.lingala.zip4j.core.ZipFile zipFile = new net.lingala.zip4j.core.ZipFile(destFile);
 
-          updateProgress(0, 100, destDirectory);
-
-          File f = new File(fileOrDirectory);
+          updateProgress(0, 100, destFile);
 
           int totalFiles = 0;
           int fileCounter = 0;
 
-          if (f.exists()) {
-            if (f.isDirectory()) {
+          for (int i = 0; i < entries.size(); i++) {
+            File f = new File(entries.get(i).toString());
 
-              List<File> files = Arrays.asList(f.listFiles());
+            if (f.exists()) {
+              if (f.isDirectory()) {
 
-              totalFiles = files.size();
-              for (int i = 0; i < files.size(); i++) {
-                if (files.get(i).isDirectory()) {
-                  zipFile.addFolder(files.get(i).getAbsolutePath(), parameters);
+                List<File> files = Arrays.asList(f.listFiles());
+
+                totalFiles += files.size();
+                for (int j = 0; j < files.size(); j++) {
+                  if (files.get(j).isDirectory()) {
+                    zipFile.addFolder(files.get(j).getAbsolutePath(), parameters);
+                  }
+                  else {
+                    zipFile.addFile(files.get(j), parameters);
+                  }
+                  fileCounter += 1;
+                  updateProgress(fileCounter, totalFiles, destFile);
                 }
-                else {
-                  zipFile.addFile(files.get(i), parameters);
-                }
+
+              } else {
+                totalFiles += 1;
+                zipFile.addFile(f, parameters);
                 fileCounter += 1;
-                updateProgress(fileCounter, totalFiles, destDirectory);
+                updateProgress(fileCounter, totalFiles, destFile);
               }
-
-            } else {
-              totalFiles = 1;
-              zipFile.addFile(f, parameters);
-              fileCounter += 1;
-              updateProgress(fileCounter, totalFiles, destDirectory);
             }
-          }
-          else {
-            promise.reject(null, "File or folder does not exist");
-          }
+            else {
+              promise.reject(null, "File or folder does not exist");
+            }
 
-          updateProgress(1, 1, destDirectory); // force 100%
-          promise.resolve(destDirectory);
-
+            updateProgress(1, 1, destFile); // force 100%
+            promise.resolve(destFile);
+          }
         } catch (Exception ex) {
           promise.reject(null, ex.getMessage());
           return;

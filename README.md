@@ -47,7 +47,7 @@ import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 
 ## API
 
-**`zip(source: string, target: string): Promise<string>`**
+**`zip(source: string | string[], target: string): Promise<string>`**
 
 > zip source to target
 
@@ -68,7 +68,7 @@ zip(sourcePath, targetPath)
 })
 ```
 
-**`zipWithPassword(source: string, target: string, password: string, encryptionType: string): Promise<string>`**
+**`zipWithPassword(source: string | string[], target: string, password: string, encryptionType: string): Promise<string>`**
 
 > zip source to target
 
