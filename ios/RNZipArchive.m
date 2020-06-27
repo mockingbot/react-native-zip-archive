@@ -80,7 +80,7 @@ RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
     }
 }
 
-RCT_EXPORT_METHOD(zip:(NSString *)from
+RCT_EXPORT_METHOD(zipFolder:(NSString *)from
                   destinationPath:(NSString *)destinationPath
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
@@ -90,6 +90,7 @@ RCT_EXPORT_METHOD(zip:(NSString *)from
 
     BOOL success;
     [self setProgressHandler];
+
     success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from keepParentDirectory:NO withPassword:nil andProgressHandler:self.progressHandler];
 
     self.progress = 1.0;
@@ -103,8 +104,32 @@ RCT_EXPORT_METHOD(zip:(NSString *)from
     }
 }
 
+RCT_EXPORT_METHOD(zipFiles:(NSArray<NSString *> *)from
+                  destinationPath:(NSString *)destinationPath
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+    self.progress = 0.0;
+    self.processedFilePath = @"";
+    [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
-RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
+    BOOL success;
+    [self setProgressHandler];
+
+    success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:from];
+
+    self.progress = 1.0;
+    [self zipArchiveProgressEvent:1 total:1]; // force 100%
+
+    if (success) {
+        resolve(destinationPath);
+    } else {
+        NSError *error = nil;
+        reject(@"zip_error", @"unable to zip", error);
+    }
+}
+
+
+RCT_EXPORT_METHOD(zipFolderWithPassword:(NSString *)from
                   destinationPath:(NSString *)destinationPath
                   password:(NSString *)password
                   encryptionType:(NSString *)encryptionType
@@ -117,6 +142,31 @@ RCT_EXPORT_METHOD(zipWithPassword:(NSString *)from
     BOOL success;
     [self setProgressHandler];
     success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from keepParentDirectory:NO withPassword:password andProgressHandler:self.progressHandler];
+
+    self.progress = 1.0;
+    [self zipArchiveProgressEvent:1 total:1]; // force 100%
+
+    if (success) {
+        resolve(destinationPath);
+    } else {
+        NSError *error = nil;
+        reject(@"zip_error", @"unable to zip", error);
+    }
+}
+
+RCT_EXPORT_METHOD(zipFilesWithPassword:(NSArray<NSString *> *)from
+                  destinationPath:(NSString *)destinationPath
+                  password:(NSString *)password
+                  encryptionType:(NSString *)encryptionType
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+    self.progress = 0.0;
+    self.processedFilePath = @"";
+    [self zipArchiveProgressEvent:0 total:1]; // force 0%
+
+    BOOL success;
+    [self setProgressHandler];
+    success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:from withPassword:password];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
