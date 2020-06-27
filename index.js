@@ -6,17 +6,24 @@ const RNZipArchive = NativeModules.RNZipArchive;
 
 const rnzaEmitter = new NativeEventEmitter(RNZipArchive);
 
+const normalizeFilePath = path =>
+  path.startsWith("file://") ? path.slice(7) : path;
+
 export const unzip = (source, target, charset = "UTF-8") => {
-  return RNZipArchive.unzip(source, target, charset);
+  return RNZipArchive.unzip(normalizeFilePath(source), target, charset);
 };
 export const isPasswordProtected = source => {
-  return RNZipArchive.isPasswordProtected(source).then(
+  return RNZipArchive.isPasswordProtected(normalizeFilePath(source)).then(
     isEncrypted => !!isEncrypted
   );
 };
 
 export const unzipWithPassword = (source, target, password) => {
-  return RNZipArchive.unzipWithPassword(source, target, password);
+  return RNZipArchive.unzipWithPassword(
+    normalizeFilePath(source),
+    target,
+    password
+  );
 };
 
 export const zipWithPassword = (
@@ -26,7 +33,7 @@ export const zipWithPassword = (
   encryptionMethod = ""
 ) => {
   return RNZipArchive.zipWithPassword(
-    source,
+    normalizeFilePath(source),
     target,
     password,
     encryptionMethod
@@ -34,7 +41,7 @@ export const zipWithPassword = (
 };
 
 export const zip = (source, target) => {
-  return RNZipArchive.zip(source, target);
+  return RNZipArchive.zip(normalizeFilePath(source), target);
 };
 
 export const unzipAssets = (source, target) => {
@@ -42,7 +49,7 @@ export const unzipAssets = (source, target) => {
     throw new Error("unzipAssets not supported on this platform");
   }
 
-  return RNZipArchive.unzipAssets(source, target);
+  return RNZipArchive.unzipAssets(normalizeFilePath(source), target);
 };
 
 export const subscribe = callback => {
