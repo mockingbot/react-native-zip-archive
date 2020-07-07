@@ -10,7 +10,7 @@ const normalizeFilePath = (path) =>
   path.startsWith("file://") ? path.slice(7) : path;
 
 export const unzip = (source, target, charset = "UTF-8") => {
-  return RNZipArchive.unzip(normalizeFilePath(source), target, charset);
+  return RNZipArchive.unzip(normalizeFilePath(source), normalizeFilePath(target), charset);
 };
 export const isPasswordProtected = (source) => {
   return RNZipArchive.isPasswordProtected(normalizeFilePath(source)).then(
@@ -21,7 +21,7 @@ export const isPasswordProtected = (source) => {
 export const unzipWithPassword = (source, target, password) => {
   return RNZipArchive.unzipWithPassword(
     normalizeFilePath(source),
-    target,
+    normalizeFilePath(target),
     password
   );
 };
@@ -35,13 +35,13 @@ export const zipWithPassword = (
   return Array.isArray(source)
     ? RNZipArchive.zipFilesWithPassword(
         source.map(normalizeFilePath),
-        target,
+        normalizeFilePath(target),
         password,
         encryptionMethod
       )
     : RNZipArchive.zipFolderWithPassword(
         normalizeFilePath(source),
-        target,
+        normalizeFilePath(target),
         password,
         encryptionMethod
       );
@@ -49,8 +49,8 @@ export const zipWithPassword = (
 
 export const zip = (source, target) => {
   return Array.isArray(source)
-    ? RNZipArchive.zipFiles(source.map(normalizeFilePath), target)
-    : RNZipArchive.zipFolder(normalizeFilePath(source), target);
+    ? RNZipArchive.zipFiles(source.map(normalizeFilePath), normalizeFilePath(target))
+    : RNZipArchive.zipFolder(normalizeFilePath(source), normalizeFilePath(target));
 };
 
 export const unzipAssets = (source, target) => {
@@ -58,7 +58,7 @@ export const unzipAssets = (source, target) => {
     throw new Error("unzipAssets not supported on this platform");
   }
 
-  return RNZipArchive.unzipAssets(normalizeFilePath(source), target);
+  return RNZipArchive.unzipAssets(normalizeFilePath(source), normalizeFilePath(target));
 };
 
 export const subscribe = (callback) => {
