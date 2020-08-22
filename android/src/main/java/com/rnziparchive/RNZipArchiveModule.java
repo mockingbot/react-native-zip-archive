@@ -452,8 +452,8 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             }
 
             updateProgress(1, 1, destFile); // force 100%
-            promise.resolve(destFile);
           }
+          promise.resolve(destFile);
         } catch (Exception ex) {
           promise.reject(null, ex.getMessage());
           return;
