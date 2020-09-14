@@ -1,0 +1,14 @@
+{
+  "Registrations":[
+    {
+      "component": { 
+        "type": "git", 
+        "git": { 
+          "repositoryUrl": "https://github.com/richgel999/miniz/",
+           "commitHash": "a4264837ae37384b1d7a205a6732db322f0f3769"
+          }
+      }
+    }
+  ],
+  "Version": 1
+}
