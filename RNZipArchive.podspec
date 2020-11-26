@@ -10,11 +10,11 @@ Pod::Spec.new do |s|
   s.license        = package['license']
   s.homepage       = 'https://github.com/mockingbot/react-native-zip-archive'
   s.source         = { :git => 'https://github.com/mockingbot/react-native-zip-archive.git', :tag => "#{s.version}"}
-  s.platform       = :ios, '8.0'
+  s.platform       = :ios, '9.0'
   s.preserve_paths = '*.js'
 
   s.dependency 'React'
-  s.dependency 'SSZipArchive', '2.2.2'
+  s.dependency 'SSZipArchive', '2.2.3'
   s.compiler_flags = '-GCC_PREPROCESSOR_DEFINITIONS="HAVE_INTTYPES_H HAVE_PKCRYPT HAVE_STDINT_H HAVE_WZAES HAVE_ZLIB MZ_ZIP_NO_SIGNING $(inherited)"'
 
   s.subspec 'Core' do |ss|
