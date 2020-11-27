@@ -16,8 +16,6 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -118,17 +116,9 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       @Override
       public void run() {
         // Check the file exists
-        FileInputStream inputStream = null;
         try {
-          inputStream = new FileInputStream(zipFilePath);
           new File(zipFilePath);
-        } catch (FileNotFoundException | NullPointerException e) {
-          if (inputStream != null) {
-            try {
-              inputStream.close();
-            } catch (IOException ignored) {
-            }
-          }
+        } catch (NullPointerException e) {
           promise.reject(null, "Couldn't open file " + zipFilePath + ". ");
           return;
         }
