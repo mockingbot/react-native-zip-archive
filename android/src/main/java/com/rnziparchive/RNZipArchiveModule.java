@@ -95,8 +95,8 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
                  throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
             }
 
-            zipFile.extractFile(fileHeader, destDirectory);
             if (!fileHeader.isDirectory()) {
+               zipFile.extractFile(fileHeader, destDirectory);
               extractedFileNames.add(fileHeader.getFileName());
             }
             updateProgress(i + 1, totalFiles, zipFilePath);
