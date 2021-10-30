@@ -60,7 +60,7 @@ RCT_EXPORT_METHOD(unzip:(NSString *)from
 
     NSError *error = nil;
 
-    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:nil error:&error delegate:self];
+    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath preserveAttributes:NO overwrite:YES password:nil error:&error delegate:self];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -83,7 +83,7 @@ RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
 
     NSError *error = nil;
 
-    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath overwrite:YES password:password error:&error delegate:self];
+    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath preserveAttributes:NO overwrite:YES password:password error:&error delegate:self];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
