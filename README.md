@@ -27,7 +27,7 @@ For iOS, run the command below in you app's root folder once the package has bee
 cd ./ios && pod install
 ````
 
-For Andriod, it's ready to go.
+For Android, it's ready to go.
 
 
 ## Usage
