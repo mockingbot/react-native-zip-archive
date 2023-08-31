@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import net.lingala.zip4j.exception.ZipException;
@@ -141,70 +140,15 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           final long[] extractedBytes = {0};
           final int[] lastPercentage = {0};
 
-          ZipFile zipFile = null;
+          net.lingala.zip4j.ZipFile zipFile = null;
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
+            zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
+            zipFile.setCharset(Charset.forName(charset));
           } else {
-            zipFile = new ZipFile(zipFilePath);
+            zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
           }
 
-          final Enumeration<? extends ZipEntry> entries = zipFile.entries();
-          Log.d(TAG, "Zip has " + zipFile.size() + " entries");
-          while (entries.hasMoreElements()) {
-            final ZipEntry entry = entries.nextElement();
-            if (entry.isDirectory()) continue;
-
-            StreamUtil.ProgressCallback cb = new StreamUtil.ProgressCallback() {
-              @Override
-              public void onCopyProgress(long bytesRead) {
-                extractedBytes[0] += bytesRead;
-
-                int lastTime = lastPercentage[0];
-                int percentDone = (int) ((double) extractedBytes[0] * 100 / (double) totalUncompressedBytes);
-
-                // update at most once per percent.
-                if (percentDone > lastTime) {
-                  lastPercentage[0] = percentDone;
-                  updateProgress(extractedBytes[0], totalUncompressedBytes, zipFilePath);
-                }
-              }
-            };
-
-            File fout = new File(destDirectory, entry.getName());
-            String canonicalPath = fout.getCanonicalPath();
-            String destDirCanonicalPath = (new File(destDirectory).getCanonicalPath()) + File.separator;
-
-            if (!canonicalPath.startsWith(destDirCanonicalPath)) {
-                 throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
-            }
-            
-            if (!fout.exists()) {
-              //noinspection ResultOfMethodCallIgnored
-              (new File(fout.getParent())).mkdirs();
-            }
-            InputStream in = null;
-            BufferedOutputStream Bout = null;
-            try {
-              in = zipFile.getInputStream(entry);
-              Bout = new BufferedOutputStream(new FileOutputStream(fout));
-              StreamUtil.copy(in, Bout, cb);
-              Bout.close();
-              in.close();
-            } catch (IOException ex) {
-              if (in != null) {
-                try {
-                  in.close();
-                } catch (Exception ignored) {
-                }
-              }
-              if (Bout != null) {
-                try {
-                  Bout.close();
-                } catch (Exception ignored) {
-                }
-              }
-            }
-          }
+          zipFile.extractAll(destDirectory);
 
           zipFile.close();
           updateProgress(1, 1, zipFilePath); // force 100%
@@ -479,20 +423,22 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   private long getUncompressedSize(String zipFilePath, String charset) {
     long totalSize = 0;
     try {
-      ZipFile zipFile = null;
+      net.lingala.zip4j.ZipFile zipFile = null;
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        zipFile = new ZipFile(zipFilePath, Charset.forName(charset));
+        zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
+        zipFile.setCharset(Charset.forName(charset));
       } else {
-        zipFile = new ZipFile(zipFilePath);
+        zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
       }
-      Enumeration<? extends ZipEntry> entries = zipFile.entries();
-      while (entries.hasMoreElements()) {
-        ZipEntry entry = entries.nextElement();
-        long size = entry.getSize();
+
+      final List <FileHeader> files = zipFile.getFileHeaders();
+      for(FileHeader it : files) {
+        long size = it.getUncompressedSize();
         if (size != -1) {
           totalSize += size;
         }
       }
+
       zipFile.close();
     } catch (IOException ignored) {
       return -1;
