@@ -194,6 +194,22 @@ RCT_EXPORT_METHOD(zipFilesWithPassword:(NSArray<NSString *> *)from
     }
 }
 
+
+RCT_EXPORT_METHOD(getUncompressedSize:(NSString *)path
+                  charset:(NSString *)charset
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+    NSError *error = nil;
+    NSNumber *wantedFileSize = [SSZipArchive payloadSizeForArchiveAtPath:path error:&error];
+
+    if (error == nil) {
+        resolve(wantedFileSize);
+    } else {
+//        reject(@"get_uncompressed_size_error", [error localizedDescription], error);
+        resolve(@-1);
+    }
+}
+
 - (dispatch_queue_t)methodQueue {
     return dispatch_queue_create("com.mockingbot.ReactNative.ZipArchiveQueue", DISPATCH_QUEUE_SERIAL);
 }

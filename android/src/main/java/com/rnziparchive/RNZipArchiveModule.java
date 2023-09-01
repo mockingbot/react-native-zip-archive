@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
+//import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import net.lingala.zip4j.exception.ZipException;
@@ -415,6 +416,12 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             .emit(PROGRESS_EVENT_NAME, map);
   }
 
+  @ReactMethod
+  public void getUncompressedSize(String zipFilePath, String charset, final Promise promise) {
+    long totalSize = getUncompressedSize(zipFilePath, charset);
+    promise.resolve((double) totalSize);
+  }
+  
   /**
    * Return the uncompressed size of the ZipFile (only works for files on disk, not in assets)
    *

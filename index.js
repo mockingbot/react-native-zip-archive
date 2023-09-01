@@ -64,3 +64,7 @@ export const unzipAssets = (source, target) => {
 export const subscribe = (callback) => {
   return rnzaEmitter.addListener("zipArchiveProgressEvent", callback);
 };
+
+export const getUncompressedSize = (source, charset = "UTF-8") => {
+  return RNZipArchive.getUncompressedSize(normalizeFilePath(source), charset);
+};
