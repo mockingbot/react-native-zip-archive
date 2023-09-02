@@ -415,6 +415,12 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             .emit(PROGRESS_EVENT_NAME, map);
   }
 
+  @ReactMethod
+  public void getUncompressedSize(String zipFilePath, String charset, final Promise promise) {
+    long totalSize = getUncompressedSize(zipFilePath, charset);
+    promise.resolve((double) totalSize);
+  }
+  
   /**
    * Return the uncompressed size of the ZipFile (only works for files on disk, not in assets)
    *
