@@ -53,6 +53,8 @@ import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 
 ***NOTE: only support zip folder, not file entries***
 
+***NOTE: the string version of source is for folder, the string[] version is for file, so you want to zip a single file, use zip([file]) instead of zip(file)***
+
 Example
 
 ```js
@@ -73,6 +75,8 @@ zip(sourcePath, targetPath)
 > zip source to target
 
 ***NOTE: only support zip folder, not file entries***
+
+***NOTE: the string version of source is for folder, the string[] version is for file, so you want to zip a single file, use zip([file]) instead of zip(file)***
 
 ***NOTE: encryptionType is not supported on iOS yet, so it would be igonred on that platform.***
 
