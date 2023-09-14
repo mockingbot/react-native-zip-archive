@@ -51,8 +51,6 @@ import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 
 > zip source to target
 
-***NOTE: only support zip folder, not file entries***
-
 ***NOTE: the string version of source is for folder, the string[] version is for file, so if you want to zip a single file, use zip([file]) instead of zip(file)***
 
 Example
@@ -72,9 +70,7 @@ zip(sourcePath, targetPath)
 
 **`zipWithPassword(source: string | string[], target: string, password: string, encryptionType: string): Promise<string>`**
 
-> zip source to target
-
-***NOTE: only support zip folder, not file entries***
+> zip source to target`
 
 ***NOTE: the string version of source is for folder, the string[] version is for file, so if you want to zip a single file, use zip([file]) instead of zip(file)***
 
