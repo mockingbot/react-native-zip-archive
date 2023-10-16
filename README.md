@@ -192,3 +192,7 @@ You can use this repo, https://github.com/plrthink/RNZATestApp, for testing and 
 
 - [ZipArchive](https://github.com/ZipArchive/ZipArchive)
 - [zip4j](https://github.com/srikanth-lingala/zip4j)
+
+---
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/plrthink)
