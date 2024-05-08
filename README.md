@@ -2,6 +2,9 @@
 
 Zip archive utility for react-native
 
+## Attention
+
+Starting from v6.1.1, it requires the iOS deployment higher than 15.5.5, more details on this thread: https://github.com/mockingbot/react-native-zip-archive/issues/305.
 
 ## Compatibility
 
@@ -21,7 +24,7 @@ npm install react-native-zip-archive --save
 
 ## Linking
 
-For iOS, run the command below in you app's root folder once the package has been installed
+For iOS, run the command below in your app's root folder once the package has been installed
 
 ````bash
 cd ./ios && pod install
