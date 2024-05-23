@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.license        = package['license']
   s.homepage       = 'https://github.com/mockingbot/react-native-zip-archive'
   s.source         = { :git => 'https://github.com/mockingbot/react-native-zip-archive.git', :tag => "#{s.version}"}
-  s.platform       = :ios, '9.0'
+  s.platform       = :ios, '15.5'
   s.preserve_paths = '*.js'
 
   s.dependency 'React-Core'

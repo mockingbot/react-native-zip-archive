@@ -4,7 +4,7 @@ Zip archive utility for react-native
 
 ## Attention
 
-If you need to adapt to the [app store's new privacy policy](https://developer.apple.com/news/?id=3d8a9yyh), you need to upgrade the SSZipArchive to '2.5.5' in your app's Podfile, like this https://github.com/plrthink/RNZATestApp/blob/main/ios/Podfile
+In order to comply with the new privacy policy of the App Store on iOS, you need to upgrade react-native-zip-archive to version 7.0.0, which requires the deployment target to be iOS 15.5 or later.
 
 ## Compatibility
 
