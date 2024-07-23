@@ -15,7 +15,6 @@ Pod::Spec.new do |s|
 
   s.dependency 'React-Core'
   s.dependency 'SSZipArchive', '~>2.5.5'
-  s.compiler_flags = '-GCC_PREPROCESSOR_DEFINITIONS="HAVE_INTTYPES_H HAVE_PKCRYPT HAVE_STDINT_H HAVE_WZAES HAVE_ZLIB MZ_ZIP_NO_SIGNING $(inherited)"'
 
   s.subspec 'Core' do |ss|
     ss.source_files = 'ios/*.{h,m}'
