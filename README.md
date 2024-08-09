@@ -6,6 +6,10 @@ Zip archive utility for react-native
 
 In order to comply with the new privacy policy of the App Store on iOS, you need to upgrade react-native-zip-archive to version 7.0.0, which requires the deployment target to be iOS 15.5 or later.
 
+## For Expo Users
+
+The only way to make this work with Expo is to create a [dev build](https://docs.expo.dev/workflow/overview/#development-builds), the expo go is not supported.
+
 ## Compatibility
 
 | react-native version | react-native-zip-archive version |
