@@ -149,11 +149,26 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
           }
 
+          ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
+
+          zipFile.setRunInThread(true);
           zipFile.extractAll(destDirectory);
 
-          zipFile.close();
-          updateProgress(1, 1, zipFilePath); // force 100%
-          promise.resolve(destDirectory);
+          while (!progressMonitor.getState().equals(ProgressMonitor.State.READY)) {
+            updateProgress(progressMonitor.getWorkCompleted(), progressMonitor.getTotalWork(), zipFilePath);
+
+            Thread.sleep(100);
+          }
+
+          if (progressMonitor.getResult().equals(ProgressMonitor.Result.SUCCESS)) {
+            zipFile.close();
+            updateProgress(1, 1, zipFilePath); // force 100%
+            promise.resolve(destDirectory);
+          } else if (progressMonitor.getResult().equals(ProgressMonitor.Result.ERROR)) {
+            throw new Exception("Error occurred. Error message: " + progressMonitor.getException().getMessage());
+          } else if (progressMonitor.getResult().equals(ProgressMonitor.Result.CANCELLED)) {
+            throw new Exception("Task cancelled");
+          }
         } catch (Exception ex) {
           updateProgress(0, 1, zipFilePath); // force 0%
           promise.reject(null, "Failed to extract file " + ex.getLocalizedMessage());
