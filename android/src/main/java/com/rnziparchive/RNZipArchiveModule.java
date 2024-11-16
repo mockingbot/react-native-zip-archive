@@ -181,9 +181,18 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         final long size;
 
         try {
-          assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
-          AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
-          size = fileDescriptor.getLength();
+          if(assetsPath.startsWith("content://")) {
+            var assetUri = Uri.parse(assetsPath);
+            var contentResolver = getReactApplicationContext().getContentResolver();
+
+            assetsInputStream = contentResolver.openInputStream(assetUri);
+            var fileDescriptor = contentResolver.openFileDescriptor(assetUri, "r");
+            size = fileDescriptor.getStatSize();
+          } else {
+            assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
+            AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
+            size = fileDescriptor.getLength();
+          }
         } catch (IOException e) {
           promise.reject(null, String.format("Asset file `%s` could not be opened", assetsPath));
           return;
