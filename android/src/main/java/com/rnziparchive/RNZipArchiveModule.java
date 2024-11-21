@@ -1,6 +1,7 @@
 package com.rnziparchive;
 
 import android.content.res.AssetFileDescriptor;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
