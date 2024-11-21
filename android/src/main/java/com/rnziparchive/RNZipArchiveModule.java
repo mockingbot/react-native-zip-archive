@@ -36,6 +36,7 @@ import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
+import net.lingala.zip4j.progress.ProgressMonitor;
 
 import java.nio.charset.Charset;
 
@@ -67,7 +68,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void unzipWithPassword(final String zipFilePath, final String destDirectory,
-        final String password, final Promise promise) {
+                                final String password, final Promise promise) {
     new Thread(new Runnable() {
       @Override
       public void run() {
@@ -92,11 +93,11 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             String destDirCanonicalPath = (new File(destDirectory).getCanonicalPath()) + File.separator;
 
             if (!canonicalPath.startsWith(destDirCanonicalPath)) {
-                 throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
+              throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
             }
 
             if (!fileHeader.isDirectory()) {
-               zipFile.extractFile(fileHeader, destDirectory);
+              zipFile.extractFile(fileHeader, destDirectory);
               extractedFileNames.add(fileHeader.getFileName());
             }
             updateProgress(i + 1, totalFiles, zipFilePath);
@@ -237,7 +238,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
               String destDirCanonicalPath = (new File(destDirectory).getCanonicalPath()) + File.separator;
 
               if (!canonicalPath.startsWith(destDirCanonicalPath)) {
-                   throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
+                throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
               }
 
               if (!fout.exists()) {
@@ -300,21 +301,21 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void zipFilesWithPassword(final ReadableArray files, final String destFile, final String password,
-                              String encryptionMethod, Promise promise) {
+                                   String encryptionMethod, Promise promise) {
     zipWithPassword(files.toArrayList(), destFile, password, encryptionMethod, promise);
   }
 
 
   @ReactMethod
   public void zipFolderWithPassword(final String folder, final String destFile, final String password,
-                                   String encryptionMethod, Promise promise) {
+                                    String encryptionMethod, Promise promise) {
     ArrayList<Object> folderAsArrayList = new ArrayList<>();
     folderAsArrayList.add(folder);
     zipWithPassword(folderAsArrayList, destFile, password, encryptionMethod, promise);
   }
 
   private void zipWithPassword(final ArrayList<Object> filesOrDirectory, final String destFile, final String password,
-      String encryptionMethod, Promise promise) {
+                               String encryptionMethod, Promise promise) {
     try{
 
       ZipParameters parameters = new ZipParameters();
