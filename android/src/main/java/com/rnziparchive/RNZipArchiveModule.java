@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -195,7 +196,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       @Override
       public void run() {
         InputStream assetsInputStream;
-        final long size;
+        final long compressedSize;
 
         try {
           if(assetsPath.startsWith("content://")) {
@@ -204,11 +205,11 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
             assetsInputStream = contentResolver.openInputStream(assetUri);
             var fileDescriptor = contentResolver.openFileDescriptor(assetUri, "r");
-            size = fileDescriptor.getStatSize();
+            compressedSize = fileDescriptor.getStatSize();
           } else {
             assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
             AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
-            size = fileDescriptor.getLength();
+            compressedSize = fileDescriptor.getLength();
           }
         } catch (IOException e) {
           promise.reject(null, String.format("Asset file `%s` could not be opened", assetsPath));
@@ -227,13 +228,15 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
             ZipEntry entry;
 
-            final long[] extractedBytes = {0};
-            final int[] lastPercentage = {0};
+            long extractedBytes = 0;
+            updateProgress(extractedBytes, compressedSize, assetsPath); // force 0%
 
-            updateProgress(0, 1, assetsPath); // force 0%
             File fout;
             while ((entry = zipIn.getNextEntry()) != null) {
               if (entry.isDirectory()) continue;
+
+              Log.i("rnziparchive", "Extracting: " + entry.getName());
+
               fout = new File(destDirectory, entry.getName());
               String canonicalPath = fout.getCanonicalPath();
               String destDirCanonicalPath = (new File(destDirectory).getCanonicalPath()) + File.separator;
@@ -247,31 +250,19 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
                 (new File(fout.getParent())).mkdirs();
               }
 
-              final ZipEntry finalEntry = entry;
-              StreamUtil.ProgressCallback cb = new StreamUtil.ProgressCallback() {
-                @Override
-                public void onCopyProgress(long bytesRead) {
-                  extractedBytes[0] += bytesRead;
-
-                  int lastTime = lastPercentage[0];
-                  int percentDone = (int) ((double) extractedBytes[0] * 100 / (double) size);
-
-                  // update at most once per percent.
-                  if (percentDone > lastTime) {
-                    lastPercentage[0] = percentDone;
-                    updateProgress(extractedBytes[0], size, finalEntry.getName());
-                  }
-                }
-              };
-
               FileOutputStream out = new FileOutputStream(fout);
               BufferedOutputStream Bout = new BufferedOutputStream(out);
-              StreamUtil.copy(bin, Bout, cb);
+              StreamUtil.copy(bin, Bout, null);
               Bout.close();
               out.close();
+
+              extractedBytes += entry.getCompressedSize();
+
+              updateProgress(extractedBytes, compressedSize, entry.getName());
             }
 
-            updateProgress(1, 1, assetsPath); // force 100%
+            updateProgress(compressedSize, compressedSize, assetsPath); // force 100%
+
             bin.close();
             zipIn.close();
           } catch (Exception ex) {
