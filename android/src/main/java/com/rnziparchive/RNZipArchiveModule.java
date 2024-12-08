@@ -258,6 +258,9 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
               extractedBytes += entry.getCompressedSize();
 
+              // do not let the percentage go over 99% because we want it to hit 100% only when we are sure it's finished
+              if(extractedBytes > compressedSize*0.99) extractedBytes = (long) (compressedSize*0.99);
+
               updateProgress(extractedBytes, compressedSize, entry.getName());
             }
 
