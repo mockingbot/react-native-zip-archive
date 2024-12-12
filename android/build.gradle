@@ -37,5 +37,5 @@ repositories {
 
 dependencies {
     implementation "com.facebook.react:react-native:+"
-    implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.+'
+    implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.11.5'
 }
