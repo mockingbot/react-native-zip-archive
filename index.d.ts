@@ -1,8 +1,8 @@
 declare module 'react-native-zip-archive' {
-  enum encryptionMethods {
-    'STANDARD',
-    'AES-128',
-    'AES-256'
+  enum EncryptionMethods {
+    STANDARD = "STANDARD",
+    AES_128 = "AES-128",
+    AES_256 = "AES-256"
   }
   import { NativeEventSubscription } from 'react-native';
   export function isPasswordProtected(source: string): Promise<boolean>;
