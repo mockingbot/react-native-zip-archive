@@ -97,6 +97,7 @@ RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
 
 RCT_EXPORT_METHOD(zipFolder:(NSString *)from
                   destinationPath:(NSString *)destinationPath
+                  compressionLevel:(double)compressionLevel
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
     self.progress = 0.0;
@@ -106,7 +107,13 @@ RCT_EXPORT_METHOD(zipFolder:(NSString *)from
     BOOL success;
     [self setProgressHandler];
 
-    success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from keepParentDirectory:NO withPassword:nil andProgressHandler:self.progressHandler];
+    success = [SSZipArchive createZipFileAtPath:destinationPath
+                        withContentsOfDirectory:from
+                            keepParentDirectory:NO
+                               compressionLevel:compressionLevel
+                                       password:nil
+                                            AES:NO
+                                progressHandler:self.progressHandler];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -121,6 +128,7 @@ RCT_EXPORT_METHOD(zipFolder:(NSString *)from
 
 RCT_EXPORT_METHOD(zipFiles:(NSArray<NSString *> *)from
                   destinationPath:(NSString *)destinationPath
+                  compressionLevel:(double)compressionLevel
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
     self.progress = 0.0;
@@ -143,11 +151,11 @@ RCT_EXPORT_METHOD(zipFiles:(NSArray<NSString *> *)from
     }
 }
 
-
 RCT_EXPORT_METHOD(zipFolderWithPassword:(NSString *)from
                   destinationPath:(NSString *)destinationPath
                   password:(NSString *)password
                   encryptionType:(NSString *)encryptionType
+                  compressionLevel:(double)compressionLevel
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
     self.progress = 0.0;
@@ -156,7 +164,13 @@ RCT_EXPORT_METHOD(zipFolderWithPassword:(NSString *)from
 
     BOOL success;
     [self setProgressHandler];
-    success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from keepParentDirectory:NO withPassword:password andProgressHandler:self.progressHandler];
+    success = [SSZipArchive createZipFileAtPath:destinationPath
+                        withContentsOfDirectory:from
+                            keepParentDirectory:NO
+                               compressionLevel:compressionLevel
+                                       password:password
+                                            AES:NO
+                                progressHandler:self.progressHandler];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -173,6 +187,7 @@ RCT_EXPORT_METHOD(zipFilesWithPassword:(NSArray<NSString *> *)from
                   destinationPath:(NSString *)destinationPath
                   password:(NSString *)password
                   encryptionType:(NSString *)encryptionType
+                  compressionLevel:(double)compressionLevel
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
     self.progress = 0.0;

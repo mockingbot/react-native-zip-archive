@@ -54,11 +54,13 @@ import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 
 ## API
 
-**`zip(source: string | string[], target: string): Promise<string>`**
+**`zip(source: string | string[], target: string, compressionLevel?: number): Promise<string>`**
 
 > zip source to target
 
 ***NOTE: the string version of source is for folder, the string[] version is for file, so if you want to zip a single file, use zip([file]) instead of zip(file)***
+
+***NOTE: customizing the compression level is not supported on iOS with a files source and will be ignored, use a directory source instead.
 
 Example
 
@@ -75,13 +77,15 @@ zip(sourcePath, targetPath)
 })
 ```
 
-**`zipWithPassword(source: string | string[], target: string, password: string, encryptionType: string): Promise<string>`**
+**`zipWithPassword(source: string | string[], target: string, password: string, encryptionType?: string, compressionLevel?: number): Promise<string>`**
 
 > zip source to target
 
 ***NOTE: the string version of source is for folder, the string[] version is for file, so if you want to zip a single file, use zip([file]) instead of zip(file)***
 
-***NOTE: encryptionType is not supported on iOS yet, so it would be igonred on that platform.***
+***NOTE: encryptionType is not supported on iOS yet, so it would be ignored on that platform.***
+
+***NOTE: customizing the compression level is not supported on iOS with a files source and will be ignored, use a directory source instead.
 
 Example
 

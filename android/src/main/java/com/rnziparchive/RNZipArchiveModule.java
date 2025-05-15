@@ -283,39 +283,37 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void zipFiles(final ReadableArray files, final String destDirectory, final Promise promise) {
-    zip(files.toArrayList(), destDirectory, promise);
+  public void zipFiles(final ReadableArray files, final String destDirectory, final double compressionLevel, final Promise promise) {
+    zip(files.toArrayList(), destDirectory, compressionLevel, promise);
   }
 
   @ReactMethod
-  public void zipFolder(final String folder, final String destFile, final Promise promise) {
+  public void zipFolder(final String folder, final String destFile, final double compressionLevel, final Promise promise) {
     ArrayList<Object> folderAsArrayList = new ArrayList<>();
     folderAsArrayList.add(folder);
-    zip(folderAsArrayList, destFile, promise);
+    zip(folderAsArrayList, destFile, compressionLevel, promise);
   }
 
   @ReactMethod
   public void zipFilesWithPassword(final ReadableArray files, final String destFile, final String password,
-                                   String encryptionMethod, Promise promise) {
-    zipWithPassword(files.toArrayList(), destFile, password, encryptionMethod, promise);
+                                   String encryptionMethod, final double compressionLevel, Promise promise) {
+    zipWithPassword(files.toArrayList(), destFile, password, encryptionMethod, compressionLevel, promise);
   }
-
 
   @ReactMethod
   public void zipFolderWithPassword(final String folder, final String destFile, final String password,
-                                    String encryptionMethod, Promise promise) {
+                                    String encryptionMethod, final double compressionLevel, Promise promise) {
     ArrayList<Object> folderAsArrayList = new ArrayList<>();
     folderAsArrayList.add(folder);
-    zipWithPassword(folderAsArrayList, destFile, password, encryptionMethod, promise);
+    zipWithPassword(folderAsArrayList, destFile, password, encryptionMethod, compressionLevel, promise);
   }
 
   private void zipWithPassword(final ArrayList<Object> filesOrDirectory, final String destFile, final String password,
-                               String encryptionMethod, Promise promise) {
+                               String encryptionMethod, final double compressionLevel, Promise promise) {
     try{
-
       ZipParameters parameters = new ZipParameters();
       parameters.setCompressionMethod(CompressionMethod.DEFLATE);
-      parameters.setCompressionLevel(CompressionLevel.NORMAL);
+      parameters.setCompressionLevel(getCompressionLevel(compressionLevel));
 
       String encParts[] = encryptionMethod.split("-");
 
@@ -347,15 +345,13 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
       promise.reject(null, ex.getMessage());
       return;
     }
-
   }
 
-  private void zip(final ArrayList<Object> filesOrDirectory, final String destFile, final Promise promise) {
+  private void zip(final ArrayList<Object> filesOrDirectory, final String destFile, final double compressionLevel, final Promise promise) {
     try{
-
       ZipParameters parameters = new ZipParameters();
       parameters.setCompressionMethod(CompressionMethod.DEFLATE);
-      parameters.setCompressionLevel(CompressionLevel.NORMAL);
+      parameters.setCompressionLevel(getCompressionLevel(compressionLevel));
 
       processZip(filesOrDirectory, destFile, parameters, promise, null);
 
@@ -473,6 +469,36 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     return totalSize;
   }
 
+  private static CompressionLevel getCompressionLevel(double compressionLevel) {
+    switch (compressionLevel) {
+      case -1:
+        return CompressionLevel.NORMAL;
+      case 0:
+        return CompressionLevel.NO_COMPRESSION;
+      case 1:
+        return CompressionLevel.FASTEST;
+      case 2:
+        return CompressionLevel.FASTER;
+      case 3:
+        return CompressionLevel.FAST;
+      case 4:
+        return CompressionLevel.MEDIUM_FAST;
+      case 5:
+        return CompressionLevel.NORMAL;
+      case 6:
+        return CompressionLevel.HIGHER;
+      case 7:
+        return CompressionLevel.MAXIMUM;
+      case 8:
+        return CompressionLevel.PRE_ULTRA;
+      case 9:
+        return CompressionLevel.ULTRA;
+      default:
+        Log.w(TAG, "Unsupported compression level: " + level + ", defaulting to NORMAL (5)");
+        return CompressionLevel.NORMAL;
+    }
+  }
+
   /**
    * Returns the exception stack trace as a string
    */
@@ -492,5 +518,4 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   public void removeListeners(Integer count) {
     // Keep: Required for RN built in Event Emitter Calls.
   }
-
 }
