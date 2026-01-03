@@ -81,7 +81,7 @@ zip(sourcePath, targetPath)
 
 ***NOTE: the string version of source is for folder, the string[] version is for file, so if you want to zip a single file, use zip([file]) instead of zip(file)***
 
-***NOTE: encryptionType is not supported on iOS yet, so it would be igonred on that platform.***
+***NOTE: On iOS, AES-256 and AES-128 both use AES-256 encryption.***
 
 Example
 
