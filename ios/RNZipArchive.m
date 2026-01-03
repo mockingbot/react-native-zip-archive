@@ -7,6 +7,7 @@
 //
 
 #import "RNZipArchive.h"
+#import <zlib.h>
 
 #if __has_include(<React/RCTEventDispatcher.h>)
 #import <React/RCTEventDispatcher.h>
@@ -91,7 +92,8 @@ RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
     if (success) {
         resolve(destinationPath);
     } else {
-        reject(@"unzip_error", @"unable to unzip", error);
+        NSString *errorMessage = error ? [error localizedDescription] : @"unable to unzip";
+        reject(@"unzip_error", errorMessage, error);
     }
 }
 
@@ -156,7 +158,8 @@ RCT_EXPORT_METHOD(zipFolderWithPassword:(NSString *)from
 
     BOOL success;
     [self setProgressHandler];
-    success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from keepParentDirectory:NO withPassword:password andProgressHandler:self.progressHandler];
+    BOOL useAES = encryptionType && ![encryptionType isEqualToString:@"STANDARD"];
+    success = [SSZipArchive createZipFileAtPath:destinationPath withContentsOfDirectory:from keepParentDirectory:NO compressionLevel:Z_DEFAULT_COMPRESSION password:password AES:useAES progressHandler:self.progressHandler];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -181,6 +184,7 @@ RCT_EXPORT_METHOD(zipFilesWithPassword:(NSArray<NSString *> *)from
 
     BOOL success;
     [self setProgressHandler];
+    // Note: withFilesAtPaths doesn't have AES class method, using password only
     success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:from withPassword:password];
 
     self.progress = 1.0;
