@@ -26,7 +26,7 @@
   "devDependencies": {
     "@babel/core": "*",
     "@react-native-community/eslint-config": "^2.0.0",
-    "eslint": "^6.7.2",
+    "eslint": "^9.26.0",
     "react": ">=16.8.6",
     "react-native": ">=0.60.0"
   },
