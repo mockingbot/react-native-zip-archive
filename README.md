@@ -42,7 +42,20 @@ For Android, it's ready to go.
 import it into your code
 
 ```js
-import { zip, unzip, unzipAssets, subscribe } from 'react-native-zip-archive'
+import { 
+  zip, 
+  zipWithPassword,
+  unzip, 
+  unzipWithPassword,
+  unzipAssets, 
+  subscribe,
+  isPasswordProtected,
+  getUncompressedSize,
+  DEFAULT_COMPRESSION,
+  NO_COMPRESSION,
+  BEST_SPEED,
+  BEST_COMPRESSION
+} from 'react-native-zip-archive'
 ```
 
 you may also want to use something like [react-native-fs](https://github.com/johanneslumpe/react-native-fs) to access the file system (check its repo for more information)
@@ -51,6 +64,44 @@ you may also want to use something like [react-native-fs](https://github.com/joh
 import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 ```
 
+
+## Platform Support Matrix
+
+| Feature | iOS | Android | Notes |
+|---------|-----|---------|-------|
+| **zip** (folder) | ✅ | ✅ | Full support |
+| **zip** (files array) | ✅ | ✅ | Compression level ignored on iOS |
+| **zipWithPassword** (folder) | ✅ | ✅ | AES encryption supported on both |
+| **zipWithPassword** (files array) | ⚠️ | ✅ | iOS: AES not supported, only standard encryption |
+| **unzip** | ✅ | ✅ | Charset param ignored on iOS |
+| **unzipWithPassword** | ✅ | ✅ | Full support |
+| **unzipAssets** | ❌ | ✅ | Android only |
+| **isPasswordProtected** | ✅ | ✅ | Full support |
+| **getUncompressedSize** | ✅ | ✅ | Charset param ignored on iOS |
+| **Progress Events** | ✅ | ✅ | File path empty on iOS for zip operations |
+
+### Feature Details
+
+#### Compression Levels
+- **Android**: Full support for levels 0-9 on all zip operations
+- **iOS**: Only supported for folder operations; ignored for file arrays
+
+#### Encryption
+- **Android**: AES-128, AES-256, and Standard ZIP encryption for all operations
+- **iOS**: 
+  - Folder operations: AES and Standard encryption supported
+  - File array operations: Only Standard encryption (AES not supported)
+  - Note: Both AES-128 and AES-256 use AES-256 on iOS
+
+#### Charset Support
+- **Android**: Full support (Android N+), defaults to UTF-8
+- **iOS**: Parameter accepted but ignored; always uses UTF-8
+
+#### unzipAssets
+- **Android**: Supports both `assets/` folder and `content://` URIs
+- **iOS**: Not supported
+
+---
 
 ## API
 
@@ -61,6 +112,12 @@ import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 ***NOTE: the string version of source is for folder, the string[] version is for file, so if you want to zip a single file, use zip([file]) instead of zip(file)***
 
 ***NOTE: customizing the compression level is not supported on iOS with a files source and will be ignored, use a directory source instead.***
+
+**Compression Level Constants:**
+- `DEFAULT_COMPRESSION` (-1) - Default compression (same as level 5)
+- `NO_COMPRESSION` (0) - Store without compression
+- `BEST_SPEED` (1) - Fastest compression (least compressed)
+- `BEST_COMPRESSION` (9) - Best compression (slowest)
 
 Example
 
@@ -79,11 +136,19 @@ zip(sourcePath, targetPath)
 
 **`zipWithPassword(source: string | string[], target: string, password: string, encryptionType?: string, compressionLevel?: number): Promise<string>`**
 
-> zip source to target
+> zip source to target with password protection
 
 ***NOTE: the string version of source is for folder, the string[] version is for file, so if you want to zip a single file, use zip([file]) instead of zip(file)***
 
-***NOTE: On iOS, AES-256 and AES-128 both use AES-256 encryption.***
+**Encryption Types:**
+- `'STANDARD'` - Standard ZIP encryption (legacy, widely compatible)
+- `'AES-128'` - AES 128-bit encryption
+- `'AES-256'` - AES 256-bit encryption
+
+**Platform-specific encryption notes:**
+- **iOS**: Both AES-128 and AES-256 use AES-256 internally
+- **iOS with files array**: AES encryption is NOT supported; only STANDARD encryption works
+- **Android**: All encryption types fully supported for both folders and files
 
 ***NOTE: customizing the compression level is not supported on iOS with a files source and will be ignored, use a directory source instead.***
 
@@ -104,9 +169,11 @@ zipWithPassword(sourcePath, targetPath, password, encryptionType)
 })
 ```
 
-**`unzip(source: string, target: string): Promise<string>`**
+**`unzip(source: string, target: string, charset?: string): Promise<string>`**
 
 > unzip from source to target
+
+***NOTE: The charset parameter is only supported on Android. On iOS, it is accepted but ignored; UTF-8 is always used.***
 
 Example
 
@@ -115,7 +182,7 @@ const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
 const targetPath = DocumentDirectoryPath
 const charset = 'UTF-8'
 // charset possible values: UTF-8, GBK, US-ASCII and so on. If none was passed, default value is UTF-8
-
+// Note: charset is only effective on Android
 
 unzip(sourcePath, targetPath, charset)
 .then((path) => {
@@ -161,6 +228,26 @@ const targetPath = DocumentDirectoryPath
 unzipAssets(assetPath, targetPath)
 .then((path) => {
   console.log(`unzip completed at ${path}`)
+})
+.catch((error) => {
+  console.error(error)
+})
+```
+
+**`getUncompressedSize(source: string, charset?: string): Promise<number>`**
+
+> Returns the total uncompressed size of all files in the zip archive (in bytes).
+
+***Note: On iOS, the charset parameter is accepted but ignored.***
+
+Example
+
+```js
+const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
+
+getUncompressedSize(sourcePath)
+.then((size) => {
+  console.log(`Uncompressed size: ${size} bytes`)
 })
 .catch((error) => {
   console.error(error)
