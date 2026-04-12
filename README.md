@@ -42,12 +42,12 @@ For Android, it's ready to go.
 import it into your code
 
 ```js
-import { 
-  zip, 
+import {
+  zip,
   zipWithPassword,
-  unzip, 
+  unzip,
   unzipWithPassword,
-  unzipAssets, 
+  unzipAssets,
   subscribe,
   isPasswordProtected,
   getUncompressedSize,
@@ -88,7 +88,7 @@ import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 
 #### Encryption
 - **Android**: AES-128, AES-256, and Standard ZIP encryption for all operations
-- **iOS**: 
+- **iOS**:
   - Folder operations: AES and Standard encryption supported
   - File array operations: Only Standard encryption (AES not supported)
   - Note: Both AES-128 and AES-256 use AES-256 on iOS
