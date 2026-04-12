@@ -9,6 +9,11 @@ const rnzaEmitter = new NativeEventEmitter(RNZipArchive);
 const normalizeFilePath = (path) =>
   path.startsWith("file://") ? path.slice(7) : path;
 
+export const DEFAULT_COMPRESSION = -1;
+export const NO_COMPRESSION = 0;
+export const BEST_SPEED = 1;
+export const BEST_COMPRESSION = 9;
+
 export const unzip = (source, target, charset = "UTF-8") => {
   return RNZipArchive.unzip(
     normalizeFilePath(source),
@@ -16,6 +21,7 @@ export const unzip = (source, target, charset = "UTF-8") => {
     charset
   );
 };
+
 export const isPasswordProtected = (source) => {
   return RNZipArchive.isPasswordProtected(normalizeFilePath(source)).then(
     (isEncrypted) => !!isEncrypted
@@ -34,32 +40,37 @@ export const zipWithPassword = (
   source,
   target,
   password,
-  encryptionMethod = ""
+  encryptionMethod = "",
+  compressionLevel = DEFAULT_COMPRESSION,
 ) => {
   return Array.isArray(source)
     ? RNZipArchive.zipFilesWithPassword(
         source.map(normalizeFilePath),
         normalizeFilePath(target),
         password,
-        encryptionMethod
+        encryptionMethod,
+        compressionLevel
       )
     : RNZipArchive.zipFolderWithPassword(
         normalizeFilePath(source),
         normalizeFilePath(target),
         password,
-        encryptionMethod
+        encryptionMethod,
+        compressionLevel
       );
 };
 
-export const zip = (source, target) => {
+export const zip = (source, target, compressionLevel = DEFAULT_COMPRESSION) => {
   return Array.isArray(source)
     ? RNZipArchive.zipFiles(
         source.map(normalizeFilePath),
-        normalizeFilePath(target)
+        normalizeFilePath(target),
+        compressionLevel
       )
     : RNZipArchive.zipFolder(
         normalizeFilePath(source),
-        normalizeFilePath(target)
+        normalizeFilePath(target),
+        compressionLevel
       );
 };
 
