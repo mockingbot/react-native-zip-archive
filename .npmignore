@@ -34,3 +34,9 @@ yarn.lock
 
 # Playground - Expo development build project (not for npm)
 playground/
+
+# Development files (not for npm)
+__tests__/
+__mocks__/
+babel.config.js
+NEW_ARCHITECTURE_MIGRATION_PLAN.md

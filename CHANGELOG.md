@@ -1,6 +1,6 @@
 # Changelog
 
-## [8.0.0] - 2024-XX-XX
+## [8.0.0] - 2026-04-13
 
 ### Added
 - TurboModule support for React Native New Architecture

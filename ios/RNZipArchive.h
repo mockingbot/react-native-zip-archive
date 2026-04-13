@@ -8,8 +8,9 @@
 
 #import "SSZipArchive/SSZipArchive.h"
 #import <RNZipArchiveSpec/RNZipArchiveSpec.h>
+#import <React/RCTEventEmitter.h>
 
-@interface RNZipArchive : NSObject <NativeZipArchiveSpec, SSZipArchiveDelegate>
+@interface RNZipArchive : RCTEventEmitter <NativeZipArchiveSpec, SSZipArchiveDelegate>
 
 @property (nonatomic) NSString *processedFilePath;
 @property (nonatomic) float progress;
