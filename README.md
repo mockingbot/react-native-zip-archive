@@ -1,45 +1,80 @@
-# React Native Zip Archive [![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive)
+# React Native Zip Archive [![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive) [![React Native New Architecture](https://img.shields.io/badge/React%20Native-New%20Architecture%20(TurboModules)-61dafb)](https://reactnative.dev/docs/new-architecture-intro)
 
-Zip archive utility for react-native
+Zip archive utility for React Native, built with **TurboModules** for the New Architecture.
 
-## Attention
+## ⚠️ Attention
 
-In order to comply with the new privacy policy of the App Store on iOS, you need to upgrade react-native-zip-archive to version 7.0.0, which requires the deployment target to be iOS 15.5 or later.
+### iOS Privacy Policy
+In order to comply with the new privacy policy of the App Store on iOS, you need react-native-zip-archive version 7.0.0 or later, which requires the deployment target to be iOS 15.5 or later.
 
-## For Expo Users
+### v8.0 Breaking Change
+**v8.0 requires React Native 0.70.0 or higher with New Architecture enabled.**
 
-The only way to make this work with Expo is to create a [dev build](https://docs.expo.dev/workflow/overview/#development-builds), the expo go is not supported.
-
-## Compatibility
-
-| react-native version | react-native-zip-archive version |
-| --- | --- |
-| ^0.60 | ^5.0.0 |
-| ^0.58 | ^4.0.0 |
-| <0.58 | ^3.0.0 |
-
-
-## Installation
-
+For React Native < 0.70, use v7.x:
 ```bash
-npm install react-native-zip-archive --save
+npm install react-native-zip-archive@^7.0.0
 ```
 
+## 🚀 What's New in v8.0
 
-## Linking
+- **TurboModule Support**: Full native integration with React Native's New Architecture
+- **Improved Performance**: Lazy loading and reduced bridge overhead
+- **Type Safety**: Full TypeScript support with generated native bindings via Codegen
+- **Concurrent React Ready**: Compatible with React 18+ concurrent features
 
-For iOS, run the command below in your app's root folder once the package has been installed
+## 📋 Requirements
 
-````bash
-cd ./ios && pod install
-````
+| Platform | Minimum Version |
+|----------|-----------------|
+| React Native | >= 0.70.0 |
+| React | >= 18.0.0 |
+| iOS | >= 15.5 |
+| Android | >= API 23 (Android 6.0) |
+
+## 🔧 Installation
+
+```bash
+npm install react-native-zip-archive
+```
+
+### iOS Setup
+
+```bash
+cd ios && pod install
+```
 
 For Android, it's ready to go.
 
+### Enabling New Architecture
 
-## Usage
+**Android** (`android/gradle.properties`):
+```properties
+newArchEnabled=true
+```
 
-import it into your code
+**iOS**:
+```bash
+RCT_NEW_ARCH_ENABLED=1 pod install
+```
+
+## 🏗️ Architecture
+
+This library is built as a **TurboModule** using React Native's New Architecture:
+
+- **Codegen**: Generates type-safe native bindings from TypeScript specs
+- **JSI**: Direct JavaScript-to-native communication without bridge overhead
+- **Lazy Loading**: Module initializes only when first used
+- **Fabric Compatible**: Works with the new Fabric renderer
+
+## 🎮 Playground App
+
+We provide a fully-featured [playground app](./playground/) built with Expo Development Builds. It demonstrates every API method with working examples.
+
+See [playground/README.md](./playground/README.md) for setup instructions.
+
+## 📖 API
+
+Import it into your code
 
 ```js
 import {
@@ -58,12 +93,11 @@ import {
 } from 'react-native-zip-archive'
 ```
 
-you may also want to use something like [react-native-fs](https://github.com/johanneslumpe/react-native-fs) to access the file system (check its repo for more information)
+You may also want to use something like [react-native-fs](https://github.com/johanneslumpe/react-native-fs) to access the file system (check its repo for more information)
 
 ```js
 import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 ```
-
 
 ## Platform Support Matrix
 
@@ -103,9 +137,7 @@ import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
 
 ---
 
-## API
-
-**`zip(source: string | string[], target: string, compressionLevel?: number): Promise<string>`**
+### `zip(source: string | string[], target: string, compressionLevel?: number): Promise<string>`
 
 > zip source to target
 
@@ -134,7 +166,7 @@ zip(sourcePath, targetPath)
 })
 ```
 
-**`zipWithPassword(source: string | string[], target: string, password: string, encryptionType?: string, compressionLevel?: number): Promise<string>`**
+### `zipWithPassword(source: string | string[], target: string, password: string, encryptionType?: string, compressionLevel?: number): Promise<string>`
 
 > zip source to target with password protection
 
@@ -169,7 +201,7 @@ zipWithPassword(sourcePath, targetPath, password, encryptionType)
 })
 ```
 
-**`unzip(source: string, target: string, charset?: string): Promise<string>`**
+### `unzip(source: string, target: string, charset?: string): Promise<string>`
 
 > unzip from source to target
 
@@ -193,7 +225,7 @@ unzip(sourcePath, targetPath, charset)
 })
 ```
 
-**`unzipWithPassword(source: string, target: string, password: string): Promise<string>`**
+### `unzipWithPassword(source: string, target: string, password: string): Promise<string>`
 
 > unzip from source to target
 
@@ -213,7 +245,7 @@ unzipWithPassword(sourcePath, targetPath, password)
 })
 ```
 
-**`unzipAssets(assetPath: string, target: string): Promise<string>`**
+### `unzipAssets(assetPath: string, target: string): Promise<string>`
 
 > unzip file from Android `assets` folder to target path
 
@@ -234,7 +266,7 @@ unzipAssets(assetPath, targetPath)
 })
 ```
 
-**`getUncompressedSize(source: string, charset?: string): Promise<number>`**
+### `getUncompressedSize(source: string, charset?: string): Promise<number>`
 
 > Returns the total uncompressed size of all files in the zip archive (in bytes).
 
@@ -254,7 +286,7 @@ getUncompressedSize(sourcePath)
 })
 ```
 
-**`subscribe(callback: ({ progress: number, filePath: string }) => void): EmitterSubscription`**
+### `subscribe(callback: ({ progress: number, filePath: string }) => void): EmitterSubscription`
 
 > Subscribe to the progress callbacks. Useful for displaying a progress bar on your UI during the process.
 
@@ -262,7 +294,6 @@ Your callback will be passed an object with the following fields:
 
 - `progress` (number)  a value from 0 to 1 representing the progress of the unzip method. 1 is completed.
 - `filePath` (string)  the zip file path of zipped or unzipped file.
-
 
 ***Note: Remember to check the filename while processing progress, to be sure that the unzipped or zipped file is the right one, because the event is global.***
 
@@ -282,9 +313,41 @@ componentWillUnmount() {
 }
 ```
 
-## Example App
-You can use this repo, https://github.com/plrthink/RNZATestApp, for testing and contribution. For more information please refer to its README.
+## 🔄 Migrating from v7 to v8
 
+See [MIGRATION.md](./MIGRATION.md) for detailed migration instructions.
+
+## 🛠️ Compatibility
+
+| react-native-zip-archive | React Native | Architecture |
+|--------------------------|--------------|--------------|
+| v8.x | >= 0.70.0 | New Architecture (TurboModules) |
+| v7.x | >= 0.60.0 | Legacy |
+| v6.x | >= 0.60.0 | Legacy |
+| v5.x | ^0.60 | Legacy |
+| v4.x | ^0.58 | Legacy |
+| v3.x | <0.58 | Legacy |
+
+## 📱 For Expo Users
+
+This library **requires an Expo Development Build**. It does NOT work in Expo Go because it contains custom native code.
+
+To use with Expo:
+1. Install `expo-dev-client`
+2. Create a [development build](https://docs.expo.dev/develop/development-builds/create-a-build/)
+3. Use the library in your app
+
+See our [playground app](./playground/) for a complete Expo Development Build example.
+
+## 🧪 Testing
+
+```bash
+npm test
+```
+
+## 🤝 Contributing
+
+See the [playground app](./playground/) for testing and contribution reference.
 
 ## Related Projects
 
@@ -293,4 +356,4 @@ You can use this repo, https://github.com/plrthink/RNZATestApp, for testing and 
 
 ---
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/plrthink)
+[!"Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/plrthink)
