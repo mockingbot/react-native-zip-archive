@@ -1,8 +1,16 @@
 import ReactNative from "react-native";
 
-const { NativeEventEmitter, NativeModules } = ReactNative;
+const { NativeEventEmitter, NativeModules, TurboModuleRegistry } = ReactNative;
 
-const RNZipArchive = NativeModules.RNZipArchive;
+// Try TurboModule first (New Architecture), fall back to NativeModules (Interop)
+const RNZipArchive = TurboModuleRegistry.get('RNZipArchive') || NativeModules.RNZipArchive;
+
+if (!RNZipArchive) {
+  throw new Error(
+    'react-native-zip-archive: Native module not found. ' +
+    'Please ensure the library is properly linked and you are using React Native >= 0.70.0'
+  );
+}
 
 const rnzaEmitter = new NativeEventEmitter(RNZipArchive);
 

@@ -8,8 +8,6 @@ import android.util.Log;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -42,7 +40,8 @@ import net.lingala.zip4j.progress.ProgressMonitor;
 
 import java.nio.charset.Charset;
 
-public class RNZipArchiveModule extends ReactContextBaseJavaModule {
+public class RNZipArchiveModule extends NativeZipArchiveSpec {
+  public static final String NAME = "RNZipArchive";
   private static final String TAG = RNZipArchiveModule.class.getSimpleName();
 
   private static final String PROGRESS_EVENT_NAME = "zipArchiveProgressEvent";
@@ -55,10 +54,10 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
   @Override
   public String getName() {
-    return "RNZipArchive";
+    return NAME;
   }
 
-  @ReactMethod
+  @Override
   public void isPasswordProtected(final String zipFilePath, final Promise promise) {
     try {
       net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
@@ -68,7 +67,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     }
   }
 
-  @ReactMethod
+  @Override
   public void unzipWithPassword(final String zipFilePath, final String destDirectory,
                                 final String password, final Promise promise) {
     new Thread(new Runnable() {
@@ -113,7 +112,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     }).start();
   }
 
-  @ReactMethod
+  @Override
   public void unzip(final String zipFilePath, final String destDirectory, final String charset, final Promise promise) {
     new Thread(new Runnable() {
       @Override
@@ -190,7 +189,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
    * Instead, we compare the number of bytes extracted to the size of the compressed zip file.
    * In most cases this means the progress 'stays on' 100% for a little bit (compressedSize < uncompressed size)
    */
-  @ReactMethod
+  @Override
   public void unzipAssets(final String assetsPath, final String destDirectory, final Promise promise) {
     new Thread(new Runnable() {
       @Override
@@ -282,25 +281,25 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     }).start();
   }
 
-  @ReactMethod
+  @Override
   public void zipFiles(final ReadableArray files, final String destDirectory, final double compressionLevel, final Promise promise) {
     zip(files.toArrayList(), destDirectory, compressionLevel, promise);
   }
 
-  @ReactMethod
+  @Override
   public void zipFolder(final String folder, final String destFile, final double compressionLevel, final Promise promise) {
     ArrayList<Object> folderAsArrayList = new ArrayList<>();
     folderAsArrayList.add(folder);
     zip(folderAsArrayList, destFile, compressionLevel, promise);
   }
 
-  @ReactMethod
+  @Override
   public void zipFilesWithPassword(final ReadableArray files, final String destFile, final String password,
                                    String encryptionMethod, final double compressionLevel, Promise promise) {
     zipWithPassword(files.toArrayList(), destFile, password, encryptionMethod, compressionLevel, promise);
   }
 
-  @ReactMethod
+  @Override
   public void zipFolderWithPassword(final String folder, final String destFile, final String password,
                                     String encryptionMethod, final double compressionLevel, Promise promise) {
     ArrayList<Object> folderAsArrayList = new ArrayList<>();
@@ -432,7 +431,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             .emit(PROGRESS_EVENT_NAME, map);
   }
 
-  @ReactMethod
+  @Override
   public void getUncompressedSize(String zipFilePath, String charset, final Promise promise) {
     long totalSize = getUncompressedSize(zipFilePath, charset);
     promise.resolve((double) totalSize);
@@ -509,13 +508,13 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
     return sw.toString();
   }
 
-  @ReactMethod
+  @Override
   public void addListener(String eventName) {
     // Keep: Required for RN built in Event Emitter Calls.
   }
 
-  @ReactMethod
-  public void removeListeners(Integer count) {
+  @Override
+  public void removeListeners(double count) {
     // Keep: Required for RN built in Event Emitter Calls.
   }
 }
