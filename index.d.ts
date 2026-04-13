@@ -23,7 +23,7 @@ declare module "react-native-zip-archive" {
     compressionLevel: number = DEFAULT_COMPRESSION
   ): Promise<string>;
   export function unzip(source: string, target: string, charset?: string): Promise<string>;
-  export function unzipWithPassword(assetPath: string, target: string, password: string): Promise<string>;
+  export function unzipWithPassword(source: string, target: string, password: string): Promise<string>;
   export function unzipAssets(assetPath: string, target: string): Promise<string>;
   export function subscribe(callback: ({ progress, filePath }: { progress: number, filePath: string }) => void): NativeEventSubscription;
   export function getUncompressedSize(source: string, charset?: string): Promise<number>;

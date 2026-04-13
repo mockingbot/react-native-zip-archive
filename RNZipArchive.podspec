@@ -13,7 +13,11 @@ Pod::Spec.new do |s|
   s.platform       = :ios, '15.5'
   s.preserve_paths = '*.js'
 
-  s.dependency 'React-Core'
+  if respond_to?(:install_modules_dependencies)
+    install_modules_dependencies(s)
+  else
+    s.dependency 'React-Core'
+  end
   s.dependency 'SSZipArchive', '~>2.5.5'
 
   s.subspec 'Core' do |ss|
