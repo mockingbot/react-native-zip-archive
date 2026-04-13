@@ -330,14 +330,65 @@ See [MIGRATION.md](./MIGRATION.md) for detailed migration instructions.
 
 ## 📱 For Expo Users
 
-This library **requires an Expo Development Build**. It does NOT work in Expo Go because it contains custom native code.
+This library **requires an Expo Development Build**. It does **NOT** work in Expo Go because it contains custom native code (zip/unzip libraries for iOS and Android).
 
-To use with Expo:
-1. Install `expo-dev-client`
-2. Create a [development build](https://docs.expo.dev/develop/development-builds/create-a-build/)
-3. Use the library in your app
+### Why Expo Go is Not Supported
 
-See our [playground app](./playground/) for a complete Expo Development Build example.
+[Expo Go](https://expo.dev/go) is a pre-built app with a fixed set of native modules. Since `react-native-zip-archive` includes its own native zip libraries (SSZipArchive on iOS, zip4j on Android), these are not bundled inside Expo Go. If you try to use this library in Expo Go, you'll get a **"Native module not found"** error.
+
+### Solution: Use an Expo Development Build
+
+An [Expo Development Build](https://docs.expo.dev/develop/development-builds/introduction/) is a custom version of your app that includes any native modules you install. It works just like Expo Go — with instant reloads, the developer menu, and deep linking — but supports libraries with custom native code.
+
+### Setup Steps
+
+1. **Install `expo-dev-client`** in your project:
+   ```bash
+   npx expo install expo-dev-client
+   ```
+
+2. **Create a development build** (one-time setup):
+   ```bash
+   # iOS Simulator
+   npx eas build --platform ios --profile development-simulator
+
+   # iOS Device
+   npx eas build --platform ios --profile development
+
+   # Android
+   npx eas build --platform android --profile development
+   ```
+
+   Or build locally:
+   ```bash
+   npx expo run:ios
+   # or
+   npx expo run:android
+   ```
+
+3. **Install the development build** on your simulator or device.
+
+4. **Start developing**:
+   ```bash
+   npx expo start --dev-client
+   ```
+
+5. **Install this library**:
+   ```bash
+   npx expo install react-native-zip-archive
+   ```
+
+### Quick Comparison
+
+| Feature | Expo Go | Development Build |
+|---------|---------|-------------------|
+| Works with `react-native-zip-archive` | ❌ No | ✅ Yes |
+| Hot reload | ✅ Yes | ✅ Yes |
+| Developer menu | ✅ Yes | ✅ Yes |
+| Custom native code | ❌ No | ✅ Yes |
+| Build required | ❌ No | ✅ One-time setup |
+
+See our [playground app](./playground/) for a complete, working Expo Development Build example.
 
 ## 🧪 Testing
 
