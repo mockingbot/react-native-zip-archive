@@ -1,28 +1,36 @@
 package com.rnziparchive;
 
-import java.util.*;
-
-import com.facebook.react.ReactPackage;
+import com.facebook.react.BaseReactPackage;
 import com.facebook.react.bridge.NativeModule;
-import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.module.model.ReactModuleInfo;
+import com.facebook.react.module.model.ReactModuleInfoProvider;
+import java.util.HashMap;
+import java.util.Map;
 
-public class RNZipArchivePackage implements ReactPackage {
-
-  @Override
-  public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-    List<NativeModule> modules = new ArrayList<>();
-    modules.add(new RNZipArchiveModule(reactContext));
-    return modules;
-  }
-
-  public List<Class<? extends JavaScriptModule>> createJSModules() {
-    return Collections.emptyList();
-  }
+public class RNZipArchivePackage extends BaseReactPackage {
 
   @Override
-  public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
-    return Arrays.<ViewManager>asList();
+  public NativeModule getModule(String name, ReactApplicationContext reactContext) {
+    if (name.equals(RNZipArchiveModule.NAME)) {
+      return new RNZipArchiveModule(reactContext);
+    }
+    return null;
+  }
+
+  @Override
+  public ReactModuleInfoProvider getReactModuleInfoProvider() {
+    return () -> {
+      Map<String, ReactModuleInfo> map = new HashMap<>();
+      map.put(RNZipArchiveModule.NAME, new ReactModuleInfo(
+        RNZipArchiveModule.NAME,       // name
+        RNZipArchiveModule.NAME,       // className
+        false, // canOverrideExistingModule
+        false, // needsEagerInit
+        false, // isCXXModule
+        true   // isTurboModule = true
+      ));
+      return map;
+    };
   }
 }

@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
   s.dependency 'SSZipArchive', '~>2.5.5'
 
   s.subspec 'Core' do |ss|
-    ss.source_files = 'ios/*.{h,m}'
+    ss.source_files = 'ios/*.{h,m,mm}'
     ss.public_header_files = ['ios/RNZipArchive.h']
   end
 end
