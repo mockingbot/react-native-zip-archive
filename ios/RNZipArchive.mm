@@ -1,5 +1,5 @@
 //
-//  RNZipArchive.m
+//  RNZipArchive.mm
 //  RNZipArchive
 //
 //  Created by Perry Poon on 8/26/15.
@@ -21,10 +21,6 @@
   bool hasListeners;
 }
 
-@synthesize bridge = _bridge;
-
-RCT_EXPORT_MODULE();
-
 // Will be called when this module's first listener is added.
 -(void)startObserving {
     hasListeners = YES;
@@ -42,19 +38,18 @@ RCT_EXPORT_MODULE();
   return @[@"zipArchiveProgressEvent"];
 }
 
-RCT_EXPORT_METHOD(isPasswordProtected:(NSString *)file
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject) {
-
+- (void)isPasswordProtected:(NSString *)file
+                   resolve:(RCTPromiseResolveBlock)resolve
+                    reject:(RCTPromiseRejectBlock)reject {
     BOOL isPasswordProtected = [SSZipArchive isFilePasswordProtectedAtPath:file];
     resolve([NSNumber numberWithBool:isPasswordProtected]);
 }
 
-RCT_EXPORT_METHOD(unzip:(NSString *)from
-                  destinationPath:(NSString *)destinationPath
-                  charset:(NSString *)charset
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject) {
+- (void)unzip:(NSString *)from
+destinationPath:(NSString *)destinationPath
+      charset:(NSString *)charset
+     resolve:(RCTPromiseResolveBlock)resolve
+      reject:(RCTPromiseRejectBlock)reject {
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -73,11 +68,11 @@ RCT_EXPORT_METHOD(unzip:(NSString *)from
     }
 }
 
-RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
-                  destinationPath:(NSString *)destinationPath
-                  password:(NSString *)password
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject) {
+- (void)unzipWithPassword:(NSString *)from
+        destinationPath:(NSString *)destinationPath
+               password:(NSString *)password
+               resolve:(RCTPromiseResolveBlock)resolve
+                reject:(RCTPromiseRejectBlock)reject {
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -97,11 +92,11 @@ RCT_EXPORT_METHOD(unzipWithPassword:(NSString *)from
     }
 }
 
-RCT_EXPORT_METHOD(zipFolder:(NSString *)from
-                  destinationPath:(NSString *)destinationPath
-                  compressionLevel:(double)compressionLevel
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject) {
+- (void)zipFolder:(NSString *)from
+  destinationPath:(NSString *)destinationPath
+ compressionLevel:(double)compressionLevel
+         resolve:(RCTPromiseResolveBlock)resolve
+          reject:(RCTPromiseRejectBlock)reject {
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -128,11 +123,11 @@ RCT_EXPORT_METHOD(zipFolder:(NSString *)from
     }
 }
 
-RCT_EXPORT_METHOD(zipFiles:(NSArray<NSString *> *)from
-                  destinationPath:(NSString *)destinationPath
-                  compressionLevel:(double)compressionLevel
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject) {
+- (void)zipFiles:(NSArray<NSString *> *)from
+ destinationPath:(NSString *)destinationPath
+compressionLevel:(double)compressionLevel
+        resolve:(RCTPromiseResolveBlock)resolve
+         reject:(RCTPromiseRejectBlock)reject {
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -153,13 +148,13 @@ RCT_EXPORT_METHOD(zipFiles:(NSArray<NSString *> *)from
     }
 }
 
-RCT_EXPORT_METHOD(zipFolderWithPassword:(NSString *)from
-                  destinationPath:(NSString *)destinationPath
-                  password:(NSString *)password
-                  encryptionType:(NSString *)encryptionType
-                  compressionLevel:(double)compressionLevel
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject) {
+- (void)zipFolderWithPassword:(NSString *)from
+              destinationPath:(NSString *)destinationPath
+                     password:(NSString *)password
+               encryptionType:(NSString *)encryptionType
+             compressionLevel:(double)compressionLevel
+                      resolve:(RCTPromiseResolveBlock)resolve
+                       reject:(RCTPromiseRejectBlock)reject {
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -186,13 +181,13 @@ RCT_EXPORT_METHOD(zipFolderWithPassword:(NSString *)from
     }
 }
 
-RCT_EXPORT_METHOD(zipFilesWithPassword:(NSArray<NSString *> *)from
-                  destinationPath:(NSString *)destinationPath
-                  password:(NSString *)password
-                  encryptionType:(NSString *)encryptionType
-                  compressionLevel:(double)compressionLevel
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject) {
+- (void)zipFilesWithPassword:(NSArray<NSString *> *)from
+             destinationPath:(NSString *)destinationPath
+                    password:(NSString *)password
+              encryptionType:(NSString *)encryptionType
+            compressionLevel:(double)compressionLevel
+                     resolve:(RCTPromiseResolveBlock)resolve
+                      reject:(RCTPromiseRejectBlock)reject {
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -213,20 +208,35 @@ RCT_EXPORT_METHOD(zipFilesWithPassword:(NSArray<NSString *> *)from
     }
 }
 
-
-RCT_EXPORT_METHOD(getUncompressedSize:(NSString *)path
-                  charset:(NSString *)charset
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject) {
+- (void)getUncompressedSize:(NSString *)path
+                    charset:(NSString *)charset
+                   resolve:(RCTPromiseResolveBlock)resolve
+                    reject:(RCTPromiseRejectBlock)reject {
     NSError *error = nil;
     NSNumber *wantedFileSize = [SSZipArchive payloadSizeForArchiveAtPath:path error:&error];
 
     if (error == nil) {
         resolve(wantedFileSize);
     } else {
-//        reject(@"get_uncompressed_size_error", [error localizedDescription], error);
         resolve(@-1);
     }
+}
+
+- (void)unzipAssets:(NSString *)source
+             target:(NSString *)target
+            resolve:(RCTPromiseResolveBlock)resolve
+             reject:(RCTPromiseRejectBlock)reject {
+    // iOS doesn't have assets like Android, return error
+    NSError *error = [NSError errorWithDomain:@"RNZipArchive" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"unzipAssets is not supported on iOS"}];
+    reject(@"unzip_assets_not_supported", @"unzipAssets is not supported on iOS", error);
+}
+
+- (void)addListener:(NSString *)eventName {
+    // No-op required by TurboModule spec
+}
+
+- (void)removeListeners:(double)count {
+    // No-op required by TurboModule spec
 }
 
 - (dispatch_queue_t)methodQueue {
