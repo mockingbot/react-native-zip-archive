@@ -1,7 +1,7 @@
 {
   "name": "react-native-zip-archive",
-  "version": "7.1.0",
-  "description": "A little wrapper on ZipArchive for react-native",
+  "version": "8.0.0-rc.1",
+  "description": "A TurboModule wrapper on ZipArchive for React Native's New Architecture",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -27,11 +27,11 @@
     "@babel/core": "*",
     "@react-native-community/eslint-config": "^2.0.0",
     "eslint": "^6.7.2",
-    "react": ">=16.8.6",
-    "react-native": ">=0.60.0"
+    "react": ">=18.0.0",
+    "react-native": ">=0.70.0"
   },
   "peerDependencies": {
-    "react": ">=16.8.6",
-    "react-native": ">=0.60.0"
+    "react": ">=18.0.0",
+    "react-native": ">=0.70.0"
   }
 }

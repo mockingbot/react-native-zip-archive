@@ -31,3 +31,6 @@ npm-debug.log
 /*.tgz
 example/
 yarn.lock
+
+# Playground - Expo development build project (not for npm)
+playground/
