@@ -2,7 +2,6 @@ const mockRNZipArchive = {
   zip: jest.fn(() => Promise.resolve('/mock/path.zip')),
   zipFolder: jest.fn(() => Promise.resolve('/mock/path.zip')),
   zipFiles: jest.fn(() => Promise.resolve('/mock/path.zip')),
-  zipWithPassword: jest.fn(() => Promise.resolve('/mock/path.zip')),
   zipFolderWithPassword: jest.fn(() => Promise.resolve('/mock/path.zip')),
   zipFilesWithPassword: jest.fn(() => Promise.resolve('/mock/path.zip')),
   unzip: jest.fn(() => Promise.resolve('/mock/dest')),
