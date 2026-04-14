@@ -470,7 +470,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
   }
 
   private static CompressionLevel getCompressionLevel(double compressionLevel) {
-    switch (compressionLevel) {
+    switch ((int) compressionLevel) {
       case -1:
         return CompressionLevel.NORMAL;
       case 0:
