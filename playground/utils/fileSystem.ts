@@ -13,12 +13,12 @@ export const ensureDir = async (dir: string) => {
 export const createSampleFolder = async () => {
   const dir = FileSystem.documentDirectory + 'sample-folder/';
   await ensureDir(dir);
+  await ensureDir(dir + 'nested/');
   await FileSystem.writeAsStringAsync(dir + 'file1.txt', 'Hello World');
   await FileSystem.writeAsStringAsync(dir + 'file2.txt', 'Sample content');
   await FileSystem.writeAsStringAsync(
     dir + 'nested/file3.txt',
-    'Nested content',
-    { dir: FileSystem.documentDirectory }
+    'Nested content'
   );
   return dir;
 };

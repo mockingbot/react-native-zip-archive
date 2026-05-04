@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "lint": "eslint index.js"
+    "lint": "eslint index.js",
+    "test:e2e:android": "./scripts/e2e-android.sh",
+    "test:e2e:ios": "./scripts/e2e-ios.sh",
+    "test:e2e": "npm run test:e2e:android && npm run test:e2e:ios"
   },
   "repository": {
     "type": "git",
