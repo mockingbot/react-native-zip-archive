@@ -1,0 +1,5 @@
+flows:
+  - "flows/**"
+
+executionOrder:
+  continueOnFailure: false

@@ -469,32 +469,31 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   }
 
   private static CompressionLevel getCompressionLevel(double compressionLevel) {
-    switch (compressionLevel) {
-      case -1:
-        return CompressionLevel.NORMAL;
-      case 0:
-        return CompressionLevel.NO_COMPRESSION;
-      case 1:
-        return CompressionLevel.FASTEST;
-      case 2:
-        return CompressionLevel.FASTER;
-      case 3:
-        return CompressionLevel.FAST;
-      case 4:
-        return CompressionLevel.MEDIUM_FAST;
-      case 5:
-        return CompressionLevel.NORMAL;
-      case 6:
-        return CompressionLevel.HIGHER;
-      case 7:
-        return CompressionLevel.MAXIMUM;
-      case 8:
-        return CompressionLevel.PRE_ULTRA;
-      case 9:
-        return CompressionLevel.ULTRA;
-      default:
-        Log.w(TAG, "Unsupported compression level: " + compressionLevel + ", defaulting to NORMAL (5)");
-        return CompressionLevel.NORMAL;
+    if (compressionLevel == -1) {
+      return CompressionLevel.NORMAL;
+    } else if (compressionLevel == 0) {
+      return CompressionLevel.NO_COMPRESSION;
+    } else if (compressionLevel == 1) {
+      return CompressionLevel.FASTEST;
+    } else if (compressionLevel == 2) {
+      return CompressionLevel.FASTER;
+    } else if (compressionLevel == 3) {
+      return CompressionLevel.FAST;
+    } else if (compressionLevel == 4) {
+      return CompressionLevel.MEDIUM_FAST;
+    } else if (compressionLevel == 5) {
+      return CompressionLevel.NORMAL;
+    } else if (compressionLevel == 6) {
+      return CompressionLevel.HIGHER;
+    } else if (compressionLevel == 7) {
+      return CompressionLevel.MAXIMUM;
+    } else if (compressionLevel == 8) {
+      return CompressionLevel.PRE_ULTRA;
+    } else if (compressionLevel == 9) {
+      return CompressionLevel.ULTRA;
+    } else {
+      Log.w(TAG, "Unsupported compression level: " + compressionLevel + ", defaulting to NORMAL (5)");
+      return CompressionLevel.NORMAL;
     }
   }
 

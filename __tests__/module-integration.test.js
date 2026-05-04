@@ -19,7 +19,7 @@ describe('TurboModule Integration', () => {
     jest.clearAllMocks();
   });
 
-  test('uses TurboModuleRegistry first', () => {
+  test('uses TurboModuleRegistry first', async () => {
     const mockTurboModuleRegistry = {
       get: jest.fn(() => mockRNZipArchive),
     };
@@ -37,8 +37,10 @@ describe('TurboModule Integration', () => {
     }));
 
     const { zip } = require('../index');
+    // Lazy loading: TurboModuleRegistry.get is only called when a function is invoked
+    expect(mockTurboModuleRegistry.get).not.toHaveBeenCalled();
+    await zip('/a', '/b');
     expect(mockTurboModuleRegistry.get).toHaveBeenCalledWith('RNZipArchive');
-    zip('/a', '/b');
     expect(mockRNZipArchive.zipFolder).toHaveBeenCalled();
   });
 
@@ -65,7 +67,7 @@ describe('TurboModule Integration', () => {
     expect(mockRNZipArchive.zipFolder).toHaveBeenCalled();
   });
 
-  test('throws error when module not found', () => {
+  test('throws error when module not found', async () => {
     const mockTurboModuleRegistry = {
       get: jest.fn(() => null),
     };
@@ -78,6 +80,8 @@ describe('TurboModule Integration', () => {
       NativeEventEmitter: mockNativeEventEmitter,
     }));
 
-    expect(() => require('../index')).toThrow('react-native-zip-archive: Native module not found');
+    const { zip } = require('../index');
+    // Lazy loading: error is thrown synchronously when a function is invoked, not at module load time
+    expect(() => zip('/a', '/b')).toThrow('react-native-zip-archive: Native module not found');
   });
 });

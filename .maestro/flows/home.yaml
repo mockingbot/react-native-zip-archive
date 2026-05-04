@@ -1,0 +1,27 @@
+appId: com.example.rnziparchive.playground
+---
+- launchApp
+- runFlow:
+    when:
+      visible: "http://localhost:8081"
+    commands:
+      - tapOn: "http://localhost:8081"
+      - runFlow:
+          when:
+            visible: "Continue"
+          commands:
+            - tapOn: "Continue"
+      - runFlow:
+          when:
+            visible: "Reload"
+          commands:
+            - tapOn:
+                id: "closeButton"
+- extendedWaitUntil:
+    visible: "RNZipArchive Playground"
+    timeout: 45000
+- assertVisible: "Zip Operations"
+- assertVisible: "Unzip Operations"
+- assertVisible: "Password Protection"
+- assertVisible: "Progress Events"
+- assertVisible: "Benchmarks"

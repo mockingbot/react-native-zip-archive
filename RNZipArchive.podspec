@@ -13,15 +13,13 @@ Pod::Spec.new do |s|
   s.platform       = :ios, '15.5'
   s.preserve_paths = '*.js'
 
-  if respond_to?(:install_modules_dependencies)
+  if defined?(install_modules_dependencies) != nil
     install_modules_dependencies(s)
   else
     s.dependency 'React-Core'
   end
   s.dependency 'SSZipArchive', '~>2.5.5'
 
-  s.subspec 'Core' do |ss|
-    ss.source_files = 'ios/*.{h,m,mm}'
-    ss.public_header_files = ['ios/RNZipArchive.h']
-  end
+  s.source_files = 'ios/*.{h,m,mm}'
+  s.public_header_files = ['ios/RNZipArchive.h']
 end

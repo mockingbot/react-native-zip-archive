@@ -21,6 +21,14 @@
   bool hasListeners;
 }
 
+RCT_EXPORT_MODULE()
+
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params
+{
+  return std::make_shared<facebook::react::NativeZipArchiveSpecJSI>(params);
+}
+
 // Will be called when this module's first listener is added.
 -(void)startObserving {
     hasListeners = YES;

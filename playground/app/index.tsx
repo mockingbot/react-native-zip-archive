@@ -41,7 +41,7 @@ export default function HomeScreen() {
       <View style={styles.cards}>
         {DEMOS.map((demo) => (
           <Link key={demo.href} href={demo.href} asChild>
-            <TouchableOpacity style={styles.card}>
+            <TouchableOpacity style={styles.card} accessibilityLabel={demo.title}>
               <Text style={styles.cardTitle}>{demo.title}</Text>
               <Text style={styles.cardDesc}>{demo.desc}</Text>
             </TouchableOpacity>
