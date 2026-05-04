@@ -103,9 +103,10 @@ export default function UnzipScreen() {
             <>
               <Text style={styles.subHeading}>Files:</Text>
               {extractedFiles.map((f) => (
-                <Text key={f} style={styles.fileItem}>
-                  • {f}
-                </Text>
+                <View key={f} style={{ flexDirection: 'row' }}>
+                  <Text style={styles.fileItem}>• </Text>
+                  <Text style={styles.fileItem}>{f}</Text>
+                </View>
               ))}
             </>
           )}

@@ -123,3 +123,9 @@ captures/
 
 # npm pack output
 /*.tgz
+
+# Playground generated artifacts
+playground/.expo/
+playground/android/
+playground/ios/
+playground/package-lock.json

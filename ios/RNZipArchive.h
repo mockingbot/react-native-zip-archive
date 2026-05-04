@@ -7,7 +7,7 @@
 //
 
 #import "SSZipArchive/SSZipArchive.h"
-#import <RNZipArchiveSpec/RNZipArchiveSpec.h>
+#import <NativeZipArchiveSpec/NativeZipArchiveSpec.h>
 #import <React/RCTEventEmitter.h>
 
 @interface RNZipArchive : RCTEventEmitter <NativeZipArchiveSpec, SSZipArchiveDelegate>

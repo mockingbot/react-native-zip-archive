@@ -1,0 +1,13 @@
+appId: com.example.rnziparchive.playground
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Zip Operations"
+    timeout: 15000
+- tapOn: "Zip Operations"
+- assertVisible: "Zip Sample Folder"
+- tapOn: "Zip Sample Folder"
+- extendedWaitUntil:
+    visible: "Success"
+    timeout: 15000
+- takeScreenshot: debug-zip-result

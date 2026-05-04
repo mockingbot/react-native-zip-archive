@@ -1,18 +1,32 @@
-import ReactNative from "react-native";
+import {
+  NativeEventEmitter,
+  NativeModules,
+  TurboModuleRegistry,
+} from "react-native";
 
-const { NativeEventEmitter, NativeModules, TurboModuleRegistry } = ReactNative;
+let _RNZipArchive = null;
+let _rnzaEmitter = null;
 
-// Try TurboModule first (New Architecture), fall back to NativeModules (Interop)
-const RNZipArchive = TurboModuleRegistry.get('RNZipArchive') || NativeModules.RNZipArchive;
+function getRNZipArchive() {
+  if (!_RNZipArchive) {
+    // Try TurboModuleRegistry first (New Architecture / Bridgeless)
+    _RNZipArchive = TurboModuleRegistry.get("RNZipArchive");
 
-if (!RNZipArchive) {
-  throw new Error(
-    'react-native-zip-archive: Native module not found. ' +
-    'Please ensure the library is properly linked and you are using React Native >= 0.70.0'
-  );
+    // Fallback to NativeModules (Old Architecture / Interop)
+    if (!_RNZipArchive) {
+      _RNZipArchive = NativeModules.RNZipArchive;
+    }
+
+    if (!_RNZipArchive) {
+      throw new Error(
+        "react-native-zip-archive: Native module not found. " +
+          "Please ensure the library is properly linked and you are using React Native >= 0.70.0"
+      );
+    }
+    _rnzaEmitter = new NativeEventEmitter(_RNZipArchive);
+  }
+  return _RNZipArchive;
 }
-
-const rnzaEmitter = new NativeEventEmitter(RNZipArchive);
 
 const normalizeFilePath = (path) =>
   path.startsWith("file://") ? path.slice(7) : path;
@@ -23,7 +37,7 @@ export const BEST_SPEED = 1;
 export const BEST_COMPRESSION = 9;
 
 export const unzip = (source, target, charset = "UTF-8") => {
-  return RNZipArchive.unzip(
+  return getRNZipArchive().unzip(
     normalizeFilePath(source),
     normalizeFilePath(target),
     charset
@@ -31,13 +45,13 @@ export const unzip = (source, target, charset = "UTF-8") => {
 };
 
 export const isPasswordProtected = (source) => {
-  return RNZipArchive.isPasswordProtected(normalizeFilePath(source)).then(
-    (isEncrypted) => !!isEncrypted
-  );
+  return getRNZipArchive()
+    .isPasswordProtected(normalizeFilePath(source))
+    .then((isEncrypted) => !!isEncrypted);
 };
 
 export const unzipWithPassword = (source, target, password) => {
-  return RNZipArchive.unzipWithPassword(
+  return getRNZipArchive().unzipWithPassword(
     normalizeFilePath(source),
     normalizeFilePath(target),
     password
@@ -49,8 +63,9 @@ export const zipWithPassword = (
   target,
   password,
   encryptionMethod = "",
-  compressionLevel = DEFAULT_COMPRESSION,
+  compressionLevel = DEFAULT_COMPRESSION
 ) => {
+  const RNZipArchive = getRNZipArchive();
   return Array.isArray(source)
     ? RNZipArchive.zipFilesWithPassword(
         source.map(normalizeFilePath),
@@ -69,6 +84,7 @@ export const zipWithPassword = (
 };
 
 export const zip = (source, target, compressionLevel = DEFAULT_COMPRESSION) => {
+  const RNZipArchive = getRNZipArchive();
   return Array.isArray(source)
     ? RNZipArchive.zipFiles(
         source.map(normalizeFilePath),
@@ -83,6 +99,7 @@ export const zip = (source, target, compressionLevel = DEFAULT_COMPRESSION) => {
 };
 
 export const unzipAssets = (source, target) => {
+  const RNZipArchive = getRNZipArchive();
   if (!RNZipArchive.unzipAssets) {
     throw new Error("unzipAssets not supported on this platform");
   }
@@ -94,9 +111,13 @@ export const unzipAssets = (source, target) => {
 };
 
 export const subscribe = (callback) => {
-  return rnzaEmitter.addListener("zipArchiveProgressEvent", callback);
+  getRNZipArchive();
+  return _rnzaEmitter.addListener("zipArchiveProgressEvent", callback);
 };
 
 export const getUncompressedSize = (source, charset = "UTF-8") => {
-  return RNZipArchive.getUncompressedSize(normalizeFilePath(source), charset);
+  return getRNZipArchive().getUncompressedSize(
+    normalizeFilePath(source),
+    charset
+  );
 };
