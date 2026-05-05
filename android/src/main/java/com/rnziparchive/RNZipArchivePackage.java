@@ -27,6 +27,7 @@ public class RNZipArchivePackage extends TurboReactPackage {
         RNZipArchiveModule.NAME,       // className
         false, // canOverrideExistingModule
         false, // needsEagerInit
+        true,  // hasConstants — required for RN 0.70.x compat
         false, // isCXXModule
         true   // isTurboModule = true
       ));
