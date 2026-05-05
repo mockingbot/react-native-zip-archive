@@ -104,7 +104,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
             }
             updateProgress(i + 1, totalFiles, zipFilePath);
           }
-          promise.resolve(Arguments.fromList(extractedFileNames));
+          promise.resolve(destDirectory);
         } catch (Exception ex) {
           updateProgress(0, 1, zipFilePath); // force 0%
           promise.reject("RNZipArchiveError", String.format("Failed to unzip file, due to: %s", getStackTrace(ex)));
@@ -408,10 +408,10 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
             }
             else {
               promise.reject("RNZipArchiveError", "File or folder does not exist");
+              return;
             }
-
-            updateProgress(1, 1, destFile); // force 100%
           }
+          updateProgress(1, 1, destFile); // force 100%
           promise.resolve(destFile);
         } catch (Exception ex) {
           promise.reject("RNZipArchiveError", ex.getMessage());
