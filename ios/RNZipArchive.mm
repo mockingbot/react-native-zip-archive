@@ -240,11 +240,11 @@ compressionLevel:(double)compressionLevel
 }
 
 - (void)addListener:(NSString *)eventName {
-    // No-op required by TurboModule spec
+    [super addListener:eventName];
 }
 
 - (void)removeListeners:(double)count {
-    // No-op required by TurboModule spec
+    [super removeListeners:count];
 }
 
 - (dispatch_queue_t)methodQueue {

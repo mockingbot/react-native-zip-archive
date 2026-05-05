@@ -79,6 +79,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
             zipFile.setPassword(password.toCharArray());
           } else {
             promise.reject("RNZipArchiveError", String.format("Zip file: %s is not password protected", zipFilePath));
+            return;
           }
 
           List fileHeaderList = zipFile.getFileHeaders();
@@ -336,6 +337,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         }
       } else {
         promise.reject("RNZipArchiveError", "Password is empty");
+        return;
       }
 
       processZip(filesOrDirectory, destFile, parameters, promise, password.toCharArray());
