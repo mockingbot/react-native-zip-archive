@@ -23,11 +23,13 @@
 
 RCT_EXPORT_MODULE()
 
+#ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
   return std::make_shared<facebook::react::NativeZipArchiveSpecJSI>(params);
 }
+#endif
 
 // Will be called when this module's first listener is added.
 -(void)startObserving {
@@ -169,7 +171,7 @@ compressionLevel:(double)compressionLevel
 
     BOOL success;
     [self setProgressHandler];
-    BOOL useAES = encryptionType && ![encryptionType isEqualToString:@"STANDARD"];
+    BOOL useAES = encryptionType && [encryptionType length] > 0 && ![encryptionType isEqualToString:@"STANDARD"];
     success = [SSZipArchive createZipFileAtPath:destinationPath
                         withContentsOfDirectory:from
                             keepParentDirectory:NO

@@ -7,13 +7,21 @@
 //
 
 #import "SSZipArchive/SSZipArchive.h"
-#import <NativeZipArchiveSpec/NativeZipArchiveSpec.h>
 #import <React/RCTEventEmitter.h>
 
-@interface RNZipArchive : RCTEventEmitter <NativeZipArchiveSpec, SSZipArchiveDelegate>
+#ifdef RCT_NEW_ARCH_ENABLED
+#import <NativeZipArchiveSpec/NativeZipArchiveSpec.h>
+#endif
+
+@interface RNZipArchive : RCTEventEmitter <SSZipArchiveDelegate>
 
 @property (nonatomic) NSString *processedFilePath;
 @property (nonatomic) float progress;
 @property (nonatomic, copy) void (^progressHandler)(NSUInteger entryNumber, NSUInteger total);
 
 @end
+
+#ifdef RCT_NEW_ARCH_ENABLED
+@interface RNZipArchive () <NativeZipArchiveSpec>
+@end
+#endif
