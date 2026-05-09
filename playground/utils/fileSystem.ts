@@ -45,6 +45,26 @@ export const listFiles = async (dir: string) => {
   }
 };
 
+export const listFilesRecursive = async (dir: string, prefix = ''): Promise<string[]> => {
+  try {
+    const entries = await FileSystem.readDirectoryAsync(dir);
+    const result: string[] = [];
+    for (const entry of entries) {
+      const path = dir + entry;
+      const info = await FileSystem.getInfoAsync(path);
+      if (info.isDirectory) {
+        const nested = await listFilesRecursive(path + '/', prefix + entry + '/');
+        result.push(...nested);
+      } else {
+        result.push(prefix + entry);
+      }
+    }
+    return result;
+  } catch {
+    return [];
+  }
+};
+
 export const getFileSize = async (path: string) => {
   try {
     const info = await FileSystem.getInfoAsync(path);

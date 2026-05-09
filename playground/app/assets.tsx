@@ -12,7 +12,7 @@ import * as FileSystem from 'expo-file-system';
 import { unzipAssets } from 'react-native-zip-archive';
 import { ResultCard } from '../components/ResultCard';
 import { CodePreview } from '../components/CodePreview';
-import { ensureDir, listFiles } from '../utils/fileSystem';
+import { ensureDir, listFilesRecursive } from '../utils/fileSystem';
 
 const SOURCE_CODE = `import { unzipAssets } from 'react-native-zip-archive';
 
@@ -35,7 +35,7 @@ export default function AssetsScreen() {
     try {
       const path = await unzipAssets('sample.zip', out);
       setResult(path);
-      const entries = await listFiles(out);
+      const entries = await listFilesRecursive(out);
       setFiles(entries);
     } catch (err) {
       setError(err as Error);
@@ -77,7 +77,7 @@ export default function AssetsScreen() {
             <>
               <Text style={styles.subHeading}>Files:</Text>
               {files.map((f) => (
-                <Text key={f} style={styles.fileItem}>• {f}</Text>
+                <Text key={f} style={styles.fileItem}>- {f}</Text>
               ))}
             </>
           )}

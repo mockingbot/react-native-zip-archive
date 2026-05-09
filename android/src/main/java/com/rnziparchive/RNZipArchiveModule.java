@@ -196,7 +196,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       @Override
       public void run() {
         InputStream assetsInputStream;
-        final long compressedSize;
+        long compressedSize;
 
         try {
           if(assetsPath.startsWith("content://")) {
@@ -208,11 +208,21 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
             compressedSize = fileDescriptor.getStatSize();
           } else {
             assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
-            AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
-            compressedSize = fileDescriptor.getLength();
+            try {
+              AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
+              compressedSize = fileDescriptor.getLength();
+            } catch (IOException fdEx) {
+              // Asset is compressed in the APK; openFd() doesn't work for compressed assets.
+              // Fall back to available() as a size estimate.
+              compressedSize = assetsInputStream.available();
+              if (compressedSize <= 0) {
+                compressedSize = 1; // avoid division by zero in progress math
+              }
+            }
           }
         } catch (IOException e) {
-          promise.reject("RNZipArchiveError", String.format("Asset file `%s` could not be opened", assetsPath));
+          Log.e(TAG, "Failed to open asset: " + assetsPath, e);
+          promise.reject("RNZipArchiveError", String.format("Asset file `%s` could not be opened: %s", assetsPath, e.getMessage()));
           return;
         }
 
