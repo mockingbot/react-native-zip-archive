@@ -5,7 +5,7 @@ set -e
 # Usage: ./scripts/e2e-android.sh [flow-file ...]
 # If no flow files are provided, runs all main flows.
 
-FLOWS=("${@:-.maestro/flows/home.yaml .maestro/flows/zip-and-unzip.yaml .maestro/flows/password.yaml .maestro/flows/progress.yaml}")
+FLOWS=("${@:-.maestro/flows/home.yaml .maestro/flows/zip-and-unzip.yaml .maestro/flows/password.yaml .maestro/flows/progress.yaml .maestro/flows/assets.yaml}")
 
 for flow in ${FLOWS[@]}; do
   echo "▶️  Running $flow"
