@@ -394,8 +394,8 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
             if (f.exists()) {
               if (f.isDirectory()) {
-
-                List<File> files = Arrays.asList(f.listFiles());
+                File[] listFiles = f.listFiles();
+                List<File> files = listFiles != null ? Arrays.asList(listFiles) : new ArrayList<File>();
 
                 totalFiles += files.size();
                 for (int j = 0; j < files.size(); j++) {
