@@ -18,6 +18,7 @@
 @property (nonatomic) NSString *processedFilePath;
 @property (nonatomic) float progress;
 @property (nonatomic, copy) void (^progressHandler)(NSUInteger entryNumber, NSUInteger total);
+@property (nonatomic, strong) dispatch_queue_t methodQueue;
 
 @end
 
