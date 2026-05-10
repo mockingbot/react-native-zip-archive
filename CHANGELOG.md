@@ -1,5 +1,21 @@
 # Changelog
 
+## [8.0.0-rc.2] - 2026-05-09
+
+### Fixed
+- Android `unzipAssets` now handles compressed assets (fallback from `openFd()` to `InputStream.available()`)
+- Android `processZip` null check for `f.listFiles()` to prevent NPE
+- iOS `zipFolderWithPassword` encryption default consistency (empty string → standard ZipCrypto)
+- iOS old-arch fallback with `#ifdef RCT_NEW_ARCH_ENABLED` guards
+- Android `unzipWithPassword` resolves with `destDirectory` string instead of array
+- Android missing `return` statements after `promise.reject()` in multiple methods
+- Android `updateProgress(1,1)` moved outside loop in `processZip`
+- README broken markdown image link
+
+### Added
+- Maestro E2E test flow for Android Assets (`assets.yaml`)
+- Playground `listFilesRecursive` utility for displaying nested extracted files
+
 ## [8.0.0] - 2026-04-13
 
 ### Added
