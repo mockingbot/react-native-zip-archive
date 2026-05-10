@@ -15,11 +15,30 @@ appId: com.example.rnziparchive.playground
           when:
             visible: "Reload"
           commands:
-            - tapOn:
-                id: "closeButton"
+            - tapOn: "Reload"
+- runFlow:
+    when:
+      visible: "http://10.0.2.2:8081"
+    commands:
+      - tapOn: "http://10.0.2.2:8081"
+      - runFlow:
+          when:
+            visible: "Continue"
+          commands:
+            - tapOn: "Continue"
+      - runFlow:
+          when:
+            visible: "Reload"
+          commands:
+            - tapOn: "Reload"
 - extendedWaitUntil:
     visible: "RNZipArchive Playground"
     timeout: 45000
+- runFlow:
+    when:
+      visible: "Toggle performance monitor"
+    commands:
+      - pressKey: BACK
 - assertVisible: "Zip Operations"
 - assertVisible: "Unzip Operations"
 - assertVisible: "Password Protection"

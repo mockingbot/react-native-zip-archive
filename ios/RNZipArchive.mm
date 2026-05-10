@@ -250,7 +250,10 @@ compressionLevel:(double)compressionLevel
 }
 
 - (dispatch_queue_t)methodQueue {
-    return dispatch_queue_create("com.mockingbot.ReactNative.ZipArchiveQueue", DISPATCH_QUEUE_SERIAL);
+    if (!_methodQueue) {
+        _methodQueue = dispatch_queue_create("com.mockingbot.ReactNative.ZipArchiveQueue", DISPATCH_QUEUE_SERIAL);
+    }
+    return _methodQueue;
 }
 
 - (void)zipArchiveProgressEvent:(unsigned long long)loaded total:(unsigned long long)total  {
