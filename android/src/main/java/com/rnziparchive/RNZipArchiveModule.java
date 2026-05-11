@@ -445,8 +445,16 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
   @Override
   public void getUncompressedSize(String zipFilePath, String charset, final Promise promise) {
-    long totalSize = getUncompressedSize(zipFilePath, charset);
-    promise.resolve((double) totalSize);
+    try {
+      long totalSize = getUncompressedSize(zipFilePath, charset);
+      if (totalSize == -1) {
+        promise.reject("RNZipArchiveError", "Failed to get uncompressed size");
+      } else {
+        promise.resolve((double) totalSize);
+      }
+    } catch (Exception e) {
+      promise.reject("RNZipArchiveError", "Failed to get uncompressed size: " + e.getMessage());
+    }
   }
 
   /**
@@ -474,7 +482,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       }
 
       zipFile.close();
-    } catch (IOException ignored) {
+    } catch (Exception ignored) {
       return -1;
     }
     return totalSize;
