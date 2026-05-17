@@ -1,28 +1,14 @@
 # React Native Zip Archive [![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive) [![React Native New Architecture](https://img.shields.io/badge/React%20Native-New%20Architecture%20(TurboModules)-61dafb)](https://reactnative.dev/docs/new-architecture-intro)
 
-Zip archive utility for React Native, built with **TurboModules** for the New Architecture.
+Zip archive utility for React Native.
 
-## ⚠️ Attention
+> **v8.0** requires React Native ≥ 0.70 with New Architecture enabled. For older RN versions, use v7.x:
+> ```bash
+> npm install react-native-zip-archive@^7.0.0
+> ```
+> **iOS:** Version 7.0.0+ requires a deployment target of iOS 15.5+ to comply with App Store privacy policy.
 
-### iOS Privacy Policy
-In order to comply with the new privacy policy of the App Store on iOS, you need react-native-zip-archive version 7.0.0 or later, which requires the deployment target to be iOS 15.5 or later.
-
-### v8.0 Breaking Change
-**v8.0 requires React Native 0.70.0 or higher with New Architecture enabled.**
-
-For React Native < 0.70, use v7.x:
-```bash
-npm install react-native-zip-archive@^7.0.0
-```
-
-## 🚀 What's New in v8.0
-
-- **TurboModule Support**: Full native integration with React Native's New Architecture
-- **Improved Performance**: Lazy loading and reduced bridge overhead
-- **Type Safety**: Full TypeScript support with generated native bindings via Codegen
-- **Concurrent React Ready**: Compatible with React 18+ concurrent features
-
-## 📋 Requirements
+## Requirements
 
 | Platform | Minimum Version |
 |----------|-----------------|
@@ -31,50 +17,20 @@ npm install react-native-zip-archive@^7.0.0
 | iOS | >= 15.5 |
 | Android | >= API 23 (Android 6.0) |
 
-## 🔧 Installation
+## Installation
 
 ```bash
 npm install react-native-zip-archive
 ```
 
-### iOS Setup
-
+**iOS:**
 ```bash
 cd ios && pod install
 ```
 
-For Android, it's ready to go.
+> To enable New Architecture, see [MIGRATION.md](./MIGRATION.md).
 
-### Enabling New Architecture
-
-**Android** (`android/gradle.properties`):
-```properties
-newArchEnabled=true
-```
-
-**iOS**:
-```bash
-RCT_NEW_ARCH_ENABLED=1 pod install
-```
-
-## 🏗️ Architecture
-
-This library is built as a **TurboModule** using React Native's New Architecture:
-
-- **Codegen**: Generates type-safe native bindings from TypeScript specs
-- **JSI**: Direct JavaScript-to-native communication without bridge overhead
-- **Lazy Loading**: Module initializes only when first used
-- **Fabric Compatible**: Works with the new Fabric renderer
-
-## 🎮 Playground App
-
-We provide a fully-featured [playground app](./playground/) built with Expo Development Builds. It demonstrates every API method with working examples.
-
-See [playground/README.md](./playground/README.md) for setup instructions.
-
-## 📖 API
-
-Import it into your code
+## Usage
 
 ```js
 import {
@@ -93,310 +49,169 @@ import {
 } from 'react-native-zip-archive'
 ```
 
-You may also want to use something like [react-native-fs](https://github.com/johanneslumpe/react-native-fs) to access the file system (check its repo for more information)
+You may also want to use [react-native-fs](https://github.com/johanneslumpe/react-native-fs) to access the file system:
 
 ```js
-import { MainBundlePath, DocumentDirectoryPath } from 'react-native-fs'
+import { DocumentDirectoryPath } from 'react-native-fs'
 ```
 
-## Platform Support Matrix
-
-| Feature | iOS | Android | Notes |
-|---------|-----|---------|-------|
-| **zip** (folder) | ✅ | ✅ | Full support |
-| **zip** (files array) | ✅ | ✅ | Compression level ignored on iOS |
-| **zipWithPassword** (folder) | ✅ | ✅ | AES encryption supported on both |
-| **zipWithPassword** (files array) | ⚠️ | ✅ | iOS: AES not supported, only standard encryption |
-| **unzip** | ✅ | ✅ | Charset param ignored on iOS |
-| **unzipWithPassword** | ✅ | ✅ | Full support |
-| **unzipAssets** | ❌ | ✅ | Android only |
-| **isPasswordProtected** | ✅ | ✅ | Full support |
-| **getUncompressedSize** | ✅ | ✅ | Charset param ignored on iOS |
-| **Progress Events** | ✅ | ✅ | File path empty on iOS for zip operations |
-
-### Feature Details
-
-#### Compression Levels
-- **Android**: Full support for levels 0-9 on all zip operations
-- **iOS**: Only supported for folder operations; ignored for file arrays
-
-#### Encryption
-- **Android**: AES-128, AES-256, and Standard ZIP encryption for all operations
-- **iOS**:
-  - Folder operations: AES and Standard encryption supported
-  - File array operations: Only Standard encryption (AES not supported)
-  - Note: Both AES-128 and AES-256 use AES-256 on iOS
-
-#### Charset Support
-- **Android**: Full support (Android N+), defaults to UTF-8
-- **iOS**: Parameter accepted but ignored; always uses UTF-8
-
-#### unzipAssets
-- **Android**: Supports both `assets/` folder and `content://` URIs
-- **iOS**: Not supported
-
----
+## API
 
 ### `zip(source: string | string[], target: string, compressionLevel?: number): Promise<string>`
 
-> zip source to target
+Zip a folder (string) or an array of files to the target path.
 
-***NOTE: the string version of source is for folder, the string[] version is for file, so if you want to zip a single file, use zip([file]) instead of zip(file)***
-
-***NOTE: customizing the compression level is not supported on iOS with a files source and will be ignored, use a directory source instead.***
+- To zip a single file, pass it as an array: `zip([file], target)`.
+- `compressionLevel` is ignored on iOS when the source is a file array. Use a directory source for custom compression on iOS.
 
 **Compression Level Constants:**
-- `DEFAULT_COMPRESSION` (-1) - Default compression (same as level 5)
-- `NO_COMPRESSION` (0) - Store without compression
-- `BEST_SPEED` (1) - Fastest compression (least compressed)
-- `BEST_COMPRESSION` (9) - Best compression (slowest)
-
-Example
+- `DEFAULT_COMPRESSION` (-1)
+- `NO_COMPRESSION` (0)
+- `BEST_SPEED` (1)
+- `BEST_COMPRESSION` (9)
 
 ```js
-const targetPath = `${DocumentDirectoryPath}/myFile.zip`
 const sourcePath = DocumentDirectoryPath
+const targetPath = `${DocumentDirectoryPath}/myFile.zip`
 
 zip(sourcePath, targetPath)
-.then((path) => {
-  console.log(`zip completed at ${path}`)
-})
-.catch((error) => {
-  console.error(error)
-})
+  .then((path) => console.log(`zip completed at ${path}`))
+  .catch((error) => console.error(error))
 ```
 
 ### `zipWithPassword(source: string | string[], target: string, password: string, encryptionType?: string, compressionLevel?: number): Promise<string>`
 
-> zip source to target with password protection
+Zip with password protection.
 
-***NOTE: the string version of source is for folder, the string[] version is for file, so if you want to zip a single file, use zip([file]) instead of zip(file)***
+- To zip a single file, pass it as an array: `zipWithPassword([file], target, password)`.
+- `compressionLevel` is ignored on iOS when the source is a file array.
 
 **Encryption Types:**
-- `'STANDARD'` - Standard ZIP encryption (legacy, widely compatible)
-- `'AES-128'` - AES 128-bit encryption
-- `'AES-256'` - AES 256-bit encryption
+- `'STANDARD'` — Standard ZIP encryption (default)
+- `'AES-128'` — AES 128-bit
+- `'AES-256'` — AES 256-bit
 
-**Platform-specific encryption notes:**
-- **iOS**: Both AES-128 and AES-256 use AES-256 internally
-- **iOS with files array**: AES encryption is NOT supported; only STANDARD encryption works
-- **Android**: All encryption types fully supported for both folders and files
-
-***NOTE: customizing the compression level is not supported on iOS with a files source and will be ignored, use a directory source instead.***
-
-Example
+> **iOS:** Both AES-128 and AES-256 use AES-256 internally. AES encryption is **not supported** for file arrays on iOS — only `STANDARD` works.
 
 ```js
-const targetPath = `${DocumentDirectoryPath}/myFile.zip`
 const sourcePath = DocumentDirectoryPath
-const password = 'password'
-const encryptionType = 'STANDARD'; //possible values: AES-256, AES-128, STANDARD. default is STANDARD
+const targetPath = `${DocumentDirectoryPath}/myFile.zip`
 
-zipWithPassword(sourcePath, targetPath, password, encryptionType)
-.then((path) => {
-  console.log(`zip completed at ${path}`)
-})
-.catch((error) => {
-  console.error(error)
-})
+zipWithPassword(sourcePath, targetPath, 'password', 'STANDARD')
+  .then((path) => console.log(`zip completed at ${path}`))
+  .catch((error) => console.error(error))
 ```
 
 ### `unzip(source: string, target: string, charset?: string): Promise<string>`
 
-> unzip from source to target
+Unzip from source to target.
 
-***NOTE: The charset parameter is only supported on Android. On iOS, it is accepted but ignored; UTF-8 is always used.***
-
-Example
+> The `charset` parameter is only supported on Android (default: `UTF-8`). On iOS it is ignored.
 
 ```js
 const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
 const targetPath = DocumentDirectoryPath
-const charset = 'UTF-8'
-// charset possible values: UTF-8, GBK, US-ASCII and so on. If none was passed, default value is UTF-8
-// Note: charset is only effective on Android
 
-unzip(sourcePath, targetPath, charset)
-.then((path) => {
-  console.log(`unzip completed at ${path}`)
-})
-.catch((error) => {
-  console.error(error)
-})
+unzip(sourcePath, targetPath, 'UTF-8')
+  .then((path) => console.log(`unzip completed at ${path}`))
+  .catch((error) => console.error(error))
 ```
 
 ### `unzipWithPassword(source: string, target: string, password: string): Promise<string>`
 
-> unzip from source to target
-
-Example
+Unzip a password-protected archive.
 
 ```js
-const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
-const targetPath = DocumentDirectoryPath
-const password = 'password'
-
-unzipWithPassword(sourcePath, targetPath, password)
-.then((path) => {
-  console.log(`unzip completed at ${path}`)
-})
-.catch((error) => {
-  console.error(error)
-})
+unzipWithPassword(sourcePath, targetPath, 'password')
+  .then((path) => console.log(`unzip completed at ${path}`))
+  .catch((error) => console.error(error))
 ```
 
 ### `unzipAssets(assetPath: string, target: string): Promise<string>`
 
-> unzip file from Android `assets` folder to target path
+Unzip a file from the Android `assets` folder. **Android only.**
 
-***Note: Android only.***
-
-`assetPath` is the relative path to the file inside the pre-bundled assets folder, e.g. `folder/myFile.zip`. ***Do not pass an absolute directory.***
+`assetPath` is the relative path inside the pre-bundled assets folder (e.g. `folder/myFile.zip`). Do not pass an absolute path.
 
 ```js
-const assetPath = './myFile.zip'
-const targetPath = DocumentDirectoryPath
-
-unzipAssets(assetPath, targetPath)
-.then((path) => {
-  console.log(`unzip completed at ${path}`)
-})
-.catch((error) => {
-  console.error(error)
-})
+unzipAssets('./myFile.zip', DocumentDirectoryPath)
+  .then((path) => console.log(`unzip completed at ${path}`))
+  .catch((error) => console.error(error))
 ```
 
 ### `getUncompressedSize(source: string, charset?: string): Promise<number>`
 
-> Returns the total uncompressed size of all files in the zip archive (in bytes).
+Returns the total uncompressed size of all files in the zip archive (in bytes).
 
-***Note: On iOS, the charset parameter is accepted but ignored.***
-
-Example
+> The `charset` parameter is only supported on Android. On iOS it is ignored.
 
 ```js
-const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
-
 getUncompressedSize(sourcePath)
-.then((size) => {
-  console.log(`Uncompressed size: ${size} bytes`)
-})
-.catch((error) => {
-  console.error(error)
-})
+  .then((size) => console.log(`Uncompressed size: ${size} bytes`))
+  .catch((error) => console.error(error))
 ```
 
 ### `subscribe(callback: ({ progress: number, filePath: string }) => void): EmitterSubscription`
 
-> Subscribe to the progress callbacks. Useful for displaying a progress bar on your UI during the process.
+Subscribe to progress events. Useful for showing a progress bar.
 
-Your callback will be passed an object with the following fields:
+- `progress` — value from 0 to 1 (1 = completed)
+- `filePath` — the zip file path (empty on iOS for zip operations)
 
-- `progress` (number)  a value from 0 to 1 representing the progress of the unzip method. 1 is completed.
-- `filePath` (string)  the zip file path of zipped or unzipped file.
-
-***Note: Remember to check the filename while processing progress, to be sure that the unzipped or zipped file is the right one, because the event is global.***
-
-***Note: Remember to unsubscribe! Run .remove() on the object returned by this method.***
+> The event is global — check `filePath` in your callback to ensure it matches the operation you care about. Remember to call `.remove()` on the returned subscription when done.
 
 ```js
-componentDidMount() {
-  this.zipProgress = subscribe(({ progress, filePath }) => {
-    // the filePath is always empty on iOS for zipping.
-    console.log(`progress: ${progress}\nprocessed at: ${filePath}`)
-  })
-}
+import { useEffect } from 'react'
 
-componentWillUnmount() {
-  // Important: Unsubscribe from the progress events
-  this.zipProgress.remove()
-}
+useEffect(() => {
+  const sub = subscribe(({ progress, filePath }) => {
+    console.log(`progress: ${progress}, file: ${filePath}`)
+  })
+  return () => sub.remove()
+}, [])
 ```
 
-## 🔄 Migrating from v7 to v8
+## Platform Support
+
+| Feature | iOS | Android | Notes |
+|---------|-----|---------|-------|
+| `zip` (folder) | ✅ | ✅ | — |
+| `zip` (files array) | ✅ | ✅ | Compression level ignored on iOS |
+| `zipWithPassword` (folder) | ✅ | ✅ | AES encryption supported |
+| `zipWithPassword` (files array) | ⚠️ | ✅ | iOS: only `STANDARD` encryption |
+| `unzip` | ✅ | ✅ | Charset ignored on iOS |
+| `unzipWithPassword` | ✅ | ✅ | — |
+| `unzipAssets` | ❌ | ✅ | Android only |
+| `isPasswordProtected` | ✅ | ✅ | — |
+| `getUncompressedSize` | ✅ | ✅ | Charset ignored on iOS |
+| Progress Events | ✅ | ✅ | File path empty on iOS for zip |
+
+### Cross-Platform Notes
+
+- **Compression levels:** Android supports 0–9 for all operations. iOS supports them only for folder operations.
+- **Encryption:** Android supports AES-128, AES-256, and Standard ZIP encryption for all operations. iOS supports AES and Standard for folders, but only Standard for file arrays.
+- **Charset:** Android supports custom charsets (default UTF-8). iOS always uses UTF-8.
+- **unzipAssets:** Supports `assets/` folder and `content://` URIs on Android. Not supported on iOS.
+
+## Expo
+
+This library **requires an Expo Development Build** and does not work in Expo Go because it includes custom native code. See the [playground app](./playground/) for a working Expo Development Build example.
+
+## Playground
+
+A fully-featured [playground app](./playground/) is included to demonstrate every API method.
+
+## Migrating from v7
 
 See [MIGRATION.md](./MIGRATION.md) for detailed migration instructions.
 
-## 🛠️ Compatibility
-
-| react-native-zip-archive | React Native | Architecture |
-|--------------------------|--------------|--------------|
-| v8.x | >= 0.70.0 | New Architecture (TurboModules) |
-| v7.x | >= 0.60.0 | Legacy |
-| v6.x | >= 0.60.0 | Legacy |
-| v5.x | ^0.60 | Legacy |
-| v4.x | ^0.58 | Legacy |
-| v3.x | <0.58 | Legacy |
-
-## 📱 For Expo Users
-
-This library **requires an Expo Development Build**. It does **NOT** work in Expo Go because it contains custom native code (zip/unzip libraries for iOS and Android).
-
-### Why Expo Go is Not Supported
-
-[Expo Go](https://expo.dev/go) is a pre-built app with a fixed set of native modules. Since `react-native-zip-archive` includes its own native zip libraries (SSZipArchive on iOS, zip4j on Android), these are not bundled inside Expo Go. If you try to use this library in Expo Go, you'll get a **"Native module not found"** error.
-
-### Solution: Use an Expo Development Build
-
-An [Expo Development Build](https://docs.expo.dev/develop/development-builds/introduction/) is a custom version of your app that includes any native modules you install. It works just like Expo Go — with instant reloads, the developer menu, and deep linking — but supports libraries with custom native code.
-
-### Setup Steps
-
-1. **Install `expo-dev-client`** in your project:
-   ```bash
-   npx expo install expo-dev-client
-   ```
-
-2. **Create a development build** (one-time setup):
-   ```bash
-   # iOS Simulator
-   npx eas build --platform ios --profile development-simulator
-
-   # iOS Device
-   npx eas build --platform ios --profile development
-
-   # Android
-   npx eas build --platform android --profile development
-   ```
-
-   Or build locally:
-   ```bash
-   npx expo run:ios
-   # or
-   npx expo run:android
-   ```
-
-3. **Install the development build** on your simulator or device.
-
-4. **Start developing**:
-   ```bash
-   npx expo start --dev-client
-   ```
-
-5. **Install this library**:
-   ```bash
-   npx expo install react-native-zip-archive
-   ```
-
-### Quick Comparison
-
-| Feature | Expo Go | Development Build |
-|---------|---------|-------------------|
-| Works with `react-native-zip-archive` | ❌ No | ✅ Yes |
-| Hot reload | ✅ Yes | ✅ Yes |
-| Developer menu | ✅ Yes | ✅ Yes |
-| Custom native code | ❌ No | ✅ Yes |
-| Build required | ❌ No | ✅ One-time setup |
-
-See our [playground app](./playground/) for a complete, working Expo Development Build example.
-
-## 🧪 Testing
+## Testing
 
 ```bash
 npm test
 ```
 
-## 🤝 Contributing
+## Contributing
 
 See the [playground app](./playground/) for testing and contribution reference.
 
