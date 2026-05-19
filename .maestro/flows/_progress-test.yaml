@@ -1,0 +1,18 @@
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      notVisible: "Progress Events"
+    commands:
+      - tapOn: "Playground"
+- tapOn: "Progress Events"
+- assertVisible: "Subscribe"
+- tapOn: "Subscribe"
+- assertVisible: "Status: Subscribed"
+- tapOn: "Run Large Zip"
+- extendedWaitUntil:
+    visible: "Completed"
+    timeout: 120000
+- tapOn: "Unsubscribe"
+- assertVisible: "Status: Not subscribed"
+- back

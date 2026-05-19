@@ -1,0 +1,30 @@
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      notVisible: "Assets (Android)"
+    commands:
+      - tapOn: "Playground"
+- scrollUntilVisible:
+    element:
+      text: "Assets (Android)"
+    direction: DOWN
+- tapOn: "Assets (Android)"
+- assertVisible: "Assets"
+- runFlow:
+    when:
+      visible: "Not Supported"
+    commands:
+      - assertVisible: "Not Supported"
+- runFlow:
+    when:
+      visible: "Unzip Assets"
+    commands:
+      - tapOn: "Unzip Assets"
+      - waitForAnimationToEnd:
+          timeout: 10000
+      - assertVisible: "Extracted To"
+      - extendedWaitUntil:
+          visible: "Files:"
+          timeout: 10000
+      - assertVisible: "Files:"

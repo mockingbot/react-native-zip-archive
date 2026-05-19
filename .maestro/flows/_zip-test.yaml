@@ -1,0 +1,9 @@
+appId: ${APP_ID}
+---
+- tapOn: "Zip Operations"
+- assertVisible: "Zip Sample Folder"
+- tapOn: "Zip Sample Folder"
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible: "Success"
+- back
