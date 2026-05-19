@@ -187,13 +187,8 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-            mkdir -p logcat-logs
-            adb logcat -c
             adb install ${{ matrix.dir }}/android/app/build/outputs/apk/release/app-release.apk
             maestro test --env APP_ID="${{ matrix.bundle_id }}" .maestro/flows/ci-master.yaml
-            TEST_EXIT=$?
-            adb logcat -d > logcat-logs/logcat.txt
-            exit $TEST_EXIT
 
       - name: Upload Maestro debug artifacts
         if: failure()
@@ -201,10 +196,3 @@ jobs:
         with:
           name: maestro-debug-android
           path: ~/.maestro/tests/
-
-      - name: Upload Android logcat
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-logcat
-          path: logcat-logs/
