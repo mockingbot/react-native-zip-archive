@@ -1,4 +1,5 @@
 name: E2E Tests
+# Test trigger for CI verification
 
 on:
   pull_request:
