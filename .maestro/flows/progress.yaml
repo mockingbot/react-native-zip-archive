@@ -20,8 +20,9 @@ appId: ${APP_ID}
             visible: "Reload"
           commands:
             - tapOn: "Reload"
-- stopApp
-- launchApp
+
+- launchApp:
+    clearState: true
 - runFlow:
     when:
       visible: "http://localhost:8081"
