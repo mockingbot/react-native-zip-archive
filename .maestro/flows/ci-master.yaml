@@ -1,0 +1,9 @@
+appId: ${APP_ID}
+---
+- runFlow: _setup.yaml
+- runFlow: _home-check.yaml
+- runFlow: _zip-test.yaml
+- runFlow: _unzip-test.yaml
+- runFlow: _password-test.yaml
+- runFlow: _progress-test.yaml
+- runFlow: _assets-test.yaml

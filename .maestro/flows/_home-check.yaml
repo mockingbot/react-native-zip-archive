@@ -1,0 +1,11 @@
+appId: ${APP_ID}
+---
+- assertVisible: "Zip Operations"
+- assertVisible: "Unzip Operations"
+- assertVisible: "Password Protection"
+- assertVisible: "Progress Events"
+- scrollUntilVisible:
+    element:
+      text: "Benchmarks"
+    direction: DOWN
+- assertVisible: "Benchmarks"

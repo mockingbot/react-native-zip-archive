@@ -1,0 +1,15 @@
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      notVisible: "Unzip Operations"
+    commands:
+      - tapOn: "Playground"
+- tapOn: "Unzip Operations"
+- assertVisible: "Create & Unzip Sample"
+- tapOn: "Create & Unzip Sample"
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible: "Extracted To"
+- assertVisible: "hello.txt"
+- back
