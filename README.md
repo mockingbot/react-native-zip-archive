@@ -195,11 +195,16 @@ useEffect(() => {
 
 ## Expo
 
-This library **requires an Expo Development Build** and does not work in Expo Go because it includes custom native code. See the [playground app](./playground/) for a working Expo Development Build example.
+This library **requires an Expo Development Build** and does not work in Expo Go because it includes custom native code. See [playground-expo](./playground-expo/) for a working Expo Development Build example.
 
 ## Playground
 
-A fully-featured [playground app](./playground/) is included to demonstrate every API method.
+Two fully-featured playground apps are included to demonstrate every API method:
+
+- **[playground-expo](./playground-expo/)** — Expo SDK 55 with Expo Router (New Architecture)
+- **[playground-rn](./playground-rn/)** — Bare React Native 0.83.9 (New Architecture)
+
+Both apps consume the local library via `file:..` and include Maestro E2E tests.
 
 ## Migrating from v7
 
@@ -213,7 +218,7 @@ npm test
 
 ## Contributing
 
-See the [playground app](./playground/) for testing and contribution reference.
+See the [playground apps](#playground) for testing and contribution reference.
 
 ## Related Projects
 
