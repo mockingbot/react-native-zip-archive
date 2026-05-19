@@ -1,0 +1,179 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-ios:
+    name: E2E iOS (${{ matrix.app }})
+    runs-on: macos-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: rn
+            dir: playground-rn
+            workspace: PlaygroundRN.xcworkspace
+            scheme: PlaygroundRN
+            app_name: PlaygroundRN
+            bundle_id: com.rnziparchive.playground.rn
+          - app: expo
+            dir: playground-expo
+            workspace: RNZipArchivePlayground.xcworkspace
+            scheme: RNZipArchivePlayground
+            app_name: RNZipArchivePlayground
+            bundle_id: com.rnziparchive.playground.expo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.dir }}/node_modules
+          key: ${{ runner.os }}-${{ matrix.app }}-node-${{ hashFiles(format('{0}/package.json', matrix.dir)) }}
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            corepack enable && pnpm install
+          else
+            npm install
+          fi
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.dir }}/ios/Pods
+          key: ${{ runner.os }}-${{ matrix.app }}-pods-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.dir)) }}
+
+      - name: Install CocoaPods
+        working-directory: ${{ matrix.dir }}/ios
+        run: |
+          gem install cocoapods -v '>= 1.13'
+          pod install
+
+      - name: Build iOS app
+        working-directory: ${{ matrix.dir }}/ios
+        run: |
+          xcodebuild \
+            -workspace ${{ matrix.workspace }} \
+            -scheme ${{ matrix.scheme }} \
+            -configuration Release \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
+      - name: Boot iOS Simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices | grep "iPhone 15" | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -1)
+          if [ -z "$DEVICE_ID" ]; then
+            DEVICE_ID=$(xcrun simctl list devices | grep "iPhone" | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -1)
+          fi
+          echo "Booting simulator: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID"
+          echo "MAESTRO_IOS_DEVICE=$DEVICE_ID" >> $GITHUB_ENV
+          xcrun simctl bootstatus "$DEVICE_ID"
+
+      - name: Run E2E tests
+        run: |
+          APP_PATH="${{ matrix.dir }}/ios/build/Build/Products/Release-iphonesimulator/${{ matrix.app_name }}.app"
+          xcrun simctl install "$MAESTRO_IOS_DEVICE" "$APP_PATH"
+          export APP_ID="${{ matrix.bundle_id }}"
+          maestro test --device="$MAESTRO_IOS_DEVICE" --env APP_ID="$APP_ID" .maestro/flows/
+
+  e2e-android:
+    name: E2E Android (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: rn
+            dir: playground-rn
+            bundle_id: com.rnziparchive.playground.rn
+          - app: expo
+            dir: playground-expo
+            bundle_id: com.rnziparchive.playground.expo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.dir }}/node_modules
+          key: ${{ runner.os }}-${{ matrix.app }}-node-${{ hashFiles(format('{0}/package.json', matrix.dir)) }}
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            corepack enable && pnpm install
+          else
+            npm install
+          fi
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ matrix.app }}-gradle-${{ hashFiles(format('{0}/android/gradle/wrapper/gradle-wrapper.properties', matrix.dir), format('{0}/android/build.gradle', matrix.dir)) }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.app }}-gradle-
+
+      - name: Build Android app
+        working-directory: ${{ matrix.dir }}/android
+        run: ./gradlew :app:assembleRelease
+
+      - name: Run E2E tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            adb install ${{ matrix.dir }}/android/app/build/outputs/apk/release/app-release.apk
+            export APP_ID="${{ matrix.bundle_id }}"
+            maestro test --env APP_ID="$APP_ID" .maestro/flows/
