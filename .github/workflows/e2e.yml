@@ -146,7 +146,8 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: |
           if [ -f "pnpm-lock.yaml" ]; then
-            corepack enable && pnpm install
+            npm install -g pnpm@9
+            pnpm install
           else
             npm install
           fi
