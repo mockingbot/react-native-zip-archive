@@ -94,11 +94,29 @@ jobs:
           APP_PATH="${{ matrix.dir }}/ios/build/Build/Products/Release-iphonesimulator/${{ matrix.app_name }}.app"
           xcrun simctl install "$MAESTRO_IOS_DEVICE" "$APP_PATH"
           export APP_ID="${{ matrix.bundle_id }}"
-          EXIT_CODE=0
-          for flow in .maestro/flows/home.yaml .maestro/flows/zip-and-unzip.yaml .maestro/flows/password.yaml .maestro/flows/progress.yaml .maestro/flows/assets.yaml; do
-            maestro test --device="$MAESTRO_IOS_DEVICE" --env APP_ID="$APP_ID" "$flow" || EXIT_CODE=1
-          done
-          exit $EXIT_CODE
+          maestro test --device="$MAESTRO_IOS_DEVICE" --env APP_ID="$APP_ID" .maestro/flows/ci-master.yaml
+
+      - name: Upload Maestro debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-debug-ios
+          path: ~/.maestro/tests/
+
+      - name: Upload iOS crash logs
+        if: failure()
+        run: |
+          mkdir -p crash-logs
+          cp ~/Library/Logs/DiagnosticReports/*.crash crash-logs/ 2>/dev/null || true
+          ls crash-logs/ || echo "No crash logs found"
+        shell: bash
+
+      - name: Upload crash logs artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-crash-logs
+          path: crash-logs/
 
   e2e-android:
     name: E2E Android (${{ matrix.app }})
@@ -169,5 +187,24 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
+            mkdir -p logcat-logs
+            adb logcat -c
             adb install ${{ matrix.dir }}/android/app/build/outputs/apk/release/app-release.apk
-            EXIT_CODE=0; for flow in .maestro/flows/home.yaml .maestro/flows/zip-and-unzip.yaml .maestro/flows/password.yaml .maestro/flows/progress.yaml .maestro/flows/assets.yaml; do maestro test --env APP_ID="${{ matrix.bundle_id }}" "$flow" || EXIT_CODE=1; done; exit $EXIT_CODE
+            maestro test --env APP_ID="${{ matrix.bundle_id }}" .maestro/flows/ci-master.yaml
+            TEST_EXIT=$?
+            adb logcat -d > logcat-logs/logcat.txt
+            exit $TEST_EXIT
+
+      - name: Upload Maestro debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-debug-android
+          path: ~/.maestro/tests/
+
+      - name: Upload Android logcat
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-logcat
+          path: logcat-logs/

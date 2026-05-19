@@ -1,0 +1,184 @@
+appId: ${APP_ID}
+---
+
+# ── Setup: single app launch for entire test suite ──
+- stopApp
+- launchApp
+
+# Handle dev-client server selection (if present)
+- runFlow:
+    when:
+      visible: "DEVELOPMENT SERVERS"
+    commands:
+      - tapOn: "RNZipArchive Playground"
+      - runFlow:
+          when:
+            visible: "Open"
+          commands:
+            - tapOn: "Open"
+      - runFlow:
+          when:
+            visible: "Continue"
+          commands:
+            - tapOn: "Continue"
+      - runFlow:
+          when:
+            visible: "Reload"
+          commands:
+            - tapOn: "Reload"
+
+- runFlow:
+    when:
+      visible: "http://localhost:8081"
+    commands:
+      - tapOn: "http://localhost:8081"
+      - runFlow:
+          when:
+            visible: "Open"
+          commands:
+            - tapOn: "Open"
+      - runFlow:
+          when:
+            visible: "Continue"
+          commands:
+            - tapOn: "Continue"
+      - runFlow:
+          when:
+            visible: "Reload"
+          commands:
+            - tapOn: "Reload"
+
+- runFlow:
+    when:
+      visible: "http://10.0.2.2:8081"
+    commands:
+      - tapOn: "http://10.0.2.2:8081"
+      - runFlow:
+          when:
+            visible: "Open"
+          commands:
+            - tapOn: "Open"
+      - runFlow:
+          when:
+            visible: "Continue"
+          commands:
+            - tapOn: "Continue"
+      - runFlow:
+          when:
+            visible: "Reload"
+          commands:
+            - tapOn: "Reload"
+
+# Wait for home screen with generous timeout for slow CI emulators
+- extendedWaitUntil:
+    visible: "RNZipArchive Playground"
+    timeout: 120000
+
+# Dismiss performance monitor overlay if present
+- runFlow:
+    when:
+      visible: "Toggle performance monitor"
+    commands:
+      - pressKey: BACK
+
+# ── Home screen verification ──
+- assertVisible: "Zip Operations"
+- assertVisible: "Unzip Operations"
+- assertVisible: "Password Protection"
+- assertVisible: "Progress Events"
+- scrollUntilVisible:
+    element:
+      text: "Benchmarks"
+    direction: DOWN
+- assertVisible: "Benchmarks"
+
+# ── Zip Operations ──
+- tapOn: "Zip Operations"
+- assertVisible: "Zip Sample Folder"
+- tapOn: "Zip Sample Folder"
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible: "Success"
+- back
+
+# ── Unzip Operations ──
+- runFlow:
+    when:
+      notVisible: "Unzip Operations"
+    commands:
+      - tapOn: "Playground"
+- tapOn: "Unzip Operations"
+- assertVisible: "Create & Unzip Sample"
+- tapOn: "Create & Unzip Sample"
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible: "Extracted To"
+- assertVisible: "hello.txt"
+- back
+
+# ── Password Protection ──
+- runFlow:
+    when:
+      notVisible: "Password Protection"
+    commands:
+      - tapOn: "Playground"
+- tapOn: "Password Protection"
+- assertVisible: "Create Password Zip"
+- tapOn: "Create Password Zip"
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible: "Zip Created"
+- assertVisible: "Password Protected: Yes"
+- tapOn: "Unzip with Password"
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible: "Extracted"
+- back
+
+# ── Progress Events ──
+- runFlow:
+    when:
+      notVisible: "Progress Events"
+    commands:
+      - tapOn: "Playground"
+- tapOn: "Progress Events"
+- assertVisible: "Subscribe"
+- tapOn: "Subscribe"
+- assertVisible: "Status: Subscribed"
+- tapOn: "Run Large Zip"
+- extendedWaitUntil:
+    visible: "Completed"
+    timeout: 120000
+- tapOn: "Unsubscribe"
+- assertVisible: "Status: Not subscribed"
+- back
+
+# ── Assets ──
+- runFlow:
+    when:
+      notVisible: "Assets (Android)"
+    commands:
+      - tapOn: "Playground"
+- scrollUntilVisible:
+    element:
+      text: "Assets (Android)"
+    direction: DOWN
+- tapOn: "Assets (Android)"
+- assertVisible: "Assets"
+- runFlow:
+    when:
+      visible: "Not Supported"
+    commands:
+      - assertVisible: "Not Supported"
+- runFlow:
+    when:
+      visible: "Unzip Assets"
+    commands:
+      - tapOn: "Unzip Assets"
+      - waitForAnimationToEnd:
+          timeout: 10000
+      - assertVisible: "Extracted To"
+      - extendedWaitUntil:
+          visible: "Files:"
+          timeout: 10000
+      - assertVisible: "Files:"
