@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "RNZipArchivePlaygroundExpo",
+    "slug": "rn-zip-archive-playground",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rnziparchive.playground.expo",
+      "deploymentTarget": "16.4"
+    },
+    "android": {
+
+      "package": "com.rnziparchive.playground.expo"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "rnziparchive",
+    "newArchEnabled": true
+  }
+}
