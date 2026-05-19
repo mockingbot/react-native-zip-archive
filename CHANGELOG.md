@@ -1,5 +1,21 @@
 # Changelog
 
+## [8.0.1] - 2026-05-19
+
+### Fixed
+- iOS: replace `_methodQueue` ivar with static `dispatch_once` to fix build on RN 0.83+ with New Architecture (#347)
+
+### Added
+- `playground-rn`: bare React Native 0.83.9 test app with New Architecture
+- `playground-expo`: Expo SDK 55.0.24 test app with New Architecture
+- Maestro E2E flows now use `${APP_ID}` env var for cross-app reuse
+- npm scripts: `test:e2e:expo:ios`, `test:e2e:expo:android`, `test:e2e:rn:ios`, `test:e2e:rn:android`
+
+### Changed
+- Export `EncryptionMethods` enum from JS entry point
+- Playground apps read library version dynamically from `package.json`
+- Removed debug-specific Maestro flows (`connect-metro`, `debug-zip`)
+
 ## [8.0.0] - 2026-05-16
 
 ### Added
