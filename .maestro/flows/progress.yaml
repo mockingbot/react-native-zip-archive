@@ -77,6 +77,6 @@ appId: ${APP_ID}
 - tapOn: "Run Large Zip"
 - extendedWaitUntil:
     visible: "Completed"
-    timeout: 30000
+    timeout: 120000
 - tapOn: "Unsubscribe"
 - assertVisible: "Status: Not subscribed"

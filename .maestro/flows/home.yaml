@@ -1,6 +1,7 @@
 appId: ${APP_ID}
 ---
 - stopApp
+- wait
 - launchApp
 - runFlow:
     when:
@@ -74,4 +75,8 @@ appId: ${APP_ID}
 - assertVisible: "Unzip Operations"
 - assertVisible: "Password Protection"
 - assertVisible: "Progress Events"
+- scrollUntilVisible:
+    element:
+      text: "Benchmarks"
+    direction: DOWN
 - assertVisible: "Benchmarks"
