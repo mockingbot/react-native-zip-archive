@@ -1,7 +1,5 @@
 appId: ${APP_ID}
 ---
-- stopApp
-- wait
 - launchApp
 - runFlow:
     when:
