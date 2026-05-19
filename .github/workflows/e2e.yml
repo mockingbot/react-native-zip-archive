@@ -57,7 +57,8 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: |
           if [ -f "pnpm-lock.yaml" ]; then
-            corepack enable && pnpm install
+            npm install -g pnpm@9
+            pnpm install
           else
             npm install
           fi
@@ -81,17 +82,14 @@ jobs:
             -workspace ${{ matrix.workspace }} \
             -scheme ${{ matrix.scheme }} \
             -configuration Release \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO
 
       - name: Boot iOS Simulator
         run: |
-          DEVICE_ID=$(xcrun simctl list devices | grep "iPhone 15" | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -1)
-          if [ -z "$DEVICE_ID" ]; then
-            DEVICE_ID=$(xcrun simctl list devices | grep "iPhone" | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -1)
-          fi
+          DEVICE_ID=$(xcrun simctl list devices | grep -E 'iPhone [0-9]+ \(' | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -1)
           echo "Booting simulator: $DEVICE_ID"
           xcrun simctl boot "$DEVICE_ID"
           echo "MAESTRO_IOS_DEVICE=$DEVICE_ID" >> $GITHUB_ENV
@@ -176,5 +174,4 @@ jobs:
           disable-animations: true
           script: |
             adb install ${{ matrix.dir }}/android/app/build/outputs/apk/release/app-release.apk
-            export APP_ID="${{ matrix.bundle_id }}"
-            maestro test --env APP_ID="$APP_ID" .maestro/flows/
+            maestro test --env APP_ID="${{ matrix.bundle_id }}" .maestro/flows/
