@@ -10,7 +10,6 @@ appId: ${APP_ID}
       text: "Assets (Android)"
     direction: DOWN
 - tapOn: "Assets (Android)"
-- assertVisible: "Assets"
 - runFlow:
     when:
       visible: "Not Supported"
@@ -18,8 +17,9 @@ appId: ${APP_ID}
       - assertVisible: "Not Supported"
 - runFlow:
     when:
-      visible: "Unzip Assets"
+      visible: "Android Assets Demo"
     commands:
+      - assertVisible: "Android Assets Demo"
       - tapOn: "Unzip Assets"
       - waitForAnimationToEnd:
           timeout: 10000
