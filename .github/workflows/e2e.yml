@@ -94,7 +94,11 @@ jobs:
           APP_PATH="${{ matrix.dir }}/ios/build/Build/Products/Release-iphonesimulator/${{ matrix.app_name }}.app"
           xcrun simctl install "$MAESTRO_IOS_DEVICE" "$APP_PATH"
           export APP_ID="${{ matrix.bundle_id }}"
-          maestro test --device="$MAESTRO_IOS_DEVICE" --env APP_ID="$APP_ID" .maestro/flows/
+          EXIT_CODE=0
+          for flow in .maestro/flows/home.yaml .maestro/flows/zip-and-unzip.yaml .maestro/flows/password.yaml .maestro/flows/progress.yaml .maestro/flows/assets.yaml; do
+            maestro test --device="$MAESTRO_IOS_DEVICE" --env APP_ID="$APP_ID" "$flow" || EXIT_CODE=1
+          done
+          exit $EXIT_CODE
 
   e2e-android:
     name: E2E Android (${{ matrix.app }})
@@ -166,4 +170,8 @@ jobs:
           disable-animations: true
           script: |
             adb install ${{ matrix.dir }}/android/app/build/outputs/apk/release/app-release.apk
-            maestro test --env APP_ID="${{ matrix.bundle_id }}" .maestro/flows/
+            EXIT_CODE=0
+            for flow in .maestro/flows/home.yaml .maestro/flows/zip-and-unzip.yaml .maestro/flows/password.yaml .maestro/flows/progress.yaml .maestro/flows/assets.yaml; do
+              maestro test --env APP_ID="${{ matrix.bundle_id }}" "$flow" || EXIT_CODE=1
+            done
+            exit $EXIT_CODE

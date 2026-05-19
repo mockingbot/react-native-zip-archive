@@ -1,7 +1,8 @@
 appId: ${APP_ID}
 ---
-- launchApp:
-    clearState: true
+- stopApp
+- launchApp
+    
 - runFlow:
     when:
       visible: "DEVELOPMENT SERVERS"
