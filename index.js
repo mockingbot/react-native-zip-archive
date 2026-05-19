@@ -31,6 +31,12 @@ function getRNZipArchive() {
 const normalizeFilePath = (path) =>
   path.startsWith("file://") ? path.slice(7) : path;
 
+export const EncryptionMethods = {
+  STANDARD: "STANDARD",
+  AES_128: "AES-128",
+  AES_256: "AES-256",
+};
+
 export const DEFAULT_COMPRESSION = -1;
 export const NO_COMPRESSION = 0;
 export const BEST_SPEED = 1;

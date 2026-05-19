@@ -32,8 +32,10 @@ npm-debug.log
 example/
 yarn.lock
 
-# Playground - Expo development build project (not for npm)
+# Playground apps (not for npm)
 playground/
+playground-expo/
+playground-rn/
 
 # Development files (not for npm)
 __tests__/

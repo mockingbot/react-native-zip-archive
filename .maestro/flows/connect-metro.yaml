@@ -1,7 +1,0 @@
-appId: com.example.rnziparchive.playground
----
-- launchApp
-- tapOn: "http://10.0.2.2:8081"
-- extendedWaitUntil:
-    visible: "Zip Operations"
-    timeout: 45000

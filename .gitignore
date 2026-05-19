@@ -129,3 +129,10 @@ playground/.expo/
 playground/android/
 playground/ios/
 playground/package-lock.json
+playground-expo/.expo/
+playground-expo/android/build/
+playground-expo/ios/build/
+playground-expo/package-lock.json
+playground-rn/android/app/build/
+playground-rn/ios/build/
+playground-rn/package-lock.json

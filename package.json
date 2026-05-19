@@ -6,9 +6,13 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint index.js",
-    "test:e2e:android": "./scripts/e2e-android.sh",
-    "test:e2e:ios": "./scripts/e2e-ios.sh",
-    "test:e2e": "npm run test:e2e:android && npm run test:e2e:ios"
+    "test:e2e:expo:ios": "./scripts/e2e-ios.sh",
+    "test:e2e:expo:android": "./scripts/e2e-android.sh",
+    "test:e2e:expo": "npm run test:e2e:expo:android && npm run test:e2e:expo:ios",
+    "test:e2e:rn:ios": "./scripts/e2e-ios.sh --rn",
+    "test:e2e:rn:android": "./scripts/e2e-android.sh --rn",
+    "test:e2e:rn": "npm run test:e2e:rn:android && npm run test:e2e:rn:ios",
+    "test:e2e": "npm run test:e2e:expo && npm run test:e2e:rn"
   },
   "repository": {
     "type": "git",
@@ -38,7 +42,8 @@
   "jest": {
     "testEnvironment": "node",
     "modulePathIgnorePatterns": [
-      "<rootDir>/playground/"
+      "<rootDir>/playground-expo/",
+      "<rootDir>/playground-rn/"
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!react-native)/"

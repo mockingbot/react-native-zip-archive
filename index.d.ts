@@ -1,5 +1,5 @@
 declare module "react-native-zip-archive" {
-  enum EncryptionMethods {
+  export enum EncryptionMethods {
     STANDARD = "STANDARD",
     AES_128 = "AES-128",
     AES_256 = "AES-256",
