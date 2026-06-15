@@ -90,6 +90,8 @@ jobs:
           xcrun simctl bootstatus "$DEVICE_ID"
 
       - name: Run E2E tests
+        env:
+          MAESTRO_DRIVER_STARTUP_TIMEOUT: 300000
         run: |
           APP_PATH="${{ matrix.dir }}/ios/build/Build/Products/Release-iphonesimulator/${{ matrix.app_name }}.app"
           xcrun simctl install "$MAESTRO_IOS_DEVICE" "$APP_PATH"
