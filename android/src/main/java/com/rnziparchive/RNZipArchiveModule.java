@@ -403,11 +403,12 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
             return;
           }
         }
-        updateProgress(1, 1, destFile); // force 100%
-        promise.resolve(destFile);
       } catch (Exception ex) {
         promise.reject("RNZipArchiveError", ex.getMessage());
+        return;
       }
+      updateProgress(1, 1, destFile); // force 100%
+      promise.resolve(destFile);
     });
   }
 
