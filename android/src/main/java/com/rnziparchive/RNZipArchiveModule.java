@@ -421,6 +421,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
               return;
             }
           }
+          zipFile.close();
           updateProgress(1, 1, destFile); // force 100%
           promise.resolve(destFile);
         } catch (Exception ex) {
