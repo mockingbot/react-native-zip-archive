@@ -266,6 +266,12 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           } catch (IOException ignored) {
           }
         }
+        if (assetsInputStream != null) {
+          try {
+            assetsInputStream.close();
+          } catch (IOException ignored) {
+          }
+        }
       }
     });
   }
