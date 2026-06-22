@@ -14,7 +14,13 @@ public class StreamUtil {
     void onCopyProgress(long bytesRead);
   }
 
-  // https://stackoverflow.com/questions/4919690/how-to-read-one-stream-into-another
+  /**
+   * Copies all bytes from {@code from} to {@code to}.
+   * <p>
+   * Callers are responsible for opening and closing both streams.
+   *
+   * @return the number of bytes copied
+   */
   public static long copy(InputStream from, OutputStream to, ProgressCallback callback) throws IOException {
     checkNotNull(from);
     checkNotNull(to);
@@ -32,6 +38,7 @@ public class StreamUtil {
         callback.onCopyProgress(r);
       }
     }
+    to.flush();
     return total;
   }
 }

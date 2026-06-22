@@ -3,13 +3,16 @@ package com.rnziparchive;
 import android.content.res.AssetFileDescriptor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.io.BufferedInputStream;
@@ -22,21 +25,18 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
-//import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
-import net.lingala.zip4j.progress.ProgressMonitor;
 
 import java.nio.charset.Charset;
 
@@ -48,6 +48,11 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   private static final String EVENT_KEY_FILENAME = "filePath";
   private static final String EVENT_KEY_PROGRESS = "progress";
 
+  private final ExecutorService executor = Executors.newSingleThreadExecutor(
+      r -> new Thread(r, "RNZipArchiveWorker")
+  );
+  private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
   public RNZipArchiveModule(ReactApplicationContext reactContext) {
     super(reactContext);
   }
@@ -58,126 +63,104 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   }
 
   @Override
+  public void invalidate() {
+    executor.shutdownNow();
+    super.invalidate();
+  }
+
+  @Deprecated
+  @SuppressWarnings({"deprecation", "removal"})
+  public void onCatalystInstanceDestroy() {
+    invalidate();
+  }
+
+  @Override
   public void isPasswordProtected(final String zipFilePath, final Promise promise) {
-    try {
-      net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
-      promise.resolve(zipFile.isEncrypted());
-    } catch (ZipException ex) {
-      promise.reject("RNZipArchiveError", String.format("Unable to check for encryption due to: %s", getStackTrace(ex)));
-    }
+    executor.submit(() -> {
+      try (net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath)) {
+        promise.resolve(zipFile.isEncrypted());
+      } catch (Exception ex) {
+        promise.reject("RNZipArchiveError", String.format("Unable to check for encryption due to: %s", getStackTrace(ex)));
+      }
+    });
   }
 
   @Override
   public void unzipWithPassword(final String zipFilePath, final String destDirectory,
                                 final String password, final Promise promise) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
-          if (zipFile.isEncrypted()) {
-            zipFile.setPassword(password.toCharArray());
-          } else {
-            promise.reject("RNZipArchiveError", String.format("Zip file: %s is not password protected", zipFilePath));
-            return;
-          }
-
-          List fileHeaderList = zipFile.getFileHeaders();
-          List extractedFileNames = new ArrayList<>();
-          int totalFiles = fileHeaderList.size();
-
-          updateProgress(0, 1, zipFilePath); // force 0%
-          for (int i = 0; i < totalFiles; i++) {
-            FileHeader fileHeader = (FileHeader) fileHeaderList.get(i);
-
-            File fout = new File(destDirectory, fileHeader.getFileName());
-            String canonicalPath = fout.getCanonicalPath();
-            String destDirCanonicalPath = (new File(destDirectory).getCanonicalPath()) + File.separator;
-
-            if (!canonicalPath.startsWith(destDirCanonicalPath)) {
-              throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
-            }
-
-            if (!fileHeader.isDirectory()) {
-              zipFile.extractFile(fileHeader, destDirectory);
-              extractedFileNames.add(fileHeader.getFileName());
-            }
-            updateProgress(i + 1, totalFiles, zipFilePath);
-          }
-          promise.resolve(destDirectory);
-        } catch (Exception ex) {
-          updateProgress(0, 1, zipFilePath); // force 0%
-          promise.reject("RNZipArchiveError", String.format("Failed to unzip file, due to: %s", getStackTrace(ex)));
+    executor.submit(() -> {
+      try (net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath)) {
+        if (zipFile.isEncrypted()) {
+          zipFile.setPassword(password.toCharArray());
+        } else {
+          promise.reject("RNZipArchiveError", String.format("Zip file: %s is not password protected", zipFilePath));
+          return;
         }
+
+        List<FileHeader> fileHeaderList = zipFile.getFileHeaders();
+        int totalFiles = fileHeaderList.size();
+
+        updateProgress(0, 1, zipFilePath); // force 0%
+        for (int i = 0; i < totalFiles; i++) {
+          FileHeader fileHeader = fileHeaderList.get(i);
+
+          ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
+
+          if (!fileHeader.isDirectory()) {
+            zipFile.extractFile(fileHeader, destDirectory);
+          }
+          updateProgress(i + 1, totalFiles, zipFilePath);
+        }
+        promise.resolve(destDirectory);
+      } catch (Exception ex) {
+        updateProgress(0, 1, zipFilePath); // force 0%
+        promise.reject("RNZipArchiveError", String.format("Failed to unzip file, due to: %s", getStackTrace(ex)));
       }
-    }).start();
+    });
   }
 
   @Override
   public void unzip(final String zipFilePath, final String destDirectory, final String charset, final Promise promise) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        // Check the file exists
-        try {
-          new File(zipFilePath);
-        } catch (NullPointerException e) {
-          promise.reject("RNZipArchiveError", "Couldn't open file " + zipFilePath + ". ");
-          return;
-        }
-
-        try {
-          // Find the total uncompressed size of every file in the zip, so we can
-          // get an accurate progress measurement
-          final long totalUncompressedBytes = getUncompressedSize(zipFilePath, charset);
-
-          File destDir = new File(destDirectory);
-          if (!destDir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            destDir.mkdirs();
-          }
-
-          updateProgress(0, 1, zipFilePath); // force 0%
-
-          // We use arrays here so we can update values
-          // from inside the callback
-          final long[] extractedBytes = {0};
-          final int[] lastPercentage = {0};
-
-          net.lingala.zip4j.ZipFile zipFile = null;
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
-            zipFile.setCharset(Charset.forName(charset));
-          } else {
-            zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
-          }
-
-          ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
-
-          zipFile.setRunInThread(true);
-          zipFile.extractAll(destDirectory);
-
-          while (!progressMonitor.getState().equals(ProgressMonitor.State.READY)) {
-            updateProgress(progressMonitor.getWorkCompleted(), progressMonitor.getTotalWork(), zipFilePath);
-
-            Thread.sleep(100);
-          }
-
-          if (progressMonitor.getResult().equals(ProgressMonitor.Result.SUCCESS)) {
-            zipFile.close();
-            updateProgress(1, 1, zipFilePath); // force 100%
-            promise.resolve(destDirectory);
-          } else if (progressMonitor.getResult().equals(ProgressMonitor.Result.ERROR)) {
-            throw new Exception("Error occurred. Error message: " + progressMonitor.getException().getMessage());
-          } else if (progressMonitor.getResult().equals(ProgressMonitor.Result.CANCELLED)) {
-            throw new Exception("Task cancelled");
-          }
-        } catch (Exception ex) {
-          updateProgress(0, 1, zipFilePath); // force 0%
-          promise.reject("RNZipArchiveError", "Failed to extract file " + ex.getLocalizedMessage());
-        }
+    executor.submit(() -> {
+      if (zipFilePath == null) {
+        promise.reject("RNZipArchiveError", "Couldn't open file null. ");
+        return;
       }
-    }).start();
+      File zipFileRef = new File(zipFilePath);
+      if (!zipFileRef.exists()) {
+        promise.reject("RNZipArchiveError", "Couldn't open file " + zipFilePath + ". ");
+        return;
+      }
+
+      try (net.lingala.zip4j.ZipFile zipFile = openZipFile(zipFilePath, charset)) {
+        File destDir = new File(destDirectory);
+        if (!destDir.exists()) {
+          //noinspection ResultOfMethodCallIgnored
+          destDir.mkdirs();
+        }
+
+        List<FileHeader> fileHeaderList = zipFile.getFileHeaders();
+        int totalFiles = fileHeaderList.size();
+
+        updateProgress(0, 1, zipFilePath); // force 0%
+        for (int i = 0; i < totalFiles; i++) {
+          FileHeader fileHeader = fileHeaderList.get(i);
+
+          ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
+
+          if (!fileHeader.isDirectory()) {
+            zipFile.extractFile(fileHeader, destDirectory);
+          }
+          updateProgress(i + 1, totalFiles, zipFilePath);
+        }
+
+        updateProgress(1, 1, zipFilePath); // force 100%
+        promise.resolve(destDirectory);
+      } catch (Exception ex) {
+        updateProgress(0, 1, zipFilePath); // force 0%
+        promise.reject("RNZipArchiveError", "Failed to extract file " + ex.getLocalizedMessage());
+      }
+    });
   }
 
   /**
@@ -192,269 +175,235 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
    */
   @Override
   public void unzipAssets(final String assetsPath, final String destDirectory, final Promise promise) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        InputStream assetsInputStream;
-        long compressedSize;
+    executor.submit(() -> {
+      InputStream assetsInputStream = null;
+      AssetFileDescriptor fileDescriptor = null;
+      long compressedSize;
 
-        try {
-          if(assetsPath.startsWith("content://")) {
-            var assetUri = Uri.parse(assetsPath);
-            var contentResolver = getReactApplicationContext().getContentResolver();
+      try {
+        if (assetsPath.startsWith("content://")) {
+          Uri assetUri = Uri.parse(assetsPath);
+          android.content.ContentResolver contentResolver = getReactApplicationContext().getContentResolver();
 
-            assetsInputStream = contentResolver.openInputStream(assetUri);
-            var fileDescriptor = contentResolver.openFileDescriptor(assetUri, "r");
-            compressedSize = fileDescriptor.getStatSize();
-          } else {
-            assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
-            try {
-              AssetFileDescriptor fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
-              compressedSize = fileDescriptor.getLength();
-            } catch (IOException fdEx) {
-              // Asset is compressed in the APK; openFd() doesn't work for compressed assets.
-              // Fall back to available() as a size estimate.
-              compressedSize = assetsInputStream.available();
-              if (compressedSize <= 0) {
-                compressedSize = 1; // avoid division by zero in progress math
-              }
-            }
+          assetsInputStream = contentResolver.openInputStream(assetUri);
+          fileDescriptor = contentResolver.openAssetFileDescriptor(assetUri, "r");
+          compressedSize = fileDescriptor != null ? fileDescriptor.getLength() : 0;
+          if (compressedSize <= 0) {
+            compressedSize = 1; // avoid division by zero in progress math
           }
-        } catch (IOException e) {
-          Log.e(TAG, "Failed to open asset: " + assetsPath, e);
-          promise.reject("RNZipArchiveError", String.format("Asset file `%s` could not be opened: %s", assetsPath, e.getMessage()));
-          return;
-        }
-
-        try {
+        } else {
+          assetsInputStream = getReactApplicationContext().getAssets().open(assetsPath);
           try {
-            File destDir = new File(destDirectory);
-            if (!destDir.exists()) {
-              //noinspection ResultOfMethodCallIgnored
-              destDir.mkdirs();
+            fileDescriptor = getReactApplicationContext().getAssets().openFd(assetsPath);
+            compressedSize = fileDescriptor.getLength();
+          } catch (IOException fdEx) {
+            // Asset is compressed in the APK; openFd() doesn't work for compressed assets.
+            // Fall back to available() as a size estimate.
+            compressedSize = assetsInputStream.available();
+            if (compressedSize <= 0) {
+              compressedSize = 1; // avoid division by zero in progress math
             }
-            ZipInputStream zipIn = new ZipInputStream(assetsInputStream);
-            BufferedInputStream bin = new BufferedInputStream(zipIn);
-
-            ZipEntry entry;
-
-            long extractedBytes = 0;
-            updateProgress(extractedBytes, compressedSize, assetsPath); // force 0%
-
-            File fout;
-            while ((entry = zipIn.getNextEntry()) != null) {
-              if (entry.isDirectory()) continue;
-
-              Log.i("rnziparchive", "Extracting: " + entry.getName());
-
-              fout = new File(destDirectory, entry.getName());
-              String canonicalPath = fout.getCanonicalPath();
-              String destDirCanonicalPath = (new File(destDirectory).getCanonicalPath()) + File.separator;
-
-              if (!canonicalPath.startsWith(destDirCanonicalPath)) {
-                throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
-              }
-
-              if (!fout.exists()) {
-                //noinspection ResultOfMethodCallIgnored
-                (new File(fout.getParent())).mkdirs();
-              }
-
-              FileOutputStream out = new FileOutputStream(fout);
-              BufferedOutputStream Bout = new BufferedOutputStream(out);
-              StreamUtil.copy(bin, Bout, null);
-              Bout.close();
-              out.close();
-
-              extractedBytes += entry.getCompressedSize();
-
-              // do not let the percentage go over 99% because we want it to hit 100% only when we are sure it's finished
-              if(extractedBytes > compressedSize*0.99) extractedBytes = (long) (compressedSize*0.99);
-
-              updateProgress(extractedBytes, compressedSize, entry.getName());
-            }
-
-            updateProgress(compressedSize, compressedSize, assetsPath); // force 100%
-
-            bin.close();
-            zipIn.close();
-          } catch (Exception ex) {
-            ex.printStackTrace();
-            updateProgress(0, 1, assetsPath); // force 0%
-            throw new Exception(String.format("Couldn't extract %s", assetsPath));
           }
-        } catch (Exception ex) {
-          promise.reject("RNZipArchiveError", ex.getMessage());
+        }
+
+        if (assetsInputStream == null) {
+          promise.reject("RNZipArchiveError", String.format("Asset file `%s` could not be opened", assetsPath));
           return;
         }
+
+        File destDir = new File(destDirectory);
+        if (!destDir.exists()) {
+          //noinspection ResultOfMethodCallIgnored
+          destDir.mkdirs();
+        }
+
+        try (ZipInputStream zipIn = new ZipInputStream(assetsInputStream);
+             BufferedInputStream bin = new BufferedInputStream(zipIn)) {
+
+          ZipEntry entry;
+          long extractedBytes = 0;
+          updateProgress(extractedBytes, compressedSize, assetsPath); // force 0%
+
+          while ((entry = zipIn.getNextEntry()) != null) {
+            if (entry.isDirectory()) continue;
+
+            Log.i("rnziparchive", "Extracting: " + entry.getName());
+
+            ZipSecurity.validateExtractPath(destDirectory, entry.getName());
+
+            File fout = new File(destDirectory, entry.getName());
+            File parentDir = fout.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+              //noinspection ResultOfMethodCallIgnored
+              parentDir.mkdirs();
+            }
+
+            try (FileOutputStream out = new FileOutputStream(fout);
+                 BufferedOutputStream bout = new BufferedOutputStream(out)) {
+              StreamUtil.copy(bin, bout, null);
+            }
+
+            extractedBytes += entry.getCompressedSize();
+
+            // do not let the percentage go over 99% because we want it to hit 100% only when we are sure it's finished
+            if (extractedBytes > compressedSize * 0.99) extractedBytes = (long) (compressedSize * 0.99);
+
+            updateProgress(extractedBytes, compressedSize, entry.getName());
+          }
+
+          updateProgress(compressedSize, compressedSize, assetsPath); // force 100%
+        }
+
         promise.resolve(destDirectory);
+      } catch (Exception ex) {
+        Log.e(TAG, "Failed to extract asset: " + assetsPath, ex);
+        updateProgress(0, 1, assetsPath); // force 0%
+        promise.reject("RNZipArchiveError", ex.getMessage());
+      } finally {
+        if (fileDescriptor != null) {
+          try {
+            fileDescriptor.close();
+          } catch (IOException ignored) {
+          }
+        }
       }
-    }).start();
+    });
   }
 
   @Override
   public void zipFiles(final ReadableArray files, final String destDirectory, final double compressionLevel, final Promise promise) {
-    zip(files.toArrayList(), destDirectory, compressionLevel, promise);
+    zip(readableArrayToStringList(files), destDirectory, compressionLevel, promise);
   }
 
   @Override
   public void zipFolder(final String folder, final String destFile, final double compressionLevel, final Promise promise) {
-    ArrayList<Object> folderAsArrayList = new ArrayList<>();
-    folderAsArrayList.add(folder);
-    zip(folderAsArrayList, destFile, compressionLevel, promise);
+    List<String> folderAsList = new ArrayList<>();
+    folderAsList.add(folder);
+    zip(folderAsList, destFile, compressionLevel, promise);
   }
 
   @Override
   public void zipFilesWithPassword(final ReadableArray files, final String destFile, final String password,
                                    String encryptionMethod, final double compressionLevel, Promise promise) {
-    zipWithPassword(files.toArrayList(), destFile, password, encryptionMethod, compressionLevel, promise);
+    zipWithPassword(readableArrayToStringList(files), destFile, password, encryptionMethod, compressionLevel, promise);
   }
 
   @Override
   public void zipFolderWithPassword(final String folder, final String destFile, final String password,
                                     String encryptionMethod, final double compressionLevel, Promise promise) {
-    ArrayList<Object> folderAsArrayList = new ArrayList<>();
-    folderAsArrayList.add(folder);
-    zipWithPassword(folderAsArrayList, destFile, password, encryptionMethod, compressionLevel, promise);
+    List<String> folderAsList = new ArrayList<>();
+    folderAsList.add(folder);
+    zipWithPassword(folderAsList, destFile, password, encryptionMethod, compressionLevel, promise);
   }
 
-  private void zipWithPassword(final ArrayList<Object> filesOrDirectory, final String destFile, final String password,
+  private void zipWithPassword(final List<String> filesOrDirectory, final String destFile, final String password,
                                String encryptionMethod, final double compressionLevel, Promise promise) {
-    try{
-      ZipParameters parameters = new ZipParameters();
-      parameters.setCompressionMethod(CompressionMethod.DEFLATE);
-      parameters.setCompressionLevel(getCompressionLevel(compressionLevel));
+    try {
+      ZipParameters parameters = buildZipParameters(compressionLevel);
 
-      String encParts[] = encryptionMethod.split("-");
-
-      if (password != null && !password.isEmpty()) {
-        parameters.setEncryptFiles(true);
-        if (encParts[0].equals("AES")) {
-          parameters.setEncryptionMethod(EncryptionMethod.AES);
-          if (encParts[1].equals("128")) {
-            parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_128);
-          } else if (encParts[1].equals("256")) {
-            parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-          } else {
-            parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_128);
-          }
-        } else if (encryptionMethod.equals("STANDARD")) {
-          parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG);
-          Log.d(TAG, "Standard Encryption");
-        } else {
-          parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
-          Log.d(TAG, "Encryption type not supported default to Standard Encryption");
-        }
-      } else {
+      if (password == null || password.isEmpty()) {
         promise.reject("RNZipArchiveError", "Password is empty");
         return;
       }
 
+      parameters.setEncryptFiles(true);
+      String[] encParts = encryptionMethod.split("-");
+
+      if (encParts[0].equals("AES")) {
+        parameters.setEncryptionMethod(EncryptionMethod.AES);
+        if (encParts[1].equals("128")) {
+          parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_128);
+        } else if (encParts[1].equals("256")) {
+          parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+        } else {
+          parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_128);
+        }
+      } else if ("STANDARD".equals(encryptionMethod)) {
+        parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG);
+        Log.d(TAG, "Standard Encryption");
+      } else {
+        parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
+        Log.d(TAG, "Encryption type not supported default to Standard Encryption");
+      }
+
       processZip(filesOrDirectory, destFile, parameters, promise, password.toCharArray());
-
     } catch (Exception ex) {
       promise.reject("RNZipArchiveError", ex.getMessage());
-      return;
     }
   }
 
-  private void zip(final ArrayList<Object> filesOrDirectory, final String destFile, final double compressionLevel, final Promise promise) {
-    try{
-      ZipParameters parameters = new ZipParameters();
-      parameters.setCompressionMethod(CompressionMethod.DEFLATE);
-      parameters.setCompressionLevel(getCompressionLevel(compressionLevel));
-
+  private void zip(final List<String> filesOrDirectory, final String destFile, final double compressionLevel, final Promise promise) {
+    try {
+      ZipParameters parameters = buildZipParameters(compressionLevel);
       processZip(filesOrDirectory, destFile, parameters, promise, null);
-
     } catch (Exception ex) {
       promise.reject("RNZipArchiveError", ex.getMessage());
-      return;
     }
   }
 
-  private void processZip(final ArrayList<Object> entries, final String destFile, final ZipParameters parameters, final Promise promise, final char[] password) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          net.lingala.zip4j.ZipFile zipFile;
-          if (password != null) {
-            zipFile = new net.lingala.zip4j.ZipFile(destFile, password);
-          } else {
-            zipFile = new net.lingala.zip4j.ZipFile(destFile);
-          }
+  private void processZip(final List<String> entries, final String destFile, final ZipParameters parameters, final Promise promise, final char[] password) {
+    executor.submit(() -> {
+      try (net.lingala.zip4j.ZipFile zipFile = password != null
+          ? new net.lingala.zip4j.ZipFile(destFile, password)
+          : new net.lingala.zip4j.ZipFile(destFile)) {
 
-          updateProgress(0, 100, destFile);
+        updateProgress(0, 100, destFile);
 
-          int totalFiles = 0;
-          int fileCounter = 0;
+        int totalFiles = 0;
+        int fileCounter = 0;
 
-          for (int i = 0; i < entries.size(); i++) {
-            File f = new File(entries.get(i).toString());
+        for (int i = 0; i < entries.size(); i++) {
+          File f = new File(entries.get(i));
 
-            if (f.exists()) {
-              if (f.isDirectory()) {
-                File[] listFiles = f.listFiles();
-                List<File> files = listFiles != null ? Arrays.asList(listFiles) : new ArrayList<File>();
+          if (f.exists()) {
+            if (f.isDirectory()) {
+              File[] listFiles = f.listFiles();
+              List<File> files = listFiles != null ? Arrays.asList(listFiles) : new ArrayList<File>();
 
-                totalFiles += files.size();
-                for (int j = 0; j < files.size(); j++) {
-                  if (files.get(j).isDirectory()) {
-                    zipFile.addFolder(files.get(j), parameters);
-                  }
-                  else {
-                    zipFile.addFile(files.get(j), parameters);
-                  }
-                  fileCounter += 1;
-                  updateProgress(fileCounter, totalFiles, destFile);
+              totalFiles += files.size();
+              for (int j = 0; j < files.size(); j++) {
+                if (files.get(j).isDirectory()) {
+                  zipFile.addFolder(files.get(j), parameters);
+                } else {
+                  zipFile.addFile(files.get(j), parameters);
                 }
-
-              } else {
-                totalFiles += 1;
-                zipFile.addFile(f, parameters);
                 fileCounter += 1;
                 updateProgress(fileCounter, totalFiles, destFile);
               }
+
+            } else {
+              totalFiles += 1;
+              zipFile.addFile(f, parameters);
+              fileCounter += 1;
+              updateProgress(fileCounter, totalFiles, destFile);
             }
-            else {
-              promise.reject("RNZipArchiveError", "File or folder does not exist");
-              return;
-            }
+          } else {
+            promise.reject("RNZipArchiveError", "File or folder does not exist");
+            return;
           }
-          updateProgress(1, 1, destFile); // force 100%
-          promise.resolve(destFile);
-        } catch (Exception ex) {
-          promise.reject("RNZipArchiveError", ex.getMessage());
-          return;
         }
+        updateProgress(1, 1, destFile); // force 100%
+        promise.resolve(destFile);
+      } catch (Exception ex) {
+        promise.reject("RNZipArchiveError", ex.getMessage());
       }
-    }).start();
-  }
-
-  protected void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
-    // Ensure progress can't overflow 1
-    double progress = Math.min((double) extractedBytes / (double) totalSize, 1);
-    Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
-
-    WritableMap map = Arguments.createMap();
-    map.putString(EVENT_KEY_FILENAME, zipFilePath);
-    map.putDouble(EVENT_KEY_PROGRESS, progress);
-    getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-            .emit(PROGRESS_EVENT_NAME, map);
+    });
   }
 
   @Override
   public void getUncompressedSize(String zipFilePath, String charset, final Promise promise) {
-    try {
-      long totalSize = getUncompressedSize(zipFilePath, charset);
-      if (totalSize == -1) {
-        promise.reject("RNZipArchiveError", "Failed to get uncompressed size");
-      } else {
-        promise.resolve((double) totalSize);
+    executor.submit(() -> {
+      try {
+        long totalSize = getUncompressedSize(zipFilePath, charset);
+        if (totalSize == -1) {
+          promise.reject("RNZipArchiveError", "Failed to get uncompressed size");
+        } else {
+          promise.resolve((double) totalSize);
+        }
+      } catch (Exception e) {
+        promise.reject("RNZipArchiveError", "Failed to get uncompressed size: " + e.getMessage());
       }
-    } catch (Exception e) {
-      promise.reject("RNZipArchiveError", "Failed to get uncompressed size: " + e.getMessage());
-    }
+    });
   }
 
   /**
@@ -464,28 +413,33 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
    */
   private long getUncompressedSize(String zipFilePath, String charset) {
     long totalSize = 0;
-    try {
-      net.lingala.zip4j.ZipFile zipFile = null;
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
-        zipFile.setCharset(Charset.forName(charset));
-      } else {
-        zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
-      }
-
-      final List <FileHeader> files = zipFile.getFileHeaders();
-      for(FileHeader it : files) {
+    try (net.lingala.zip4j.ZipFile zipFile = openZipFile(zipFilePath, charset)) {
+      final List<FileHeader> files = zipFile.getFileHeaders();
+      for (FileHeader it : files) {
         long size = it.getUncompressedSize();
         if (size != -1) {
           totalSize += size;
         }
       }
-
-      zipFile.close();
     } catch (Exception ignored) {
       return -1;
     }
     return totalSize;
+  }
+
+  private net.lingala.zip4j.ZipFile openZipFile(String zipFilePath, String charset) {
+    net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && charset != null) {
+      zipFile.setCharset(Charset.forName(charset));
+    }
+    return zipFile;
+  }
+
+  private ZipParameters buildZipParameters(double compressionLevel) {
+    ZipParameters parameters = new ZipParameters();
+    parameters.setCompressionMethod(CompressionMethod.DEFLATE);
+    parameters.setCompressionLevel(getCompressionLevel(compressionLevel));
+    return parameters;
   }
 
   private static CompressionLevel getCompressionLevel(double compressionLevel) {
@@ -515,6 +469,36 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       Log.w(TAG, "Unsupported compression level: " + compressionLevel + ", defaulting to NORMAL (5)");
       return CompressionLevel.NORMAL;
     }
+  }
+
+  private List<String> readableArrayToStringList(ReadableArray array) {
+    List<String> result = new ArrayList<>();
+    for (int i = 0; i < array.size(); i++) {
+      if (array.getType(i) == ReadableType.String) {
+        result.add(array.getString(i));
+      } else {
+        result.add(array.getDynamic(i).asString());
+      }
+    }
+    return result;
+  }
+
+  protected void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
+    // Ensure progress can't overflow 1
+    final double progress = Math.min((double) extractedBytes / (double) totalSize, 1);
+    Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
+
+    final WritableMap map = Arguments.createMap();
+    map.putString(EVENT_KEY_FILENAME, zipFilePath);
+    map.putDouble(EVENT_KEY_PROGRESS, progress);
+
+    mainHandler.post(() -> {
+      ReactApplicationContext context = getReactApplicationContext();
+      if (context != null && context.hasActiveCatalystInstance()) {
+        context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+            .emit(PROGRESS_EVENT_NAME, map);
+      }
+    });
   }
 
   /**

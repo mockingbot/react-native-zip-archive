@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   e2e-ios:
-    name: E2E iOS (${{ matrix.app }})
+    name: E2E iOS (playground-rn)
     runs-on: macos-latest
     timeout-minutes: 60
     strategy:
@@ -121,7 +121,7 @@ jobs:
           path: crash-logs/
 
   e2e-android:
-    name: E2E Android (${{ matrix.app }})
+    name: E2E Android (playground-rn)
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
