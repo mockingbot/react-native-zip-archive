@@ -88,11 +88,15 @@ def patch_expo_modules_for_swift62
     path = File.join(expo_router_root, 'ios/LinkPreview/LinkPreviewNativeNavigation.swift')
     if File.exist?(path)
       content = File.read(path)
-      if !content.include?('@MainActor')
+      # Heal any previously-applied patch that used a literal backslash-n.
+      content = content.gsub('@MainActor\\ninternal class LinkPreviewNativeNavigation {', "@MainActor\ninternal class LinkPreviewNativeNavigation {")
+      if !content.include?("@MainActor\ninternal class LinkPreviewNativeNavigation {")
         content = content.sub(
           'internal class LinkPreviewNativeNavigation {',
-          '@MainActor\ninternal class LinkPreviewNativeNavigation {'
+          "@MainActor\ninternal class LinkPreviewNativeNavigation {"
         )
+      end
+      if content != File.read(path)
         File.write(path, content)
         Pod::UI.puts "Patched main-actor isolation in #{path}"
       end
@@ -103,11 +107,15 @@ def patch_expo_modules_for_swift62
     path = File.join(expo_router_root, 'ios/Toolbar/RouterFontUtils.swift')
     if File.exist?(path)
       content = File.read(path)
-      if !content.include?('@MainActor')
+      # Heal any previously-applied patch that used a literal backslash-n.
+      content = content.gsub('@MainActor\\nstruct RouterFontUtils {', "@MainActor\nstruct RouterFontUtils {")
+      if !content.include?("@MainActor\nstruct RouterFontUtils {")
         content = content.sub(
           'struct RouterFontUtils {',
-          '@MainActor\nstruct RouterFontUtils {'
+          "@MainActor\nstruct RouterFontUtils {"
         )
+      end
+      if content != File.read(path)
         File.write(path, content)
         Pod::UI.puts "Patched main-actor isolation in #{path}"
       end
