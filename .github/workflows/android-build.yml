@@ -1,4 +1,4 @@
-name: iOS Build
+name: Android Build
 
 on:
   pull_request:
@@ -12,9 +12,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-ios:
-    name: Build iOS (${{ matrix.app }})
-    runs-on: macos-latest
+  build-android:
+    name: Build Android (${{ matrix.app }})
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -22,12 +22,8 @@ jobs:
         include:
           - app: rn
             dir: playground-rn
-            workspace: PlaygroundRN.xcworkspace
-            scheme: PlaygroundRN
           - app: expo
             dir: playground-expo
-            workspace: RNZipArchivePlayground.xcworkspace
-            scheme: RNZipArchivePlayground
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,6 +32,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -53,26 +55,16 @@ jobs:
             npm install
           fi
 
-      - name: Cache CocoaPods
+      - name: Cache Gradle
         uses: actions/cache@v4
         with:
-          path: ${{ matrix.dir }}/ios/Pods
-          key: ${{ runner.os }}-${{ matrix.app }}-pods-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.dir)) }}
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ matrix.app }}-gradle-${{ hashFiles(format('{0}/android/gradle/wrapper/gradle-wrapper.properties', matrix.dir), format('{0}/android/build.gradle', matrix.dir)) }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.app }}-gradle-
 
-      - name: Install CocoaPods
-        working-directory: ${{ matrix.dir }}/ios
-        run: |
-          gem install cocoapods -v '>= 1.13'
-          pod install
-
-      - name: Build iOS app
-        working-directory: ${{ matrix.dir }}/ios
-        run: |
-          xcodebuild \
-            -workspace ${{ matrix.workspace }} \
-            -scheme ${{ matrix.scheme }} \
-            -configuration Release \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO
+      - name: Build Android app
+        working-directory: ${{ matrix.dir }}/android
+        run: ./gradlew :app:assembleRelease
