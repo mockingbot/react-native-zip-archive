@@ -61,5 +61,20 @@ target 'RNZipArchivePlayground' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+
+    # Xcode 16 / Swift 6 workaround:
+    # ExpoModulesCore uses @MainActor and requires Swift 6.0, while
+    # react-native-screens 4.25.x still has strict-concurrency issues.
+    # Pin per-target Swift versions until upstream is Swift-6 clean.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        case target.name
+        when 'ExpoModulesCore'
+          config.build_settings['SWIFT_VERSION'] = '6.0'
+        when 'RNScreens'
+          config.build_settings['SWIFT_VERSION'] = '5.0'
+        end
+      end
+    end
   end
 end
