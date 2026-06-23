@@ -62,15 +62,11 @@ target 'RNZipArchivePlayground' do
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
 
-    # Xcode 16 / Swift 6 workaround:
-    # - Pods that use @MainActor need Swift 6 language mode so the attribute
-    #   is recognized.
-    # - Swift 6 defaults to complete concurrency checking, which turns many
-    #   existing issues into errors. Use "targeted" to keep @MainActor valid
-    #   while downgrading most diagnostics to warnings.
-    # - Isolated conformances (e.g. `class Foo: @MainActor Bar`) used by
-    #   ExpoModulesCore are a Swift 6.2 feature. On Swift 6.0/6.1 they must be
-    #   enabled via experimental compiler flags.
+    # Xcode / Swift 6 workaround:
+    # - Expo SDK 55 pods use @MainActor and isolated conformances. They build
+    #   cleanly on Swift 6.2 (Xcode 26), which is why Expo iOS runs on
+    #   macos-26. With strict concurrency set to "minimal" the remaining
+    #   diagnostics are warnings rather than errors.
     # - react-native-screens 4.25.x gamma sources are not Swift-6 clean, so
     #   keep that pod on Swift 5.
     installer.pods_project.targets.each do |target|
@@ -80,8 +76,7 @@ target 'RNZipArchivePlayground' do
           config.build_settings.delete('SWIFT_STRICT_CONCURRENCY')
         else
           config.build_settings['SWIFT_VERSION'] = '6.0'
-          config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'targeted'
-          config.build_settings['OTHER_SWIFT_FLAGS'] = "$(inherited) -enable-upcoming-feature InferIsolatedConformances -enable-experimental-feature IsolatedConformances -enable-experimental-feature StrictSendableMetatypes"
+          config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
         end
       end
     end
@@ -104,8 +99,7 @@ target 'RNZipArchivePlayground' do
           file.puts ""
           file.puts "// Xcode 16 / Swift 6 workaround"
           file.puts "SWIFT_VERSION = 6.0"
-          file.puts "SWIFT_STRICT_CONCURRENCY = targeted"
-          file.puts "OTHER_SWIFT_FLAGS = $(inherited) -enable-upcoming-feature InferIsolatedConformances -enable-experimental-feature IsolatedConformances -enable-experimental-feature StrictSendableMetatypes"
+          file.puts "SWIFT_STRICT_CONCURRENCY = minimal"
         end
       end
     end
