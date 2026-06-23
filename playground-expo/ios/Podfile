@@ -246,6 +246,71 @@ def patch_expo_modules_for_swift62
     end
   end
 
+  # expo-updates-interface: shared singleton registry is flagged as
+  # non-Sendable under Swift 6.2.
+  expo_updates_interface_paths = Dir.glob(File.expand_path('../node_modules/.pnpm/expo-updates-interface@*/node_modules/expo-updates-interface', __dir__))
+  if expo_updates_interface_paths.any?
+    path = File.join(expo_updates_interface_paths.first, 'ios/EXUpdatesInterface/UpdatesControllerRegistry.swift')
+    if File.exist?(path)
+      content = File.read(path)
+      if !content.include?('@unchecked Sendable')
+        content = content.sub(
+          'public final class UpdatesControllerRegistry: NSObject {',
+          'public final class UpdatesControllerRegistry: NSObject, @unchecked Sendable {'
+        )
+        File.write(path, content)
+        Pod::UI.puts "Patched Sendable conformance in #{path}"
+      end
+    end
+  end
+
+  # @expo/dom-webview: the shared registry uses its own dispatch queue for
+  # synchronization but is flagged as non-concurrency-safe by Swift 6.2.
+  dom_webview_paths = Dir.glob(File.expand_path('../node_modules/.pnpm/@expo+dom-webview@*/node_modules/@expo/dom-webview', __dir__))
+  if dom_webview_paths.any?
+    path = File.join(dom_webview_paths.first, 'ios/DomWebViewRegistry.swift')
+    if File.exist?(path)
+      content = File.read(path)
+      original = content.dup
+
+      content = content.sub(
+        'internal final class DomWebViewRegistry {',
+        'internal final class DomWebViewRegistry: @unchecked Sendable {'
+      )
+      # Guard against a previously-applied duplicate modifier.
+      content = content.gsub('nonisolated(unsafe) nonisolated(unsafe)', 'nonisolated(unsafe)')
+      if !content.include?('nonisolated(unsafe) static var shared')
+        content = content.sub(
+          'static var shared = DomWebViewRegistry()',
+          'nonisolated(unsafe) static var shared = DomWebViewRegistry()'
+        )
+      end
+
+      if content != original
+        File.write(path, content)
+        Pod::UI.puts "Patched registry concurrency in #{path}"
+      end
+    end
+
+    # DomWebView calls a MainActor completion handler from a JavaScriptActor
+    # runtime schedule block. Bridge the result back to MainActor with a Task.
+    path = File.join(dom_webview_paths.first, 'ios/DomWebView.swift')
+    if File.exist?(path)
+      content = File.read(path)
+      original = content.dup
+
+      content = content.sub(
+        "      do {\n        let result = try runtime.eval(wrappedSource)\n        completionHandler(result.getString())\n      } catch {\n        completionHandler(\"\\(error)\")\n      }",
+        "      let resultString: String\n      do {\n        let result = try runtime.eval(wrappedSource)\n        resultString = result.getString()\n      } catch {\n        resultString = \"\\(error)\"\n      }\n      Task { @MainActor in\n        completionHandler(resultString)\n      }"
+      )
+
+      if content != original
+        File.write(path, content)
+        Pod::UI.puts "Patched JavaScriptActor -> MainActor bridge in #{path}"
+      end
+    end
+  end
+
   # expo-router: global mutable state in ExpoHeadModule is flagged as
   # non-concurrency-safe.
   if !expo_router_root.empty?
