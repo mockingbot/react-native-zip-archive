@@ -90,26 +90,63 @@ def patch_expo_modules_for_swift62
 
   # expo-file-system: FileSystemBackgroundSessionHandler needs explicit
   # @MainActor isolation for its AppDelegate subscriber conformance.
-  expo_file_system_paths = Dir.glob(File.expand_path('../node_modules/.pnpm/expo-file-system@*/node_modules/expo-file-system/ios/Legacy/FileSystemBackgroundSessionHandler.swift', __dir__))
-  expo_file_system_path = expo_file_system_paths.first
-  if expo_file_system_path && File.exist?(expo_file_system_path)
-    content = File.read(expo_file_system_path)
-    original = content.dup
-    # Ensure the class itself is main-actor isolated.
-    if !content.include?('@MainActor')
+  expo_file_system_root = File.expand_path('../node_modules/.pnpm/expo-file-system@*/node_modules/expo-file-system', __dir__)
+  expo_file_system_paths = Dir.glob(expo_file_system_root)
+  if expo_file_system_paths.any?
+    expo_file_system_path = expo_file_system_paths.first
+
+    background_handler_path = File.join(expo_file_system_path, 'ios/Legacy/FileSystemBackgroundSessionHandler.swift')
+    if File.exist?(background_handler_path)
+      content = File.read(background_handler_path)
+      original = content.dup
+      if !content.include?('@MainActor')
+        content = content.sub(
+          'public final class FileSystemBackgroundSessionHandler: ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {',
+          "@MainActor\npublic final class FileSystemBackgroundSessionHandler: ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {"
+        )
+      end
       content = content.sub(
-        'public final class FileSystemBackgroundSessionHandler: ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {',
-        "@MainActor\npublic final class FileSystemBackgroundSessionHandler: ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {"
+        'ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {',
+        'ExpoAppDelegateSubscriber, @MainActor EXSessionHandlerProtocol {'
       )
+      if content != original
+        File.write(background_handler_path, content)
+        Pod::UI.puts "Patched main-actor isolation in #{background_handler_path}"
+      end
     end
-    # Isolate the EXSessionHandlerProtocol conformance to the main actor.
-    content = content.sub(
-      'ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {',
-      'ExpoAppDelegateSubscriber, @MainActor EXSessionHandlerProtocol {'
-    )
-    if content != original
-      File.write(expo_file_system_path, content)
-      Pod::UI.puts "Patched main-actor isolation in #{expo_file_system_path}"
+
+    # FilePickingHandler operates on UIDocumentPickerViewController and needs
+    # to be main-actor isolated.
+    file_picking_handler_path = File.join(expo_file_system_path, 'ios/FilePickingHandler.swift')
+    if File.exist?(file_picking_handler_path)
+      content = File.read(file_picking_handler_path)
+      if !content.include?('@MainActor')
+        content = content.sub(
+          'internal class FilePickingHandler: FilePickingResultHandler {',
+          "@MainActor\ninternal class FilePickingHandler: FilePickingResultHandler {"
+        )
+        File.write(file_picking_handler_path, content)
+        Pod::UI.puts "Patched main-actor isolation in #{file_picking_handler_path}"
+      end
+    end
+
+    # FileSystemLegacyModule's OnCreate block sends self to MainActor. Mark the
+    # closure itself as @MainActor so the capture stays in the same isolation.
+    legacy_module_path = File.join(expo_file_system_path, 'ios/Legacy/FileSystemLegacyModule.swift')
+    if File.exist?(legacy_module_path)
+      content = File.read(legacy_module_path)
+      if content.include?('OnCreate {') && !content.include?('OnCreate { @MainActor in')
+        content = content.sub(
+          'OnCreate {',
+          'OnCreate { @MainActor in'
+        )
+        content = content.sub(
+          'Task { @MainActor in',
+          'Task {'
+        )
+        File.write(legacy_module_path, content)
+        Pod::UI.puts "Patched OnCreate isolation in #{legacy_module_path}"
+      end
     end
   end
 
