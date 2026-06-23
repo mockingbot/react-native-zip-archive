@@ -68,6 +68,9 @@ target 'RNZipArchivePlayground' do
     # - Swift 6 defaults to complete concurrency checking, which turns many
     #   existing issues into errors. Use "targeted" to keep @MainActor valid
     #   while downgrading most diagnostics to warnings.
+    # - Isolated conformances (e.g. `class Foo: @MainActor Bar`) used by
+    #   ExpoModulesCore are a Swift 6.2 feature. On Swift 6.0/6.1 they must be
+    #   enabled via experimental compiler flags.
     # - react-native-screens 4.25.x gamma sources are not Swift-6 clean, so
     #   keep that pod on Swift 5.
     installer.pods_project.targets.each do |target|
@@ -78,6 +81,7 @@ target 'RNZipArchivePlayground' do
         else
           config.build_settings['SWIFT_VERSION'] = '6.0'
           config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'targeted'
+          config.build_settings['OTHER_SWIFT_FLAGS'] = "$(inherited) -enable-experimental-feature IsolatedConformances -enable-experimental-feature StrictSendableMetatypes"
         end
       end
     end
@@ -101,6 +105,7 @@ target 'RNZipArchivePlayground' do
           file.puts "// Xcode 16 / Swift 6 workaround"
           file.puts "SWIFT_VERSION = 6.0"
           file.puts "SWIFT_STRICT_CONCURRENCY = targeted"
+          file.puts "OTHER_SWIFT_FLAGS = $(inherited) -enable-experimental-feature IsolatedConformances -enable-experimental-feature StrictSendableMetatypes"
         end
       end
     end
