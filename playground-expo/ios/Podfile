@@ -94,11 +94,20 @@ def patch_expo_modules_for_swift62
   expo_file_system_path = expo_file_system_paths.first
   if expo_file_system_path && File.exist?(expo_file_system_path)
     content = File.read(expo_file_system_path)
+    original = content.dup
+    # Ensure the class itself is main-actor isolated.
     if !content.include?('@MainActor')
       content = content.sub(
         'public final class FileSystemBackgroundSessionHandler: ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {',
         "@MainActor\npublic final class FileSystemBackgroundSessionHandler: ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {"
       )
+    end
+    # Isolate the EXSessionHandlerProtocol conformance to the main actor.
+    content = content.sub(
+      'ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {',
+      'ExpoAppDelegateSubscriber, @MainActor EXSessionHandlerProtocol {'
+    )
+    if content != original
       File.write(expo_file_system_path, content)
       Pod::UI.puts "Patched main-actor isolation in #{expo_file_system_path}"
     end
