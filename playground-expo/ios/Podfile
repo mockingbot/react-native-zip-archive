@@ -88,6 +88,22 @@ def patch_expo_modules_for_swift62
     end
   end
 
+  # expo-file-system: FileSystemBackgroundSessionHandler needs explicit
+  # @MainActor isolation for its AppDelegate subscriber conformance.
+  expo_file_system_paths = Dir.glob(File.expand_path('../node_modules/.pnpm/expo-file-system@*/node_modules/expo-file-system/ios/Legacy/FileSystemBackgroundSessionHandler.swift', __dir__))
+  expo_file_system_path = expo_file_system_paths.first
+  if expo_file_system_path && File.exist?(expo_file_system_path)
+    content = File.read(expo_file_system_path)
+    if !content.include?('@MainActor')
+      content = content.sub(
+        'public final class FileSystemBackgroundSessionHandler: ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {',
+        "@MainActor\npublic final class FileSystemBackgroundSessionHandler: ExpoAppDelegateSubscriber, EXSessionHandlerProtocol {"
+      )
+      File.write(expo_file_system_path, content)
+      Pod::UI.puts "Patched main-actor isolation in #{expo_file_system_path}"
+    end
+  end
+
   # expo-router: global mutable state in ExpoHeadModule is flagged as
   # non-concurrency-safe.
   if !expo_router_root.empty?
