@@ -15,7 +15,7 @@ concurrency:
 jobs:
   e2e-ios:
     name: E2E iOS (${{ matrix.app }})
-    runs-on: macos-latest
+    runs-on: macos-14
     timeout-minutes: 60
     strategy:
       fail-fast: false
