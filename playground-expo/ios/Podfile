@@ -67,6 +67,30 @@ def patch_expo_modules_for_swift62
     end
   end
 
+  # expo-font: global mutable state is manually synchronized but flagged as
+  # non-concurrency-safe by Swift 6.
+  expo_font_root = `node --print "require.resolve('expo-font/package.json')" 2>/dev/null`.strip
+  if !expo_font_root.empty?
+    expo_font_root = File.dirname(expo_font_root)
+    path = File.join(expo_font_root, 'ios/FontFamilyAliasManager.swift')
+    if File.exist?(path)
+      content = File.read(path)
+      original = content.dup
+      content = content.sub(
+        'private var fontFamilyAliases = [String: String]()',
+        'private nonisolated(unsafe) var fontFamilyAliases = [String: String]()'
+      )
+      content = content.sub(
+        'private var hasSwizzled = false',
+        'private nonisolated(unsafe) var hasSwizzled = false'
+      )
+      if content != original
+        File.write(path, content)
+        Pod::UI.puts "Patched global mutable state in #{path}"
+      end
+    end
+  end
+
   # expo-router: global mutable state in ExpoHeadModule is flagged as
   # non-concurrency-safe.
   if !expo_router_root.empty?
