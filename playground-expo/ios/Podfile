@@ -81,7 +81,7 @@ target 'RNZipArchivePlayground' do
         else
           config.build_settings['SWIFT_VERSION'] = '6.0'
           config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'targeted'
-          config.build_settings['OTHER_SWIFT_FLAGS'] = "$(inherited) -enable-experimental-feature IsolatedConformances -enable-experimental-feature StrictSendableMetatypes"
+          config.build_settings['OTHER_SWIFT_FLAGS'] = "$(inherited) -enable-upcoming-feature InferIsolatedConformances -enable-experimental-feature IsolatedConformances -enable-experimental-feature StrictSendableMetatypes"
         end
       end
     end
@@ -105,7 +105,7 @@ target 'RNZipArchivePlayground' do
           file.puts "// Xcode 16 / Swift 6 workaround"
           file.puts "SWIFT_VERSION = 6.0"
           file.puts "SWIFT_STRICT_CONCURRENCY = targeted"
-          file.puts "OTHER_SWIFT_FLAGS = $(inherited) -enable-experimental-feature IsolatedConformances -enable-experimental-feature StrictSendableMetatypes"
+          file.puts "OTHER_SWIFT_FLAGS = $(inherited) -enable-upcoming-feature InferIsolatedConformances -enable-experimental-feature IsolatedConformances -enable-experimental-feature StrictSendableMetatypes"
         end
       end
     end
