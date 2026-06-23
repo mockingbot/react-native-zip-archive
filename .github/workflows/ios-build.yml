@@ -76,5 +76,4 @@ jobs:
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            SWIFT_VERSION=6.0 \
-            SWIFT_STRICT_CONCURRENCY=minimal
+            SWIFT_VERSION=5
