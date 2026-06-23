@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build-ios:
     name: Build iOS (${{ matrix.app }})
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -24,10 +24,12 @@ jobs:
             dir: playground-rn
             workspace: PlaygroundRN.xcworkspace
             scheme: PlaygroundRN
+            runner: macos-latest
           - app: expo
             dir: playground-expo
             workspace: RNZipArchivePlayground.xcworkspace
             scheme: RNZipArchivePlayground
+            runner: macos-26
     steps:
       - name: Checkout
         uses: actions/checkout@v4

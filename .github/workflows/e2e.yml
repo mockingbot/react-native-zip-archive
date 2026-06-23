@@ -15,7 +15,7 @@ concurrency:
 jobs:
   e2e-ios:
     name: E2E iOS (${{ matrix.app }})
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -27,12 +27,14 @@ jobs:
             scheme: PlaygroundRN
             app_name: PlaygroundRN
             bundle_id: com.rnziparchive.playground.rn
+            runner: macos-latest
           - app: expo
             dir: playground-expo
             workspace: RNZipArchivePlayground.xcworkspace
             scheme: RNZipArchivePlayground
             app_name: RNZipArchivePlayground
             bundle_id: com.rnziparchive.playground.expo
+            runner: macos-26
     steps:
       - name: Checkout
         uses: actions/checkout@v4
