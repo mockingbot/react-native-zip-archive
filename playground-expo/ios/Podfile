@@ -14,41 +14,56 @@ def ccache_enabled?(podfile_properties)
   podfile_properties['apple.ccacheEnabled'] == 'true'
 end
 
-# Patch expo-router (<=55.0.14) so that main-actor-isolated view classes
-# explicitly use isolated conformances. Swift 6.2's InferIsolatedConformances
-# does not infer these for protocols coming from other modules, so the build
-# fails without the explicit @MainActor annotation on the conformance.
-def patch_expo_router_isolated_conformances
+# Patch Expo SDK 55 pods so they compile under Swift 6.2 / Xcode 26.
+# The issues are isolated-conformance and Sendable errors that the upstream
+# SDK does not hit in its own CI configuration.
+def patch_expo_modules_for_swift62
+  # expo-router: main-actor-isolated view classes need explicit isolated
+  # conformances for protocols coming from other modules.
   expo_router_root = `node --print "require.resolve('expo-router/package.json')" 2>/dev/null`.strip
-  return if expo_router_root.empty?
+  if !expo_router_root.empty?
+    expo_router_root = File.dirname(expo_router_root)
+    files = [
+      File.join(expo_router_root, 'ios/LinkPreview/LinkPreviewNativeActionView.swift'),
+      File.join(expo_router_root, 'ios/LinkPreview/LinkPreviewNativeView.swift'),
+      File.join(expo_router_root, 'ios/LinkPreview/LinkZoomTransition.swift'),
+      File.join(expo_router_root, 'ios/Toolbar/RouterToolbarHostView.swift'),
+    ]
 
-  expo_router_root = File.dirname(expo_router_root)
-  files = [
-    File.join(expo_router_root, 'ios/LinkPreview/LinkPreviewNativeActionView.swift'),
-    File.join(expo_router_root, 'ios/LinkPreview/LinkPreviewNativeView.swift'),
-    File.join(expo_router_root, 'ios/LinkPreview/LinkZoomTransition.swift'),
-    File.join(expo_router_root, 'ios/Toolbar/RouterToolbarHostView.swift'),
-  ]
+    files.each do |path|
+      next unless File.exist?(path)
+      content = File.read(path)
+      original = content.dup
 
-  files.each do |path|
-    next unless File.exist?(path)
-    content = File.read(path)
-    original = content.dup
+      content.gsub!(
+        /class NativeLinkPreviewView: RouterViewWithLogger, UIContextMenuInteractionDelegate,\n  RNSDismissibleModalProtocol, LinkPreviewMenuUpdatable \{/,
+        "class NativeLinkPreviewView: RouterViewWithLogger, UIContextMenuInteractionDelegate,\n  @MainActor RNSDismissibleModalProtocol, @MainActor LinkPreviewMenuUpdatable {"
+      )
+      content.gsub!(/, LinkPreviewMenuUpdatable \{/, ', @MainActor LinkPreviewMenuUpdatable {')
+      content.gsub!(/, LinkPreviewIndirectTriggerProtocol \{/, ', @MainActor LinkPreviewIndirectTriggerProtocol {')
 
-    # NativeLinkPreviewView inherits UIContextMenuInteractionDelegate and two
-    # protocols from RNScreens / expo-router that must be main-actor isolated.
-    content.gsub!(
-      /class NativeLinkPreviewView: RouterViewWithLogger, UIContextMenuInteractionDelegate,\n  RNSDismissibleModalProtocol, LinkPreviewMenuUpdatable \{/,
-      "class NativeLinkPreviewView: RouterViewWithLogger, UIContextMenuInteractionDelegate,\n  @MainActor RNSDismissibleModalProtocol, @MainActor LinkPreviewMenuUpdatable {"
-    )
+      if content != original
+        File.write(path, content)
+        Pod::UI.puts "Patched isolated conformances in #{path}"
+      end
+    end
+  end
 
-    # Other single-protocol main-actor conformances.
-    content.gsub!(/, LinkPreviewMenuUpdatable \{/, ', @MainActor LinkPreviewMenuUpdatable {')
-    content.gsub!(/, LinkPreviewIndirectTriggerProtocol \{/, ', @MainActor LinkPreviewIndirectTriggerProtocol {')
-
-    if content != original
-      File.write(path, content)
-      Pod::UI.puts "Patched isolated conformances in #{path}"
+  # expo-linking: the shared registry singleton is flagged as non-Sendable.
+  expo_linking_root = `node --print "require.resolve('expo-linking/package.json')" 2>/dev/null`.strip
+  if !expo_linking_root.empty?
+    expo_linking_root = File.dirname(expo_linking_root)
+    path = File.join(expo_linking_root, 'ios/ExpoLinkingRegistry.swift')
+    if File.exist?(path)
+      content = File.read(path)
+      if !content.include?('@unchecked Sendable')
+        content = content.sub(
+          /class ExpoLinkingRegistry \{/,
+          "final class ExpoLinkingRegistry: @unchecked Sendable {"
+        )
+        File.write(path, content)
+        Pod::UI.puts "Patched Sendable conformance in #{path}"
+      end
     end
   end
 end
@@ -121,8 +136,8 @@ target 'RNZipArchivePlayground' do
 
     installer.pods_project.save
 
-    # Patch expo-router sources for Swift 6.2 isolated conformances.
-    patch_expo_router_isolated_conformances
+    # Patch Expo SDK 55 sources for Swift 6.2 / Xcode 26 compatibility.
+    patch_expo_modules_for_swift62
 
     # Also patch the generated xcconfigs so Xcode actually sees the settings.
     Dir.glob(File.join(installer.sandbox.target_support_files_root, '**', '*.xcconfig')).each do |xcconfig_path|
