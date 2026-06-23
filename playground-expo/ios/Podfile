@@ -74,5 +74,16 @@ target 'RNZipArchivePlayground' do
     end
 
     installer.pods_project.save
+
+    # Also patch the generated xcconfigs so Xcode actually sees the settings.
+    Dir.glob(File.join(installer.sandbox.target_support_files_root, '**', '*.xcconfig')).each do |xcconfig_path|
+      next if File.read(xcconfig_path).include?('SWIFT_VERSION = 6.0')
+      File.open(xcconfig_path, 'a') do |file|
+        file.puts ""
+        file.puts "// Xcode 16 / Swift 6 workaround"
+        file.puts "SWIFT_VERSION = 6.0"
+        file.puts "SWIFT_STRICT_CONCURRENCY = minimal"
+      end
+    end
   end
 end
