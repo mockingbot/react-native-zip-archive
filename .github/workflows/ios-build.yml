@@ -24,7 +24,7 @@ jobs:
             dir: playground-rn
             workspace: PlaygroundRN.xcworkspace
             scheme: PlaygroundRN
-            runner: macos-latest
+            runner: macos-15
           - app: expo
             dir: playground-expo
             workspace: RNZipArchivePlayground.xcworkspace

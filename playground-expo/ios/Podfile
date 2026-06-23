@@ -63,11 +63,8 @@ target 'RNZipArchivePlayground' do
     )
 
     # Xcode / Swift 6 workaround:
-    # - Expo SDK 55 pods assume main-actor-by-default and isolated conformances.
-    #   They build cleanly on Swift 6.2 (Xcode 26) when
-    #   SWIFT_DEFAULT_ACTOR_ISOLATION=MainActor and
-    #   SWIFT_APPROACHABLE_CONCURRENCY=YES are enabled. That's why Expo iOS
-    #   runs on macos-26.
+    # - Expo SDK 55 pods use Swift 6 and rely on inferred isolated conformances
+    #   (Swift 6.2 / Xcode 26). That's why Expo iOS runs on macos-26.
     # - react-native-screens 4.25.x gamma sources are not Swift-6 clean, so
     #   keep that pod on Swift 5.
     installer.pods_project.targets.each do |target|
@@ -75,10 +72,10 @@ target 'RNZipArchivePlayground' do
         if target.name == 'RNScreens'
           config.build_settings['SWIFT_VERSION'] = '5.0'
           config.build_settings.delete('SWIFT_STRICT_CONCURRENCY')
+          config.build_settings.delete('SWIFT_UPCOMING_FEATURES')
         else
           config.build_settings['SWIFT_VERSION'] = '6.0'
-          config.build_settings['SWIFT_DEFAULT_ACTOR_ISOLATION'] = 'MainActor'
-          config.build_settings['SWIFT_APPROACHABLE_CONCURRENCY'] = 'YES'
+          config.build_settings['SWIFT_UPCOMING_FEATURES'] = 'InferIsolatedConformances'
         end
       end
     end
@@ -101,8 +98,7 @@ target 'RNZipArchivePlayground' do
           file.puts ""
           file.puts "// Xcode / Swift 6 workaround"
           file.puts "SWIFT_VERSION = 6.0"
-          file.puts "SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor"
-          file.puts "SWIFT_APPROACHABLE_CONCURRENCY = YES"
+          file.puts "SWIFT_UPCOMING_FEATURES = InferIsolatedConformances"
         end
       end
     end
