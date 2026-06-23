@@ -63,18 +63,14 @@ target 'RNZipArchivePlayground' do
     )
 
     # Xcode 16 / Swift 6 workaround:
-    # ExpoModulesCore uses @MainActor and requires Swift 6.0 syntax.
-    # react-native-screens 4.25.x gamma sources trigger strict-concurrency
-    # errors in Swift 6 mode, so keep that pod on Swift 5.10.
+    # Several pods (ExpoModulesCore, RNScreens gamma sources, etc.) hit
+    # strict-concurrency errors in Swift 6 mode or unknown-attribute errors
+    # in Swift 5.0 mode. Swift 5.10 provides MainActor support without
+    # enforcing Swift 6 concurrency errors.
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        if target.name == 'RNScreens'
-          config.build_settings['SWIFT_VERSION'] = '5.10'
-          config.build_settings.delete('SWIFT_STRICT_CONCURRENCY')
-        else
-          config.build_settings['SWIFT_VERSION'] = '6.0'
-          config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
-        end
+        config.build_settings['SWIFT_VERSION'] = '5.10'
+        config.build_settings.delete('SWIFT_STRICT_CONCURRENCY')
       end
     end
 
@@ -82,22 +78,11 @@ target 'RNZipArchivePlayground' do
 
     # Also patch the generated xcconfigs so Xcode actually sees the settings.
     Dir.glob(File.join(installer.sandbox.target_support_files_root, '**', '*.xcconfig')).each do |xcconfig_path|
-      target_name = File.basename(xcconfig_path, '.xcconfig').split('.').first
-      if target_name == 'RNScreens'
-        next if File.read(xcconfig_path).include?('SWIFT_VERSION = 5.10')
-        File.open(xcconfig_path, 'a') do |file|
-          file.puts ""
-          file.puts "// Xcode 16 / Swift 6 workaround"
-          file.puts "SWIFT_VERSION = 5.10"
-        end
-      else
-        next if File.read(xcconfig_path).include?('SWIFT_VERSION = 6.0')
-        File.open(xcconfig_path, 'a') do |file|
-          file.puts ""
-          file.puts "// Xcode 16 / Swift 6 workaround"
-          file.puts "SWIFT_VERSION = 6.0"
-          file.puts "SWIFT_STRICT_CONCURRENCY = minimal"
-        end
+      next if File.read(xcconfig_path).include?('SWIFT_VERSION = 5.10')
+      File.open(xcconfig_path, 'a') do |file|
+        file.puts ""
+        file.puts "// Xcode 16 / Swift 6 workaround"
+        file.puts "SWIFT_VERSION = 5.10"
       end
     end
   end
