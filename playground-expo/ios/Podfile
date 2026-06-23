@@ -115,37 +115,133 @@ def patch_expo_modules_for_swift62
       end
     end
 
-    # FilePickingHandler operates on UIDocumentPickerViewController and needs
-    # to be main-actor isolated.
+    # FilePickingHandler and its protocol operate on UIDocumentPickerViewController
+    # and must be main-actor isolated under Swift 6.2.
+    file_picking_utils_path = File.join(expo_file_system_path, 'ios/FilePickingUtils.swift')
+    if File.exist?(file_picking_utils_path)
+      content = File.read(file_picking_utils_path)
+      original = content.dup
+
+      # Make the result-handler protocol main-actor isolated so the
+      # @MainActor class conformance is valid.
+      content = content.sub(
+        'internal protocol FilePickingResultHandler {',
+        "@MainActor\ninternal protocol FilePickingResultHandler {"
+      )
+
+      # The delegate stores the handler and runs UIKit delegate callbacks.
+      content = content.sub(
+        'internal class FilePickingDelegate: NSObject, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {',
+        "@MainActor\ninternal class FilePickingDelegate: NSObject, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {"
+      )
+
+      # The context carries a main-actor delegate.
+      content = content.sub(
+        'internal struct FilePickingContext {',
+        "@MainActor\ninternal struct FilePickingContext {"
+      )
+
+      # Picker creation touches main-actor-only UIKit APIs.
+      content = content.sub(
+        'internal func createFilePicker(initialUri: URL?, mimeType: String?) -> UIDocumentPickerViewController {',
+        "@MainActor\ninternal func createFilePicker(initialUri: URL?, mimeType: String?) -> UIDocumentPickerViewController {"
+      )
+      content = content.sub(
+        'internal func createDirectoryPicker(initialUri: URL?) -> UIDocumentPickerViewController {',
+        "@MainActor\ninternal func createDirectoryPicker(initialUri: URL?) -> UIDocumentPickerViewController {"
+      )
+
+      if content != original
+        File.write(file_picking_utils_path, content)
+        Pod::UI.puts "Patched main-actor isolation in #{file_picking_utils_path}"
+      end
+    end
+
     file_picking_handler_path = File.join(expo_file_system_path, 'ios/FilePickingHandler.swift')
     if File.exist?(file_picking_handler_path)
       content = File.read(file_picking_handler_path)
+      original = content.dup
+
+      # Ensure the class itself is main-actor isolated.
       if !content.include?('@MainActor')
         content = content.sub(
           'internal class FilePickingHandler: FilePickingResultHandler {',
           "@MainActor\ninternal class FilePickingHandler: FilePickingResultHandler {"
         )
+      end
+
+      if content != original
         File.write(file_picking_handler_path, content)
         Pod::UI.puts "Patched main-actor isolation in #{file_picking_handler_path}"
       end
     end
 
-    # FileSystemLegacyModule's OnCreate block sends self to MainActor. Mark the
-    # closure itself as @MainActor so the capture stays in the same isolation.
+    # FileSystemModule stores the main-actor FilePickingHandler and calls it
+    # from .runOnQueue(.main) AsyncFunctions. Mark the module @unchecked
+    # Sendable so the main-actor bridge compiles, and wrap the calls with
+    # MainActor.assumeIsolated.
+    file_system_module_path = File.join(expo_file_system_path, 'ios/FileSystemModule.swift')
+    if File.exist?(file_system_module_path)
+      content = File.read(file_system_module_path)
+      original = content.dup
+
+      # Mark the module @unchecked Sendable.
+      content = content.sub(
+        'public final class FileSystemModule: Module {',
+        'public final class FileSystemModule: Module, @unchecked Sendable {'
+      )
+
+      # Make the lazy handler property main-actor isolated.
+      content = content.sub(
+        'private lazy var filePickingHandler = FilePickingHandler(module: self)',
+        '@MainActor private lazy var filePickingHandler = FilePickingHandler(module: self)'
+      )
+
+      # Wrap the two picker calls in MainActor.assumeIsolated.
+      content = content.sub(
+        "filePickingHandler.presentDocumentPicker(\n        picker: createDirectoryPicker(initialUri: initialUri),\n        isDirectory: true,\n        initialUri: initialUri,\n        mimeType: nil,\n        promise: promise\n      )",
+        "MainActor.assumeIsolated {\n        filePickingHandler.presentDocumentPicker(\n          picker: createDirectoryPicker(initialUri: initialUri),\n          isDirectory: true,\n          initialUri: initialUri,\n          mimeType: nil,\n          promise: promise\n        )\n      }"
+      )
+
+      content = content.sub(
+        "filePickingHandler.presentDocumentPicker(\n        picker: createFilePicker(initialUri: initialUri, mimeType: mimeType),\n        isDirectory: false,\n        initialUri: initialUri,\n        mimeType: mimeType,\n        promise: promise\n      )",
+        "MainActor.assumeIsolated {\n        filePickingHandler.presentDocumentPicker(\n          picker: createFilePicker(initialUri: initialUri, mimeType: mimeType),\n          isDirectory: false,\n          initialUri: initialUri,\n          mimeType: mimeType,\n          promise: promise\n        )\n      }"
+      )
+
+      if content != original
+        File.write(file_system_module_path, content)
+        Pod::UI.puts "Patched FileSystemModule main-actor usage in #{file_system_module_path}"
+      end
+    end
+
+    # FileSystemLegacyModule spawns a @MainActor Task from OnCreate. The
+    # module is not otherwise Sendable, so mark it @unchecked Sendable and
+    # leave the closure nonisolated as upstream intended.
     legacy_module_path = File.join(expo_file_system_path, 'ios/Legacy/FileSystemLegacyModule.swift')
     if File.exist?(legacy_module_path)
       content = File.read(legacy_module_path)
-      if content.include?('OnCreate {') && !content.include?('OnCreate { @MainActor in')
-        content = content.sub(
-          'OnCreate {',
-          'OnCreate { @MainActor in'
-        )
-        content = content.sub(
-          'Task { @MainActor in',
-          'Task {'
-        )
+      original = content.dup
+
+      # Mark the module @unchecked Sendable.
+      content = content.sub(
+        'public final class FileSystemLegacyModule: Module {',
+        'public final class FileSystemLegacyModule: Module, @unchecked Sendable {'
+      )
+
+      # Undo any previous OnCreate @MainActor patch and restore the original
+      # Task { @MainActor in ... } pattern.
+      content = content.sub(
+        'OnCreate { @MainActor in',
+        'OnCreate {'
+      )
+      content = content.sub(
+        '      Task {',
+        '      Task { @MainActor in'
+      )
+
+      if content != original
         File.write(legacy_module_path, content)
-        Pod::UI.puts "Patched OnCreate isolation in #{legacy_module_path}"
+        Pod::UI.puts "Patched FileSystemLegacyModule Sendable in #{legacy_module_path}"
       end
     end
   end
