@@ -63,10 +63,11 @@ target 'RNZipArchivePlayground' do
     )
 
     # Xcode / Swift 6 workaround:
-    # - Expo SDK 55 pods use @MainActor and isolated conformances. They build
-    #   cleanly on Swift 6.2 (Xcode 26), which is why Expo iOS runs on
-    #   macos-26. With strict concurrency set to "minimal" the remaining
-    #   diagnostics are warnings rather than errors.
+    # - Expo SDK 55 pods assume main-actor-by-default and isolated conformances.
+    #   They build cleanly on Swift 6.2 (Xcode 26) when
+    #   SWIFT_DEFAULT_ACTOR_ISOLATION=MainActor and
+    #   SWIFT_APPROACHABLE_CONCURRENCY=YES are enabled. That's why Expo iOS
+    #   runs on macos-26.
     # - react-native-screens 4.25.x gamma sources are not Swift-6 clean, so
     #   keep that pod on Swift 5.
     installer.pods_project.targets.each do |target|
@@ -76,7 +77,8 @@ target 'RNZipArchivePlayground' do
           config.build_settings.delete('SWIFT_STRICT_CONCURRENCY')
         else
           config.build_settings['SWIFT_VERSION'] = '6.0'
-          config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
+          config.build_settings['SWIFT_DEFAULT_ACTOR_ISOLATION'] = 'MainActor'
+          config.build_settings['SWIFT_APPROACHABLE_CONCURRENCY'] = 'YES'
         end
       end
     end
@@ -90,16 +92,17 @@ target 'RNZipArchivePlayground' do
         next if File.read(xcconfig_path).include?('SWIFT_VERSION = 5.0')
         File.open(xcconfig_path, 'a') do |file|
           file.puts ""
-          file.puts "// Xcode 16 / Swift 6 workaround"
+          file.puts "// Xcode / Swift 6 workaround"
           file.puts "SWIFT_VERSION = 5.0"
         end
       else
         next if File.read(xcconfig_path).include?('SWIFT_VERSION = 6.0')
         File.open(xcconfig_path, 'a') do |file|
           file.puts ""
-          file.puts "// Xcode 16 / Swift 6 workaround"
+          file.puts "// Xcode / Swift 6 workaround"
           file.puts "SWIFT_VERSION = 6.0"
-          file.puts "SWIFT_STRICT_CONCURRENCY = minimal"
+          file.puts "SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor"
+          file.puts "SWIFT_APPROACHABLE_CONCURRENCY = YES"
         end
       end
     end
