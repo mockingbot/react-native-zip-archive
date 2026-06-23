@@ -82,6 +82,36 @@ def patch_expo_modules_for_swift62
         Pod::UI.puts "Patched global mutable state in #{path}"
       end
     end
+
+    # expo-router: LinkPreviewNativeNavigation operates entirely on UIKit/RNScreens
+    # types and needs to be main-actor isolated under Swift 6.2.
+    path = File.join(expo_router_root, 'ios/LinkPreview/LinkPreviewNativeNavigation.swift')
+    if File.exist?(path)
+      content = File.read(path)
+      if !content.include?('@MainActor')
+        content = content.sub(
+          'internal class LinkPreviewNativeNavigation {',
+          '@MainActor\ninternal class LinkPreviewNativeNavigation {'
+        )
+        File.write(path, content)
+        Pod::UI.puts "Patched main-actor isolation in #{path}"
+      end
+    end
+
+    # expo-router: RouterFontUtils operates on UIBarButtonItem and needs to be
+    # main-actor isolated under Swift 6.2.
+    path = File.join(expo_router_root, 'ios/Toolbar/RouterFontUtils.swift')
+    if File.exist?(path)
+      content = File.read(path)
+      if !content.include?('@MainActor')
+        content = content.sub(
+          'struct RouterFontUtils {',
+          '@MainActor\nstruct RouterFontUtils {'
+        )
+        File.write(path, content)
+        Pod::UI.puts "Patched main-actor isolation in #{path}"
+      end
+    end
   end
 end
 
