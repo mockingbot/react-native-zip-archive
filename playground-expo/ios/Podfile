@@ -66,6 +66,23 @@ def patch_expo_modules_for_swift62
       end
     end
   end
+
+  # expo-router: global mutable state in ExpoHeadModule is flagged as
+  # non-concurrency-safe.
+  if !expo_router_root.empty?
+    path = File.join(expo_router_root, 'ios/ExpoHeadModule.swift')
+    if File.exist?(path)
+      content = File.read(path)
+      if content.include?("var launchedActivity: NSUserActivity?") && !content.include?('nonisolated(unsafe) var launchedActivity')
+        content = content.sub(
+          "var launchedActivity: NSUserActivity?",
+          "nonisolated(unsafe) var launchedActivity: NSUserActivity?"
+        )
+        File.write(path, content)
+        Pod::UI.puts "Patched global mutable state in #{path}"
+      end
+    end
+  end
 end
 
 ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
