@@ -63,18 +63,16 @@ target 'RNZipArchivePlayground' do
     )
 
     # Xcode 16 / Swift 6 workaround:
-    # ExpoModulesCore uses @MainActor and requires Swift 6.0, while
+    # ExpoModulesCore uses @MainActor and requires Swift 6.0 syntax, while
     # react-native-screens 4.25.x still has strict-concurrency issues.
-    # Pin per-target Swift versions until upstream is Swift-6 clean.
+    # Use Swift 6.0 everywhere but opt out of strict concurrency checks.
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        case target.name
-        when 'ExpoModulesCore'
-          config.build_settings['SWIFT_VERSION'] = '6.0'
-        when 'RNScreens'
-          config.build_settings['SWIFT_VERSION'] = '5.0'
-        end
+        config.build_settings['SWIFT_VERSION'] = '6.0'
+        config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
       end
     end
+
+    installer.pods_project.save
   end
 end
