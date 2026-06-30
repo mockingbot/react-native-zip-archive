@@ -30,7 +30,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion safeExtGet('minSdkVersion', 21)
+        minSdkVersion safeExtGet('minSdkVersion', 23)
         targetSdkVersion safeExtGet('targetSdkVersion', 33)
         versionCode 1
         versionName "1.0"
@@ -64,4 +64,6 @@ repositories {
 dependencies {
     implementation 'com.facebook.react:react-native'
     implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.11.5'
+
+    testImplementation 'junit:junit:4.13.2'
 }

@@ -1,0 +1,80 @@
+name: iOS Build
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    name: Build iOS (${{ matrix.app }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: rn
+            dir: playground-rn
+            workspace: PlaygroundRN.xcworkspace
+            scheme: PlaygroundRN
+            runner: macos-15
+          - app: expo
+            dir: playground-expo
+            workspace: RNZipArchivePlayground.xcworkspace
+            scheme: RNZipArchivePlayground
+            runner: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.dir }}/node_modules
+          key: ${{ runner.os }}-${{ matrix.app }}-node-${{ hashFiles(format('{0}/package.json', matrix.dir)) }}
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            npm install -g pnpm@9
+            pnpm install
+          else
+            npm install
+          fi
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.dir }}/ios/Pods
+          key: ${{ runner.os }}-${{ matrix.app }}-pods-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.dir)) }}
+
+      - name: Install CocoaPods
+        working-directory: ${{ matrix.dir }}/ios
+        run: |
+          gem install cocoapods -v '>= 1.13'
+          pod install
+
+      - name: Build iOS app
+        working-directory: ${{ matrix.dir }}/ios
+        run: |
+          xcodebuild \
+            -workspace ${{ matrix.workspace }} \
+            -scheme ${{ matrix.scheme }} \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
