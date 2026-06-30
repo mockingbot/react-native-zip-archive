@@ -68,12 +68,26 @@ appId: ${APP_ID}
 
 # The GitHub Actions Android emulator (API 29, software GPU) occasionally shows
 # a system-level "System UI isn't responding" dialog that is unrelated to the
-# app. Tap Wait so the loaded app stays in focus and the test can continue.
+# app. The dialog usually appears shortly after launch, after the initial
+# visibility check has already run, so a one-shot conditional can miss it.
+# Poll for the dialog on Android while the playground screen is still hidden,
+# and tap "Wait" so the loaded app stays in focus.
 - runFlow:
     when:
-      visible: "System UI isn’t responding"
+      platform: Android
     commands:
-      - tapOn: "Wait"
+      - repeat:
+          times: 60
+          while:
+            notVisible: "RNZipArchive Playground"
+          commands:
+            - runFlow:
+                when:
+                  visible: "System UI isn’t responding"
+                commands:
+                  - tapOn: "Wait"
+            - waitForAnimationToEnd:
+                timeout: 2000
 
 - extendedWaitUntil:
     visible: "RNZipArchive Playground"
