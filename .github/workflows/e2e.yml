@@ -197,9 +197,19 @@ jobs:
         with:
           api-level: 29
           arch: x86_64
+          ram-size: 4096M
+          disk-size: 4096M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
+            # The Expo dev client can push the emulator system UI close to its
+            # default memory limit, which occasionally triggers a “System UI isn’t
+            # responding” ANR dialog on the GitHub Actions runner. Disable system
+            # ANR dialogs so the test run is not blocked by an emulator-level
+            # prompt that is unrelated to the app under test.
+            adb shell settings put secure show_anr_messages 0
+            adb shell settings put global anr_dialogs_disabled true
+            adb shell settings put global anr_show_background false
             adb install ${{ matrix.dir }}/android/app/build/outputs/apk/release/app-release.apk
             maestro test --env APP_ID="${{ matrix.bundle_id }}" .maestro/flows/ci-master.yaml
 

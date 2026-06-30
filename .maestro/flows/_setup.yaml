@@ -66,12 +66,6 @@ appId: ${APP_ID}
           commands:
             - tapOn: "Reload"
 
-- runFlow:
-    when:
-      visible: "System UI isn’t responding"
-    commands:
-      - tapOn: "Wait"
-
 - extendedWaitUntil:
     visible: "RNZipArchive Playground"
     timeout: 180000
