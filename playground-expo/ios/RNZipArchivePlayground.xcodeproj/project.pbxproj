@@ -382,8 +382,7 @@
 				PRODUCT_NAME = RNZipArchivePlayground;
 				SWIFT_OBJC_BRIDGING_HEADER = "RNZipArchivePlayground/RNZipArchivePlayground-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_UPCOMING_FEATURES = InferIsolatedConformances;
-				SWIFT_VERSION = 6.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -413,8 +412,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.rnziparchive.playground.expo;
 				PRODUCT_NAME = RNZipArchivePlayground;
 				SWIFT_OBJC_BRIDGING_HEADER = "RNZipArchivePlayground/RNZipArchivePlayground-Bridging-Header.h";
-				SWIFT_UPCOMING_FEATURES = InferIsolatedConformances;
-				SWIFT_VERSION = 6.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};

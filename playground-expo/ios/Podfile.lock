@@ -2167,7 +2167,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNScreens (4.25.1):
+  - RNScreens (4.25.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2189,9 +2189,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNScreens/common (= 4.25.1)
+    - RNScreens/common (= 4.25.2)
     - Yoga
-  - RNScreens/common (4.25.1):
+  - RNScreens/common (4.25.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2214,7 +2214,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNZipArchive (8.0.0):
+  - RNZipArchive (8.0.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2272,7 +2272,7 @@ DEPENDENCIES:
   - "ExpoLogBox (from `../node_modules/.pnpm/@expo+log-box@55.0.12_@expo+dom-webview@55.0.6_expo@55.0.24_react-native@0.83.9_@babel+_e793a23f021904cb90aca52b02325627/node_modules/@expo/log-box`)"
   - "ExpoModulesCore (from `../node_modules/.pnpm/expo-modules-core@55.0.25_react-native@0.83.9_@babel+core@7.29.0_@react-native-communit_087fd0e951dd02e79f8845e87a44f4c0/node_modules/expo-modules-core`)"
   - "ExpoModulesJSI (from `../node_modules/.pnpm/expo-modules-core@55.0.25_react-native@0.83.9_@babel+core@7.29.0_@react-native-communit_087fd0e951dd02e79f8845e87a44f4c0/node_modules/expo-modules-core`)"
-  - "ExpoRouter (from `../node_modules/.pnpm/expo-router@55.0.14_@expo+log-box@55.0.12_@expo+metro-runtime@55.0.11_@types+react@19.0_3e34215a2215cb436996c578e41dcd27/node_modules/expo-router/ios`)"
+  - "ExpoRouter (from `../node_modules/.pnpm/expo-router@55.0.14_@expo+log-box@55.0.12_@expo+metro-runtime@55.0.11_@types+react@19.0_7963b2a8fa53ad71da4d6d600e2e2b8d/node_modules/expo-router/ios`)"
   - "ExpoSymbols (from `../node_modules/.pnpm/expo-symbols@55.0.8_expo-font@55.0.7_expo@55.0.24_react-native@0.83.9_@babel+core@7.29._543cdd268cfc9f8eb1bffd6762f95efa/node_modules/expo-symbols/ios`)"
   - "EXUpdatesInterface (from `../node_modules/.pnpm/expo-updates-interface@55.1.6_expo@55.0.24/node_modules/expo-updates-interface/ios`)"
   - "FBLazyVector (from `../node_modules/.pnpm/react-native@0.83.9_@babel+core@7.29.0_@react-native-community+cli@20.1.3_typescript@5._a74f6cc48602ef8fdbac7889a4700499/node_modules/react-native/Libraries/FBLazyVector`)"
@@ -2351,7 +2351,7 @@ DEPENDENCIES:
   - "ReactCommon/turbomodule/core (from `../node_modules/.pnpm/react-native@0.83.9_@babel+core@7.29.0_@react-native-community+cli@20.1.3_typescript@5._a74f6cc48602ef8fdbac7889a4700499/node_modules/react-native/ReactCommon`)"
   - "ReactNativeDependencies (from `../node_modules/.pnpm/react-native@0.83.9_@babel+core@7.29.0_@react-native-community+cli@20.1.3_typescript@5._a74f6cc48602ef8fdbac7889a4700499/node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)"
   - "RNGestureHandler (from `../node_modules/.pnpm/react-native-gesture-handler@2.31.2_react-native@0.83.9_@babel+core@7.29.0_@react-nativ_e1a9ea27ba9dd35d6202bd5a4e603aa1/node_modules/react-native-gesture-handler`)"
-  - "RNScreens (from `../node_modules/.pnpm/react-native-screens@4.25.1_react-native@0.83.9_@babel+core@7.29.0_@react-native-commun_5fda5ce5a84bd0fa3b1b9e64a2ca5e15/node_modules/react-native-screens`)"
+  - "RNScreens (from `../node_modules/.pnpm/react-native-screens@4.25.2_react-native@0.83.9_@babel+core@7.29.0_@react-native-commun_ca72db04dab7622cd2788778a38953f8/node_modules/react-native-screens`)"
   - "RNZipArchive (from `../node_modules/.pnpm/react-native-zip-archive@file+.._react-native@0.83.9_@babel+core@7.29.0_@react-native-c_f686999c74b0cdd6ec23ea7588293dd3/node_modules/react-native-zip-archive`)"
   - "Yoga (from `../node_modules/.pnpm/react-native@0.83.9_@babel+core@7.29.0_@react-native-community+cli@20.1.3_typescript@5._a74f6cc48602ef8fdbac7889a4700499/node_modules/react-native/ReactCommon/yoga`)"
 
@@ -2408,7 +2408,7 @@ EXTERNAL SOURCES:
   ExpoModulesJSI:
     :path: "../node_modules/.pnpm/expo-modules-core@55.0.25_react-native@0.83.9_@babel+core@7.29.0_@react-native-communit_087fd0e951dd02e79f8845e87a44f4c0/node_modules/expo-modules-core"
   ExpoRouter:
-    :path: "../node_modules/.pnpm/expo-router@55.0.14_@expo+log-box@55.0.12_@expo+metro-runtime@55.0.11_@types+react@19.0_3e34215a2215cb436996c578e41dcd27/node_modules/expo-router/ios"
+    :path: "../node_modules/.pnpm/expo-router@55.0.14_@expo+log-box@55.0.12_@expo+metro-runtime@55.0.11_@types+react@19.0_7963b2a8fa53ad71da4d6d600e2e2b8d/node_modules/expo-router/ios"
   ExpoSymbols:
     :path: "../node_modules/.pnpm/expo-symbols@55.0.8_expo-font@55.0.7_expo@55.0.24_react-native@0.83.9_@babel+core@7.29._543cdd268cfc9f8eb1bffd6762f95efa/node_modules/expo-symbols/ios"
   EXUpdatesInterface:
@@ -2565,7 +2565,7 @@ EXTERNAL SOURCES:
   RNGestureHandler:
     :path: "../node_modules/.pnpm/react-native-gesture-handler@2.31.2_react-native@0.83.9_@babel+core@7.29.0_@react-nativ_e1a9ea27ba9dd35d6202bd5a4e603aa1/node_modules/react-native-gesture-handler"
   RNScreens:
-    :path: "../node_modules/.pnpm/react-native-screens@4.25.1_react-native@0.83.9_@babel+core@7.29.0_@react-native-commun_5fda5ce5a84bd0fa3b1b9e64a2ca5e15/node_modules/react-native-screens"
+    :path: "../node_modules/.pnpm/react-native-screens@4.25.2_react-native@0.83.9_@babel+core@7.29.0_@react-native-commun_ca72db04dab7622cd2788778a38953f8/node_modules/react-native-screens"
   RNZipArchive:
     :path: "../node_modules/.pnpm/react-native-zip-archive@file+.._react-native@0.83.9_@babel+core@7.29.0_@react-native-c_f686999c74b0cdd6ec23ea7588293dd3/node_modules/react-native-zip-archive"
   Yoga:
@@ -2673,8 +2673,8 @@ SPEC CHECKSUMS:
   ReactCommon: d4871ce29ec62aadda5cc8a206449f314dab9b76
   ReactNativeDependencies: edcbe7f15b74de188571f8bcce3e0b0be5d29b0e
   RNGestureHandler: e5a2ca72bdd39bed79cb8ccb8d4ee333357dc11d
-  RNScreens: 6daa35235046286228e707a8ee052467756ab8f1
-  RNZipArchive: 2f13e4ae46a490be0819623be17f4a4ae9f00987
+  RNScreens: a594370f2eaa08a48d682ebbca014ffec4816fd3
+  RNZipArchive: 647ead787c9854c3cfd2ed818bb295da9542f8d0
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   SDWebImageAVIFCoder: afe194a084e851f70228e4be35ef651df0fc5c57
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
@@ -2682,6 +2682,6 @@ SPEC CHECKSUMS:
   SSZipArchive: c69881e8ac5521f0e622291387add5f60f30f3c4
   Yoga: 7ca324e377340c274423a58a5494b08c2927f470
 
-PODFILE CHECKSUM: e1de91d809569a92f2102e8995277f37df799cf9
+PODFILE CHECKSUM: 832175b355c7c0039ca038b15aae04ff53dbd317
 
 COCOAPODS: 1.16.2
