@@ -66,6 +66,15 @@ appId: ${APP_ID}
           commands:
             - tapOn: "Reload"
 
+# The GitHub Actions Android emulator (API 29, software GPU) occasionally shows
+# a system-level "System UI isn't responding" dialog that is unrelated to the
+# app. Tap Wait so the loaded app stays in focus and the test can continue.
+- runFlow:
+    when:
+      visible: "System UI isn’t responding"
+    commands:
+      - tapOn: "Wait"
+
 - extendedWaitUntil:
     visible: "RNZipArchive Playground"
     timeout: 180000
