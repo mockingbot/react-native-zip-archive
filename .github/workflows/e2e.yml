@@ -205,11 +205,11 @@ jobs:
           disable-animations: true
           script: |
             # Expo's heavier UI can trigger a system-level ANR dialog on the
-            # low-memory GitHub Actions emulator. Disable ANR prompts before
-            # installing the app so Maestro is not blocked by emulator noise.
-            adb shell settings put secure show_anr_messages 0
-            adb shell settings put global anr_dialogs_disabled true
-            adb shell settings put global anr_show_background false
+            # low-memory GitHub Actions emulator. hide_error_dialogs is the
+            # documented AOSP global setting (Settings.Global.HIDE_ERROR_DIALOGS)
+            # used by CTS/Input ANR tests to suppress error dialogs on API 29+.
+            # Maestro still dismisses any dialog that slips through (_setup.yaml).
+            adb shell settings put global hide_error_dialogs 1
             adb install ${{ matrix.dir }}/android/app/build/outputs/apk/release/app-release.apk
             maestro test --env APP_ID="${{ matrix.bundle_id }}" .maestro/flows/ci-master.yaml
 
