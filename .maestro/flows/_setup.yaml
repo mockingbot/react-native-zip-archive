@@ -67,9 +67,8 @@ appId: ${APP_ID}
             - tapOn: "Reload"
 
 # The GitHub Actions Android emulator (API 29, software GPU) occasionally shows
-# a system-level "System UI isn't responding" dialog that is unrelated to the
-# app. The dialog usually appears shortly after launch, after the initial
-# visibility check has already run, so a one-shot conditional can miss it.
+# a system-level "System UI isn't responding" ANR dialog that is unrelated to
+# the app. The dialog uses a straight ASCII apostrophe; match that exactly.
 # Poll for the dialog on Android while the playground screen is still hidden,
 # and tap "Wait" so the loaded app stays in focus.
 - runFlow:
@@ -83,7 +82,7 @@ appId: ${APP_ID}
           commands:
             - runFlow:
                 when:
-                  visible: "System UI isn’t responding"
+                  visible: "System UI isn't responding"
                 commands:
                   - tapOn: "Wait"
             - waitForAnimationToEnd:
@@ -91,7 +90,7 @@ appId: ${APP_ID}
 
 - extendedWaitUntil:
     visible: "RNZipArchive Playground"
-    timeout: 180000
+    timeout: 10000
 
 - runFlow:
     when:
