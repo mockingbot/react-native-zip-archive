@@ -279,7 +279,14 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
   @Override
   public void zipFiles(final ReadableArray files, final String destDirectory, final double compressionLevel, final Promise promise) {
-    zip(readableArrayToStringList(files), destDirectory, compressionLevel, promise);
+    final List<String> fileList;
+    try {
+      fileList = readableArrayToStringList(files);
+    } catch (IllegalArgumentException ex) {
+      promise.reject("RNZipArchiveError", "Invalid files array: " + ex.getMessage());
+      return;
+    }
+    zip(fileList, destDirectory, compressionLevel, promise);
   }
 
   @Override
@@ -292,7 +299,14 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   @Override
   public void zipFilesWithPassword(final ReadableArray files, final String destFile, final String password,
                                    String encryptionMethod, final double compressionLevel, Promise promise) {
-    zipWithPassword(readableArrayToStringList(files), destFile, password, encryptionMethod, compressionLevel, promise);
+    final List<String> fileList;
+    try {
+      fileList = readableArrayToStringList(files);
+    } catch (IllegalArgumentException ex) {
+      promise.reject("RNZipArchiveError", "Invalid files array: " + ex.getMessage());
+      return;
+    }
+    zipWithPassword(fileList, destFile, password, encryptionMethod, compressionLevel, promise);
   }
 
   @Override
@@ -484,14 +498,20 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     }
   }
 
-  private List<String> readableArrayToStringList(ReadableArray array) {
+  /**
+   * Convert a JS string array to a Java list, rejecting non-string elements instead of
+   * crashing the caller with an unchecked native type exception.
+   *
+   * @throws IllegalArgumentException if an element is not a string
+   */
+  static List<String> readableArrayToStringList(ReadableArray array) {
     List<String> result = new ArrayList<>();
     for (int i = 0; i < array.size(); i++) {
-      if (array.getType(i) == ReadableType.String) {
-        result.add(array.getString(i));
-      } else {
-        result.add(array.getDynamic(i).asString());
+      if (array.getType(i) != ReadableType.String) {
+        throw new IllegalArgumentException(
+            "expected string at index " + i + " but got " + array.getType(i));
       }
+      result.add(array.getString(i));
     }
     return result;
   }
