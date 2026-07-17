@@ -60,22 +60,7 @@ destinationPath:(NSString *)destinationPath
       charset:(NSString *)charset
      resolve:(RCTPromiseResolveBlock)resolve
       reject:(RCTPromiseRejectBlock)reject {
-    self.progress = 0.0;
-    self.processedFilePath = @"";
-    [self zipArchiveProgressEvent:0 total:1]; // force 0%
-
-    NSError *error = nil;
-
-    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath preserveAttributes:NO overwrite:YES password:nil error:&error delegate:self];
-
-    self.progress = 1.0;
-    [self zipArchiveProgressEvent:1 total:1]; // force 100%
-
-    if (success) {
-        resolve(destinationPath);
-    } else {
-        reject(@"unzip_error", [error localizedDescription], error);
-    }
+    [self unzipFile:from destinationPath:destinationPath password:nil resolve:resolve reject:reject];
 }
 
 - (void)unzipWithPassword:(NSString *)from
@@ -83,13 +68,50 @@ destinationPath:(NSString *)destinationPath
                password:(NSString *)password
                resolve:(RCTPromiseResolveBlock)resolve
                 reject:(RCTPromiseRejectBlock)reject {
+    [self unzipFile:from destinationPath:destinationPath password:password resolve:resolve reject:reject];
+}
+
+- (void)unzipFile:(NSString *)from
+destinationPath:(NSString *)destinationPath
+      password:(NSString *)password
+      resolve:(RCTPromiseResolveBlock)resolve
+       reject:(RCTPromiseRejectBlock)reject {
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
 
     NSError *error = nil;
 
-    BOOL success = [SSZipArchive unzipFileAtPath:from toDestination:destinationPath preserveAttributes:NO overwrite:YES password:password error:&error delegate:self];
+    // Total uncompressed size, used for byte-weighted progress. If it can't be
+    // determined, fall back to per-entry progress (entryNumber / total).
+    NSNumber *payloadSize = [SSZipArchive payloadSizeForArchiveAtPath:from error:nil];
+    unsigned long long totalSize = payloadSize ? [payloadSize unsignedLongLongValue] : 0;
+
+    __block unsigned long long extractedBytes = 0;
+    __weak RNZipArchive *weakSelf = self;
+
+    BOOL success = [SSZipArchive unzipFileAtPath:from
+                                  toDestination:destinationPath
+                             preserveAttributes:NO
+                                      overwrite:YES
+                                 nestedZipLevel:0
+                                       password:password
+                                          error:&error
+                                       delegate:nil
+                                progressHandler:^(NSString *entry, unz_file_info zipInfo, long entryNumber, long total) {
+                                    RNZipArchive *strongSelf = weakSelf;
+                                    if (strongSelf == nil) {
+                                        return;
+                                    }
+                                    strongSelf.processedFilePath = entry;
+                                    if (totalSize > 0) {
+                                        extractedBytes += zipInfo.uncompressed_size;
+                                        [strongSelf zipArchiveProgressEvent:extractedBytes total:totalSize];
+                                    } else {
+                                        [strongSelf zipArchiveProgressEvent:entryNumber total:total];
+                                    }
+                                }
+                              completionHandler:nil];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -145,7 +167,7 @@ compressionLevel:(double)compressionLevel
     BOOL success;
     [self setProgressHandler];
 
-    success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:from];
+    success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:from withPassword:nil progressHandler:self.progressHandler];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -205,7 +227,7 @@ compressionLevel:(double)compressionLevel
     BOOL success;
     [self setProgressHandler];
     // Note: withFilesAtPaths doesn't have AES class method, using password only
-    success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:from withPassword:password];
+    success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:from withPassword:password progressHandler:self.progressHandler];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -260,11 +282,6 @@ compressionLevel:(double)compressionLevel
 
 - (void)zipArchiveProgressEvent:(unsigned long long)loaded total:(unsigned long long)total  {
     self.progress = (float)loaded / (float)total;
-    [self dispatchProgessEvent:self.progress processedFilePath:self.processedFilePath];
-}
-
-- (void)zipArchiveDidUnzipFileAtIndex:(NSInteger)fileIndex totalFiles:(NSInteger)totalFiles archivePath:(NSString *)archivePath unzippedFilePath:(NSString *)processedFilePath {
-    self.processedFilePath = processedFilePath;
     [self dispatchProgessEvent:self.progress processedFilePath:self.processedFilePath];
 }
 

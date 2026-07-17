@@ -98,19 +98,20 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         }
 
         List<FileHeader> fileHeaderList = zipFile.getFileHeaders();
-        int totalFiles = fileHeaderList.size();
+        long totalBytes = Math.max(totalUncompressedSize(fileHeaderList), 1);
+        long extractedBytes = 0;
 
         updateProgress(0, 1, zipFilePath); // force 0%
-        for (int i = 0; i < totalFiles; i++) {
-          FileHeader fileHeader = fileHeaderList.get(i);
-
+        for (FileHeader fileHeader : fileHeaderList) {
           ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
 
           if (!fileHeader.isDirectory()) {
             zipFile.extractFile(fileHeader, destDirectory);
+            extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
           }
-          updateProgress(i + 1, totalFiles, zipFilePath);
+          updateProgress(extractedBytes, totalBytes, zipFilePath);
         }
+        updateProgress(1, 1, zipFilePath); // force 100%
         promise.resolve(destDirectory);
       } catch (Exception ex) {
         updateProgress(0, 1, zipFilePath); // force 0%
@@ -140,18 +141,18 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         }
 
         List<FileHeader> fileHeaderList = zipFile.getFileHeaders();
-        int totalFiles = fileHeaderList.size();
+        long totalBytes = Math.max(totalUncompressedSize(fileHeaderList), 1);
+        long extractedBytes = 0;
 
         updateProgress(0, 1, zipFilePath); // force 0%
-        for (int i = 0; i < totalFiles; i++) {
-          FileHeader fileHeader = fileHeaderList.get(i);
-
+        for (FileHeader fileHeader : fileHeaderList) {
           ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
 
           if (!fileHeader.isDirectory()) {
             zipFile.extractFile(fileHeader, destDirectory);
+            extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
           }
-          updateProgress(i + 1, totalFiles, zipFilePath);
+          updateProgress(extractedBytes, totalBytes, zipFilePath);
         }
 
         updateProgress(1, 1, zipFilePath); // force 100%
@@ -418,17 +419,23 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
    * @return -1 on failure
    */
   private long getUncompressedSize(String zipFilePath, String charset) {
-    long totalSize = 0;
     try (net.lingala.zip4j.ZipFile zipFile = openZipFile(zipFilePath, charset)) {
-      final List<FileHeader> files = zipFile.getFileHeaders();
-      for (FileHeader it : files) {
-        long size = it.getUncompressedSize();
-        if (size != -1) {
-          totalSize += size;
-        }
-      }
+      return totalUncompressedSize(zipFile.getFileHeaders());
     } catch (Exception ignored) {
       return -1;
+    }
+  }
+
+  /**
+   * Sum the uncompressed sizes of the given entries, skipping entries whose size is unknown (-1).
+   */
+  private static long totalUncompressedSize(List<FileHeader> fileHeaders) {
+    long totalSize = 0;
+    for (FileHeader fileHeader : fileHeaders) {
+      long size = fileHeader.getUncompressedSize();
+      if (size > 0) {
+        totalSize += size;
+      }
     }
     return totalSize;
   }

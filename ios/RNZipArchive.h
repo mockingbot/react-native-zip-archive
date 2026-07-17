@@ -15,7 +15,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface RNZipArchive : RCTEventEmitter <SSZipArchiveDelegate>
+@interface RNZipArchive : RCTEventEmitter
 
 @property (nonatomic, copy, nullable) NSString *processedFilePath;
 @property (nonatomic) float progress;

@@ -156,7 +156,13 @@ getUncompressedSize(sourcePath)
 Subscribe to progress events. Useful for showing a progress bar.
 
 - `progress` — value from 0 to 1 (1 = completed)
-- `filePath` — the zip file path (empty on iOS for zip operations)
+- `filePath` — the zip file path (on iOS, the entry being processed for unzip operations; empty for zip operations)
+
+Progress is reported monotonically from 0 to 1, with explicit 0% and 100% events at the start and end of each operation. The granularity depends on the operation:
+
+- `unzip` / `unzipWithPassword` — byte-weighted: progress reflects uncompressed bytes extracted so far, updated after each entry completes.
+- `zip` / `zipWithPassword` — per-file: progress reflects the number of files compressed so far.
+- `unzipAssets` (Android only) — approximate: compares bytes read to the compressed archive size.
 
 > The event is global — check `filePath` in your callback to ensure it matches the operation you care about. Remember to call `.remove()` on the returned subscription when done.
 
