@@ -15,7 +15,7 @@ concurrency:
 jobs:
   e2e-ios:
     name: E2E iOS (${{ matrix.app }})
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -27,6 +27,14 @@ jobs:
             scheme: PlaygroundRN
             app_name: PlaygroundRN
             bundle_id: com.rnziparchive.playground.rn
+            runner: macos-15
+          - app: expo
+            dir: playground-expo
+            workspace: RNZipArchivePlayground.xcworkspace
+            scheme: RNZipArchivePlayground
+            app_name: RNZipArchivePlayground
+            bundle_id: com.rnziparchive.playground.expo
+            runner: macos-26
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -102,7 +110,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: maestro-debug-ios
+          name: maestro-debug-ios-${{ matrix.app }}
           path: ~/.maestro/tests/
 
       - name: Upload iOS crash logs
@@ -117,7 +125,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ios-crash-logs
+          name: ios-crash-logs-${{ matrix.app }}
           path: crash-logs/
 
   e2e-android:
@@ -131,6 +139,9 @@ jobs:
           - app: rn
             dir: playground-rn
             bundle_id: com.rnziparchive.playground.rn
+          - app: expo
+            dir: playground-expo
+            bundle_id: com.rnziparchive.playground.expo
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -186,9 +197,19 @@ jobs:
         with:
           api-level: 29
           arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          heap-size: 1024M
+          disk-size: 4096M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
+            # Expo's heavier UI can trigger a system-level ANR dialog on the
+            # low-memory GitHub Actions emulator. hide_error_dialogs is the
+            # documented AOSP global setting (Settings.Global.HIDE_ERROR_DIALOGS)
+            # used by CTS/Input ANR tests to suppress error dialogs on API 29+.
+            # Maestro still dismisses any dialog that slips through (_setup.yaml).
+            adb shell settings put global hide_error_dialogs 1
             adb install ${{ matrix.dir }}/android/app/build/outputs/apk/release/app-release.apk
             maestro test --env APP_ID="${{ matrix.bundle_id }}" .maestro/flows/ci-master.yaml
 
@@ -196,5 +217,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: maestro-debug-android
+          name: maestro-debug-android-${{ matrix.app }}
           path: ~/.maestro/tests/

@@ -14,6 +14,7 @@ def ccache_enabled?(podfile_properties)
   podfile_properties['apple.ccacheEnabled'] == 'true'
 end
 
+
 ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
 ENV['RCT_USE_RN_DEP'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true'
 ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true'
@@ -61,5 +62,21 @@ target 'RNZipArchivePlayground' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+
+    # Xcode / Swift version workaround:
+    # - The macos-26 runner uses Xcode 26.5 / Swift 6.3, but Expo SDK 55 pods
+    #   are not fully Swift-6 clean upstream. Compile third-party pods in Swift
+    #   5 to avoid the unbounded Swift 6.2 strict-concurrency patch list.
+    # - react-native-screens 4.25.x gamma sources are also not Swift-6 clean,
+    #   so keep that pod on Swift 5 as well.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['SWIFT_VERSION'] = '5.0'
+        config.build_settings.delete('SWIFT_STRICT_CONCURRENCY')
+        config.build_settings.delete('SWIFT_UPCOMING_FEATURES')
+      end
+    end
+
+    installer.pods_project.save
   end
 end

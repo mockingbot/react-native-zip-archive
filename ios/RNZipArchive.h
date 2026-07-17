@@ -13,11 +13,13 @@
 #import <NativeZipArchiveSpec/NativeZipArchiveSpec.h>
 #endif
 
-@interface RNZipArchive : RCTEventEmitter <SSZipArchiveDelegate>
+NS_ASSUME_NONNULL_BEGIN
 
-@property (nonatomic) NSString *processedFilePath;
+@interface RNZipArchive : RCTEventEmitter
+
+@property (nonatomic, copy, nullable) NSString *processedFilePath;
 @property (nonatomic) float progress;
-@property (nonatomic, copy) void (^progressHandler)(NSUInteger entryNumber, NSUInteger total);
+@property (nonatomic, copy, nullable) void (^progressHandler)(NSUInteger entryNumber, NSUInteger total);
 
 @end
 
@@ -25,3 +27,5 @@
 @interface RNZipArchive () <NativeZipArchiveSpec>
 @end
 #endif
+
+NS_ASSUME_NONNULL_END

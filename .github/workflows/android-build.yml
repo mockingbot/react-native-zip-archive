@@ -1,0 +1,70 @@
+name: Android Build
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    name: Build Android (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: rn
+            dir: playground-rn
+          - app: expo
+            dir: playground-expo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.dir }}/node_modules
+          key: ${{ runner.os }}-${{ matrix.app }}-node-${{ hashFiles(format('{0}/package.json', matrix.dir)) }}
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            npm install -g pnpm@9
+            pnpm install
+          else
+            npm install
+          fi
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ matrix.app }}-gradle-${{ hashFiles(format('{0}/android/gradle/wrapper/gradle-wrapper.properties', matrix.dir), format('{0}/android/build.gradle', matrix.dir)) }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.app }}-gradle-
+
+      - name: Build Android app
+        working-directory: ${{ matrix.dir }}/android
+        run: ./gradlew :app:assembleRelease
