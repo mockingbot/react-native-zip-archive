@@ -1,5 +1,29 @@
 # Changelog
 
+## [9.0.0] - Unreleased
+
+### Changed (Breaking)
+- Progress events are now byte-weighted per entry for `unzip`/`unzipWithPassword` on both platforms (previously byte-level with within-file granularity on Android, effectively start/end-only on iOS)
+- iOS `unzip` progress events now report the zip entry name in `filePath` instead of the full destination path
+- iOS `zip`/`zipWithPassword` with a files array now emits per-file progress events (previously only 0% and 100%)
+- Android operations are serialized on a managed single-thread executor instead of one raw thread per call
+- Android progress events are posted on the main thread; the final 100% event may now arrive after the promise resolves
+- See [MIGRATION.md](./MIGRATION.md) for upgrade guidance
+
+### Added
+- Android: Zip Slip protection — entries escaping the destination directory are rejected during extraction (`unzip`, `unzipWithPassword`, `unzipAssets`)
+- Android: `ZipSecurity` utility with JUnit regression tests
+- CI: Android/iOS build workflows for both playground apps; Expo added to the E2E matrix
+
+### Fixed
+- Android: close all zip/stream handles via try-with-resources (previously leaked on error paths)
+- Android: emit progress events on the main thread and flush output streams in `StreamUtil.copy`
+- Android: `minSdkVersion` fallback now matches the documented API 23 minimum
+- TypeScript: fix invalid default-parameter syntax in `index.d.ts`; move the `react-native` import to the top level
+- iOS: nullability annotations in `RNZipArchive.h`
+- iOS: per-entry `filePath` updates during unzip (previously dispatched a stale progress value)
+- playground-rn: pin `react-native`, `react-native-screens`, `react-native-gesture-handler`, `react-native-safe-area-context` to match playground-expo (fixes CI codegen failure from floating `react-native-screens` 4.26.x)
+
 ## [8.0.1] - 2026-05-19
 
 ### Fixed
