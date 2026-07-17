@@ -1,6 +1,6 @@
 # Changelog
 
-## [9.0.0] - Unreleased
+## [9.0.0] - 2026-07-17
 
 ### Changed (Breaking)
 - Progress events are now byte-weighted per entry for `unzip`/`unzipWithPassword` on both platforms (previously byte-level with within-file granularity on Android, effectively start/end-only on iOS)
