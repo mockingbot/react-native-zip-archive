@@ -1,5 +1,10 @@
 # Changelog
 
+## [9.0.1] - 2026-07-22
+
+### Fixed
+- Android: close the zip output file before resolving `zip`/`zipWithPassword` promises — fixes zipped data occasionally reading as 0 bytes when used immediately after `zip(...)` (#355, thanks @jamesthomp)
+
 ## [9.0.0] - 2026-07-17
 
 ### Changed (Breaking)

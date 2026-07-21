@@ -1,6 +1,6 @@
 {
   "name": "react-native-zip-archive",
-  "version": "9.0.0",
+  "version": "9.0.1",
   "description": "A TurboModule wrapper on ZipArchive for React Native's New Architecture",
   "main": "index.js",
   "scripts": {
