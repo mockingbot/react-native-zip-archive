@@ -3,6 +3,8 @@ package com.rnziparchive;
 import java.io.File;
 import java.io.IOException;
 
+import net.lingala.zip4j.model.UnzipParameters;
+
 /**
  * Validates zip extraction paths to prevent Zip Slip / path traversal attacks.
  */
@@ -10,6 +12,19 @@ public final class ZipSecurity {
 
   private ZipSecurity() {
     // utility class
+  }
+
+  /**
+   * Returns extraction parameters with symlink extraction disabled. zip4j enables symlink
+   * extraction by default but does not validate that a symlink's resolved target stays inside
+   * the destination directory, allowing archives to plant links escaping the extraction root
+   * (see issue #357). With symlinks disabled, zip4j skips symlink entries entirely, so nothing
+   * can escape the destination.
+   */
+  public static UnzipParameters createExtractParameters() {
+    UnzipParameters params = new UnzipParameters();
+    params.setExtractSymbolicLinks(false);
+    return params;
   }
 
   /**
