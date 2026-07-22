@@ -106,7 +106,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
 
           if (!fileHeader.isDirectory()) {
-            zipFile.extractFile(fileHeader, destDirectory);
+            zipFile.extractFile(fileHeader, destDirectory, ZipSecurity.createExtractParameters());
             extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
           }
           updateProgress(extractedBytes, totalBytes, zipFilePath);
@@ -149,7 +149,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
 
           if (!fileHeader.isDirectory()) {
-            zipFile.extractFile(fileHeader, destDirectory);
+            zipFile.extractFile(fileHeader, destDirectory, ZipSecurity.createExtractParameters());
             extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
           }
           updateProgress(extractedBytes, totalBytes, zipFilePath);
