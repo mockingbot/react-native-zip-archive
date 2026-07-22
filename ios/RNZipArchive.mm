@@ -155,6 +155,63 @@ destinationPath:(NSString *)destinationPath
     }
 }
 
+// Expands `paths` into (full path, entry name) pairs. Files keep their base
+// name; directory contents are added recursively with entry names relative to
+// the listed directory (e.g. "a.txt", "sub/b.txt"), matching Android's
+// zip(string[]) behavior (#339). Directory entries themselves are not written.
+// Returns nil if any path does not exist.
+- (NSArray<NSArray<NSString *> *> *)expandedZipEntries:(NSArray<NSString *> *)paths {
+    NSFileManager *fileManager = [[NSFileManager alloc] init];
+    NSMutableArray<NSArray<NSString *> *> *entries = [NSMutableArray array];
+    for (NSString *path in paths) {
+        BOOL isDirectory = NO;
+        if (![fileManager fileExistsAtPath:path isDirectory:&isDirectory]) {
+            return nil;
+        }
+        if (!isDirectory) {
+            [entries addObject:@[path, path.lastPathComponent]];
+            continue;
+        }
+        NSDirectoryEnumerator *enumerator = [fileManager enumeratorAtPath:path];
+        NSString *relativePath;
+        while ((relativePath = [enumerator nextObject])) {
+            NSString *fullPath = [path stringByAppendingPathComponent:relativePath];
+            BOOL childIsDirectory = NO;
+            [fileManager fileExistsAtPath:fullPath isDirectory:&childIsDirectory];
+            if (childIsDirectory) {
+                continue;
+            }
+            [entries addObject:@[fullPath, relativePath]];
+        }
+    }
+    return entries;
+}
+
+- (BOOL)writeZipEntriesToPath:(NSString *)destinationPath
+                        paths:(NSArray<NSString *> *)paths
+             compressionLevel:(int)compressionLevel
+                     password:(NSString *)password
+                          AES:(BOOL)aes {
+    NSArray<NSArray<NSString *> *> *entries = [self expandedZipEntries:paths];
+    if (entries == nil) {
+        return NO;
+    }
+    SSZipArchive *zipArchive = [[SSZipArchive alloc] initWithPath:destinationPath];
+    BOOL success = [zipArchive open];
+    if (success) {
+        NSUInteger total = entries.count, complete = 0;
+        for (NSArray<NSString *> *entry in entries) {
+            success &= [zipArchive writeFileAtPath:entry[0] withFileName:entry[1] compressionLevel:compressionLevel password:password AES:aes];
+            if (self.progressHandler) {
+                complete++;
+                self.progressHandler(complete, total);
+            }
+        }
+        success &= [zipArchive close];
+    }
+    return success;
+}
+
 - (void)zipFiles:(NSArray<NSString *> *)from
  destinationPath:(NSString *)destinationPath
 compressionLevel:(double)compressionLevel
@@ -167,7 +224,7 @@ compressionLevel:(double)compressionLevel
     BOOL success;
     [self setProgressHandler];
 
-    success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:from withPassword:nil progressHandler:self.progressHandler];
+    success = [self writeZipEntriesToPath:destinationPath paths:from compressionLevel:Z_DEFAULT_COMPRESSION password:nil AES:NO];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -226,8 +283,9 @@ compressionLevel:(double)compressionLevel
 
     BOOL success;
     [self setProgressHandler];
-    // Note: withFilesAtPaths doesn't have AES class method, using password only
-    success = [SSZipArchive createZipFileAtPath:destinationPath withFilesAtPaths:from withPassword:password progressHandler:self.progressHandler];
+    // Note: entries are written with AES:YES, matching the previous behavior of
+    // createZipFileAtPath:withFilesAtPaths: (which routes through AES:YES writes)
+    success = [self writeZipEntriesToPath:destinationPath paths:from compressionLevel:Z_DEFAULT_COMPRESSION password:password AES:YES];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
