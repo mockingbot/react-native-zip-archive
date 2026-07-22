@@ -62,6 +62,7 @@ import { DocumentDirectoryPath } from 'react-native-fs'
 Zip a folder (string) or an array of files to the target path.
 
 - To zip a single file, pass it as an array: `zip([file], target)`.
+- Array items may also be directories: their contents are added recursively with entry paths relative to the listed directory (the directory's own name is not included). This behaves the same on Android and iOS, except that empty directories are preserved on Android only.
 - `compressionLevel` is ignored on iOS when the source is a file array. Use a directory source for custom compression on iOS.
 
 **Compression Level Constants:**
@@ -84,6 +85,7 @@ zip(sourcePath, targetPath)
 Zip with password protection.
 
 - To zip a single file, pass it as an array: `zipWithPassword([file], target, password)`.
+- Array items may also be directories: their contents are added recursively with entry paths relative to the listed directory (the directory's own name is not included). This behaves the same on Android and iOS, except that empty directories are preserved on Android only.
 - `compressionLevel` is ignored on iOS when the source is a file array.
 
 **Encryption Types:**
