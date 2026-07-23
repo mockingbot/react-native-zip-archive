@@ -1,5 +1,11 @@
 # Changelog
 
+## [9.0.2] - 2026-07-22
+
+### Fixed
+- Android: `unzip`/`unzipWithPassword` no longer extract symlink entries — zip4j's default `extractSymbolicLinks=true` allowed a crafted archive to plant a symlink resolving outside the destination directory (#357, thanks @kimdu0)
+- iOS: `zip`/`zipWithPassword` with a files array now add directory items recursively with entry paths relative to the listed directory, matching Android (previously directories produced empty entries and their contents were silently dropped) (#339, thanks @trustytrojan)
+
 ## [9.0.1] - 2026-07-22
 
 ### Fixed
