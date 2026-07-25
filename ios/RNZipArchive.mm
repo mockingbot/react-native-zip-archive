@@ -7,7 +7,7 @@
 //
 
 #import "RNZipArchive.h"
-#import "unzip.h"
+#import "mz_compat.h"
 #import <zlib.h>
 
 #if __has_include(<React/RCTEventDispatcher.h>)
