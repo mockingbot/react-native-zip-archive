@@ -10,6 +10,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ title: 'Playground' }} />
         <Stack.Screen name="zip" options={{ title: 'Zip Demo' }} />
         <Stack.Screen name="unzip" options={{ title: 'Unzip Demo' }} />
+        <Stack.Screen name="list-contents" options={{ title: 'List & Selective Extract' }} />
         <Stack.Screen name="password" options={{ title: 'Password Demo' }} />
         <Stack.Screen name="progress" options={{ title: 'Progress Demo' }} />
         <Stack.Screen name="benchmark" options={{ title: 'Benchmark' }} />

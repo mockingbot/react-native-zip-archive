@@ -7,6 +7,7 @@
 //
 
 #import "RNZipArchive.h"
+#import "unzip.h"
 #import <zlib.h>
 
 #if __has_include(<React/RCTEventDispatcher.h>)
@@ -69,6 +70,361 @@ destinationPath:(NSString *)destinationPath
                resolve:(RCTPromiseResolveBlock)resolve
                 reject:(RCTPromiseRejectBlock)reject {
     [self unzipFile:from destinationPath:destinationPath password:password resolve:resolve reject:reject];
+}
+
+- (void)listContents:(NSString *)source
+             charset:(NSString *)charset
+             resolve:(RCTPromiseResolveBlock)resolve
+              reject:(RCTPromiseRejectBlock)reject {
+    (void)charset; // iOS always reads entry names as UTF-8 / Latin-1 fallback
+
+    zipFile zip = unzOpen(source.fileSystemRepresentation);
+    if (zip == NULL) {
+        reject(@"list_contents_error", @"failed to open zip file", nil);
+        return;
+    }
+
+    NSMutableArray *entries = [NSMutableArray array];
+    // Empty archives return a non-UNZ_OK code from unzGoToFirstFile; treat as an empty list.
+    int ret = unzGoToFirstFile(zip);
+    while (ret == UNZ_OK) {
+        unz_file_info fileInfo;
+        memset(&fileInfo, 0, sizeof(unz_file_info));
+        ret = unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
+        if (ret != UNZ_OK) {
+            unzClose(zip);
+            reject(@"list_contents_error", @"failed to retrieve info for zip entry", nil);
+            return;
+        }
+
+        char *filename = (char *)malloc(fileInfo.size_filename + 1);
+        if (filename == NULL) {
+            unzClose(zip);
+            reject(@"list_contents_error", @"out of memory while listing zip contents", nil);
+            return;
+        }
+        unzGetCurrentFileInfo(zip, &fileInfo, filename, fileInfo.size_filename + 1, NULL, 0, NULL, 0);
+        filename[fileInfo.size_filename] = '\0';
+
+        NSString *path = [NSString stringWithUTF8String:filename];
+        if (path == nil) {
+            path = [[NSString alloc] initWithBytes:filename
+                                            length:fileInfo.size_filename
+                                          encoding:NSISOLatin1StringEncoding];
+        }
+        BOOL isDirectory = NO;
+        if (fileInfo.size_filename > 0 &&
+            (filename[fileInfo.size_filename - 1] == '/' || filename[fileInfo.size_filename - 1] == '\\')) {
+            isDirectory = YES;
+        }
+        free(filename);
+
+        if (path == nil) {
+            path = @"";
+        }
+
+        BOOL isEncrypted = (fileInfo.flag & 1) != 0;
+        [entries addObject:@{
+            @"path": path,
+            @"size": @((double)fileInfo.uncompressed_size),
+            @"compressedSize": @((double)fileInfo.compressed_size),
+            @"isDirectory": @(isDirectory),
+            @"isEncrypted": @(isEncrypted),
+        }];
+
+        ret = unzGoToNextFile(zip);
+    }
+
+    unzClose(zip);
+    resolve(entries);
+}
+
+- (NSString *)normalizedZipPath:(NSString *)path {
+    NSString *normalized = [path stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
+    while ([normalized hasSuffix:@"/"] && normalized.length > 0) {
+        normalized = [normalized substringToIndex:normalized.length - 1];
+    }
+    return normalized;
+}
+
+- (BOOL)entry:(NSString *)entryName matchesSelection:(NSArray<NSString *> *)wantedEntries {
+    if (entryName == nil || wantedEntries.count == 0) {
+        return NO;
+    }
+    NSString *normalizedEntry = [self normalizedZipPath:entryName];
+    for (NSString *wanted in wantedEntries) {
+        if (wanted.length == 0) {
+            continue;
+        }
+        NSString *normalizedWanted = [self normalizedZipPath:wanted];
+        if ([normalizedEntry isEqualToString:normalizedWanted]) {
+            return YES;
+        }
+        NSString *prefix = [normalizedWanted stringByAppendingString:@"/"];
+        if ([normalizedEntry hasPrefix:prefix]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (BOOL)isSafeExtractPath:(NSString *)entryName intoDestination:(NSString *)destinationPath {
+    if (entryName.length == 0) {
+        return NO;
+    }
+    NSString *fullPath = [destinationPath stringByAppendingPathComponent:entryName];
+    NSString *standardizedDest = [[destinationPath stringByStandardizingPath] stringByAppendingString:@"/"];
+    NSString *standardizedFull = [fullPath stringByStandardizingPath];
+    return [standardizedFull hasPrefix:standardizedDest] ||
+           [standardizedFull isEqualToString:[destinationPath stringByStandardizingPath]];
+}
+
+- (void)unzipFiles:(NSString *)from
+ destinationPath:(NSString *)destinationPath
+         entries:(NSArray *)entries
+         charset:(NSString *)charset
+         resolve:(RCTPromiseResolveBlock)resolve
+          reject:(RCTPromiseRejectBlock)reject {
+    (void)charset;
+    [self unzipSelectedEntries:from
+               destinationPath:destinationPath
+                       entries:entries
+                      password:nil
+                       resolve:resolve
+                        reject:reject];
+}
+
+- (void)unzipFilesWithPassword:(NSString *)from
+               destinationPath:(NSString *)destinationPath
+                       entries:(NSArray *)entries
+                      password:(NSString *)password
+                       resolve:(RCTPromiseResolveBlock)resolve
+                        reject:(RCTPromiseRejectBlock)reject {
+    [self unzipSelectedEntries:from
+               destinationPath:destinationPath
+                       entries:entries
+                      password:password
+                       resolve:resolve
+                        reject:reject];
+}
+
+- (void)unzipSelectedEntries:(NSString *)from
+             destinationPath:(NSString *)destinationPath
+                     entries:(NSArray *)entries
+                    password:(NSString *)password
+                     resolve:(RCTPromiseResolveBlock)resolve
+                      reject:(RCTPromiseRejectBlock)reject {
+    if (entries.count == 0) {
+        reject(@"unzip_files_error", @"entries must be a non-empty array", nil);
+        return;
+    }
+
+    self.progress = 0.0;
+    self.processedFilePath = @"";
+    [self zipArchiveProgressEvent:0 total:1];
+
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSError *dirError = nil;
+    if (![fileManager fileExistsAtPath:destinationPath]) {
+        [fileManager createDirectoryAtPath:destinationPath
+               withIntermediateDirectories:YES
+                                attributes:nil
+                                     error:&dirError];
+        if (dirError != nil) {
+            reject(@"unzip_files_error", dirError.localizedDescription, dirError);
+            return;
+        }
+    }
+
+    zipFile zip = unzOpen(from.fileSystemRepresentation);
+    if (zip == NULL) {
+        reject(@"unzip_files_error", @"failed to open zip file", nil);
+        return;
+    }
+
+    // First pass: compute total uncompressed size of matching entries for progress.
+    unsigned long long totalSize = 0;
+    NSUInteger matchCount = 0;
+    int ret = unzGoToFirstFile(zip);
+    while (ret == UNZ_OK) {
+        unz_file_info fileInfo;
+        memset(&fileInfo, 0, sizeof(unz_file_info));
+        ret = unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
+        if (ret != UNZ_OK) {
+            break;
+        }
+        char *filenameBuf = (char *)malloc(fileInfo.size_filename + 1);
+        if (filenameBuf == NULL) {
+            break;
+        }
+        unzGetCurrentFileInfo(zip, &fileInfo, filenameBuf, fileInfo.size_filename + 1, NULL, 0, NULL, 0);
+        filenameBuf[fileInfo.size_filename] = '\0';
+        NSString *path = [NSString stringWithUTF8String:filenameBuf];
+        if (path == nil) {
+            path = [[NSString alloc] initWithBytes:filenameBuf
+                                            length:fileInfo.size_filename
+                                          encoding:NSISOLatin1StringEncoding];
+        }
+        free(filenameBuf);
+        if ([self entry:path matchesSelection:entries]) {
+            matchCount += 1;
+            totalSize += fileInfo.uncompressed_size;
+        }
+        ret = unzGoToNextFile(zip);
+    }
+
+    if (matchCount == 0) {
+        unzClose(zip);
+        reject(@"unzip_files_error", @"None of the requested entries were found in the archive", nil);
+        return;
+    }
+
+    if (totalSize == 0) {
+        totalSize = 1;
+    }
+
+    // Second pass: extract matching entries.
+    unsigned long long extractedBytes = 0;
+    BOOL success = YES;
+    NSError *extractError = nil;
+    ret = unzGoToFirstFile(zip);
+    while (ret == UNZ_OK) {
+        unz_file_info fileInfo;
+        memset(&fileInfo, 0, sizeof(unz_file_info));
+        ret = unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
+        if (ret != UNZ_OK) {
+            success = NO;
+            extractError = [NSError errorWithDomain:@"RNZipArchive"
+                                               code:-1
+                                           userInfo:@{NSLocalizedDescriptionKey: @"failed to retrieve info for zip entry"}];
+            break;
+        }
+
+        char *filename = (char *)malloc(fileInfo.size_filename + 1);
+        if (filename == NULL) {
+            success = NO;
+            extractError = [NSError errorWithDomain:@"RNZipArchive"
+                                               code:-1
+                                           userInfo:@{NSLocalizedDescriptionKey: @"out of memory while extracting"}];
+            break;
+        }
+        unzGetCurrentFileInfo(zip, &fileInfo, filename, fileInfo.size_filename + 1, NULL, 0, NULL, 0);
+        filename[fileInfo.size_filename] = '\0';
+
+        NSString *strPath = [NSString stringWithUTF8String:filename];
+        if (strPath == nil) {
+            strPath = [[NSString alloc] initWithBytes:filename
+                                               length:fileInfo.size_filename
+                                             encoding:NSISOLatin1StringEncoding];
+        }
+        BOOL isDirectory = NO;
+        if (fileInfo.size_filename > 0 &&
+            (filename[fileInfo.size_filename - 1] == '/' || filename[fileInfo.size_filename - 1] == '\\')) {
+            isDirectory = YES;
+        }
+        free(filename);
+
+        if (strPath == nil || ![self entry:strPath matchesSelection:entries]) {
+            ret = unzGoToNextFile(zip);
+            continue;
+        }
+
+        if ([strPath hasPrefix:@"__MACOSX/"]) {
+            ret = unzGoToNextFile(zip);
+            continue;
+        }
+
+        if (![self isSafeExtractPath:strPath intoDestination:destinationPath]) {
+            success = NO;
+            extractError = [NSError errorWithDomain:@"RNZipArchive"
+                                               code:-1
+                                           userInfo:@{NSLocalizedDescriptionKey:
+                                                          [NSString stringWithFormat:@"Found Zip Path Traversal Vulnerability with %@", strPath]}];
+            break;
+        }
+
+        self.processedFilePath = strPath;
+        NSString *fullPath = [destinationPath stringByAppendingPathComponent:strPath];
+
+        if (isDirectory) {
+            [fileManager createDirectoryAtPath:fullPath
+                   withIntermediateDirectories:YES
+                                    attributes:nil
+                                         error:nil];
+            extractedBytes += fileInfo.uncompressed_size;
+            [self zipArchiveProgressEvent:extractedBytes total:totalSize];
+            ret = unzGoToNextFile(zip);
+            continue;
+        }
+
+        NSString *parentDir = [fullPath stringByDeletingLastPathComponent];
+        [fileManager createDirectoryAtPath:parentDir
+               withIntermediateDirectories:YES
+                                attributes:nil
+                                     error:nil];
+
+        if (password.length > 0) {
+            ret = unzOpenCurrentFilePassword(zip, [password cStringUsingEncoding:NSUTF8StringEncoding]);
+        } else {
+            ret = unzOpenCurrentFile(zip);
+        }
+        if (ret != UNZ_OK) {
+            success = NO;
+            extractError = [NSError errorWithDomain:@"RNZipArchive"
+                                               code:-1
+                                           userInfo:@{NSLocalizedDescriptionKey: @"failed to open file in zip archive"}];
+            break;
+        }
+
+        FILE *out = fopen(fullPath.fileSystemRepresentation, "wb");
+        if (out == NULL) {
+            unzCloseCurrentFile(zip);
+            success = NO;
+            extractError = [NSError errorWithDomain:@"RNZipArchive"
+                                               code:-1
+                                           userInfo:@{NSLocalizedDescriptionKey: @"failed to write extracted file"}];
+            break;
+        }
+
+        unsigned char buffer[4096];
+        int readBytes;
+        do {
+            readBytes = unzReadCurrentFile(zip, buffer, sizeof(buffer));
+            if (readBytes < 0) {
+                success = NO;
+                extractError = [NSError errorWithDomain:@"RNZipArchive"
+                                                   code:-1
+                                               userInfo:@{NSLocalizedDescriptionKey: @"failed to read zip entry"}];
+                break;
+            }
+            if (readBytes > 0) {
+                fwrite(buffer, 1, readBytes, out);
+            }
+        } while (readBytes > 0);
+
+        fclose(out);
+        unzCloseCurrentFile(zip);
+
+        if (!success) {
+            break;
+        }
+
+        extractedBytes += fileInfo.uncompressed_size;
+        [self zipArchiveProgressEvent:extractedBytes total:totalSize];
+        ret = unzGoToNextFile(zip);
+    }
+
+    unzClose(zip);
+
+    self.progress = 1.0;
+    [self zipArchiveProgressEvent:1 total:1];
+
+    if (success) {
+        resolve(destinationPath);
+    } else {
+        NSString *message = extractError ? extractError.localizedDescription : @"unable to unzip selected entries";
+        reject(@"unzip_files_error", message, extractError);
+    }
 }
 
 - (void)unzipFile:(NSString *)from

@@ -32,6 +32,30 @@ declare module "react-native-zip-archive" {
   export function unzipWithPassword(source: string, target: string, password: string): Promise<string>;
   export function unzipAssets(assetPath: string, target: string): Promise<string>;
 
+  export type ZipEntry = {
+    path: string;
+    size: number;
+    compressedSize: number;
+    isDirectory: boolean;
+    isEncrypted: boolean;
+  };
+
+  export function listContents(source: string, charset?: string): Promise<ZipEntry[]>;
+
+  export function unzipFiles(
+    source: string,
+    target: string,
+    entries: string[],
+    charset?: string
+  ): Promise<string>;
+
+  export function unzipFilesWithPassword(
+    source: string,
+    target: string,
+    entries: string[],
+    password: string
+  ): Promise<string>;
+
   export function subscribe(
     callback: ({ progress, filePath }: { progress: number; filePath: string }) => void
   ): NativeEventSubscription;

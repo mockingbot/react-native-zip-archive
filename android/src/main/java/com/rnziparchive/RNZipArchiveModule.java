@@ -12,6 +12,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
@@ -162,6 +163,173 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         promise.reject("RNZipArchiveError", "Failed to extract file " + ex.getLocalizedMessage());
       }
     });
+  }
+
+  @Override
+  public void listContents(final String zipFilePath, final String charset, final Promise promise) {
+    executor.submit(() -> {
+      if (zipFilePath == null) {
+        promise.reject("RNZipArchiveError", "Couldn't open file null. ");
+        return;
+      }
+      File zipFileRef = new File(zipFilePath);
+      if (!zipFileRef.exists()) {
+        promise.reject("RNZipArchiveError", "Couldn't open file " + zipFilePath + ". ");
+        return;
+      }
+
+      try (net.lingala.zip4j.ZipFile zipFile = openZipFile(zipFilePath, charset)) {
+        WritableArray entries = Arguments.createArray();
+        for (FileHeader fileHeader : zipFile.getFileHeaders()) {
+          WritableMap entry = Arguments.createMap();
+          entry.putString("path", fileHeader.getFileName());
+          entry.putDouble("size", Math.max(fileHeader.getUncompressedSize(), 0));
+          entry.putDouble("compressedSize", Math.max(fileHeader.getCompressedSize(), 0));
+          entry.putBoolean("isDirectory", fileHeader.isDirectory());
+          entry.putBoolean("isEncrypted", fileHeader.isEncrypted());
+          entries.pushMap(entry);
+        }
+        promise.resolve(entries);
+      } catch (Exception ex) {
+        promise.reject("RNZipArchiveError", "Failed to list contents: " + ex.getLocalizedMessage());
+      }
+    });
+  }
+
+  @Override
+  public void unzipFiles(final String zipFilePath, final String destDirectory,
+                         final ReadableArray entries, final String charset, final Promise promise) {
+    final List<String> entryList;
+    try {
+      entryList = readableArrayToStringList(entries);
+    } catch (IllegalArgumentException ex) {
+      promise.reject("RNZipArchiveError", "Invalid entries array: " + ex.getMessage());
+      return;
+    }
+    extractSelectedEntries(zipFilePath, destDirectory, entryList, charset, null, promise);
+  }
+
+  @Override
+  public void unzipFilesWithPassword(final String zipFilePath, final String destDirectory,
+                                     final ReadableArray entries, final String password,
+                                     final Promise promise) {
+    final List<String> entryList;
+    try {
+      entryList = readableArrayToStringList(entries);
+    } catch (IllegalArgumentException ex) {
+      promise.reject("RNZipArchiveError", "Invalid entries array: " + ex.getMessage());
+      return;
+    }
+    extractSelectedEntries(zipFilePath, destDirectory, entryList, "UTF-8", password, promise);
+  }
+
+  private void extractSelectedEntries(final String zipFilePath, final String destDirectory,
+                                      final List<String> wantedEntries, final String charset,
+                                      final String password, final Promise promise) {
+    executor.submit(() -> {
+      if (zipFilePath == null) {
+        promise.reject("RNZipArchiveError", "Couldn't open file null. ");
+        return;
+      }
+      File zipFileRef = new File(zipFilePath);
+      if (!zipFileRef.exists()) {
+        promise.reject("RNZipArchiveError", "Couldn't open file " + zipFilePath + ". ");
+        return;
+      }
+      if (wantedEntries == null || wantedEntries.isEmpty()) {
+        promise.reject("RNZipArchiveError", "entries must be a non-empty array");
+        return;
+      }
+
+      try (net.lingala.zip4j.ZipFile zipFile = openZipFile(zipFilePath, charset)) {
+        if (password != null) {
+          if (!zipFile.isEncrypted()) {
+            promise.reject("RNZipArchiveError",
+                String.format("Zip file: %s is not password protected", zipFilePath));
+            return;
+          }
+          zipFile.setPassword(password.toCharArray());
+        }
+
+        File destDir = new File(destDirectory);
+        if (!destDir.exists()) {
+          //noinspection ResultOfMethodCallIgnored
+          destDir.mkdirs();
+        }
+
+        List<FileHeader> selected = new ArrayList<>();
+        for (FileHeader fileHeader : zipFile.getFileHeaders()) {
+          if (entryMatchesSelection(fileHeader.getFileName(), wantedEntries)) {
+            selected.add(fileHeader);
+          }
+        }
+
+        if (selected.isEmpty()) {
+          promise.reject("RNZipArchiveError", "None of the requested entries were found in the archive");
+          return;
+        }
+
+        long totalBytes = Math.max(totalUncompressedSize(selected), 1);
+        long extractedBytes = 0;
+
+        updateProgress(0, 1, zipFilePath);
+        for (FileHeader fileHeader : selected) {
+          ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
+
+          if (!fileHeader.isDirectory()) {
+            zipFile.extractFile(fileHeader, destDirectory, ZipSecurity.createExtractParameters());
+            extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
+          } else {
+            File dir = new File(destDirectory, fileHeader.getFileName());
+            //noinspection ResultOfMethodCallIgnored
+            dir.mkdirs();
+          }
+          updateProgress(extractedBytes, totalBytes, zipFilePath);
+        }
+
+        updateProgress(1, 1, zipFilePath);
+        promise.resolve(destDirectory);
+      } catch (Exception ex) {
+        updateProgress(0, 1, zipFilePath);
+        promise.reject("RNZipArchiveError", "Failed to extract selected files: " + ex.getLocalizedMessage());
+      }
+    });
+  }
+
+  /**
+   * Returns true when {@code entryName} should be extracted for the given selection list.
+   * Matches exact paths, directory prefixes ({@code foo/} or {@code foo}), and strips a
+   * trailing slash from either side before comparing.
+   */
+  static boolean entryMatchesSelection(String entryName, List<String> wantedEntries) {
+    if (entryName == null || wantedEntries == null) {
+      return false;
+    }
+    String normalizedEntry = stripTrailingSlash(entryName.replace('\\', '/'));
+    for (String wanted : wantedEntries) {
+      if (wanted == null || wanted.isEmpty()) {
+        continue;
+      }
+      String normalizedWanted = stripTrailingSlash(wanted.replace('\\', '/'));
+      if (normalizedEntry.equals(normalizedWanted)) {
+        return true;
+      }
+      if (normalizedEntry.startsWith(normalizedWanted + "/")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static String stripTrailingSlash(String path) {
+    if (path == null || path.isEmpty()) {
+      return path;
+    }
+    int end = path.length();
+    while (end > 0 && path.charAt(end - 1) == '/') {
+      end--;
+    }
+    return path.substring(0, end);
   }
 
   /**

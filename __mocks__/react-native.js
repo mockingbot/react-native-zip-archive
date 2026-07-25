@@ -6,6 +6,19 @@ const mockRNZipArchive = {
   zipFilesWithPassword: jest.fn(() => Promise.resolve('/mock/path.zip')),
   unzip: jest.fn(() => Promise.resolve('/mock/dest')),
   unzipWithPassword: jest.fn(() => Promise.resolve('/mock/dest')),
+  unzipFiles: jest.fn(() => Promise.resolve('/mock/dest')),
+  unzipFilesWithPassword: jest.fn(() => Promise.resolve('/mock/dest')),
+  listContents: jest.fn(() =>
+    Promise.resolve([
+      {
+        path: 'hello.txt',
+        size: 12,
+        compressedSize: 10,
+        isDirectory: false,
+        isEncrypted: false,
+      },
+    ])
+  ),
   unzipAssets: jest.fn(() => Promise.resolve('/mock/dest')),
   isPasswordProtected: jest.fn(() => Promise.resolve(true)),
   getUncompressedSize: jest.fn(() => Promise.resolve(1024)),

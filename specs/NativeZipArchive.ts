@@ -1,6 +1,14 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
+export type ZipEntry = {
+  path: string;
+  size: number;
+  compressedSize: number;
+  isDirectory: boolean;
+  isEncrypted: boolean;
+};
+
 export interface Spec extends TurboModule {
   isPasswordProtected(file: string): Promise<boolean>;
   unzip(from: string, destinationPath: string, charset: string): Promise<string>;
@@ -9,6 +17,19 @@ export interface Spec extends TurboModule {
     destinationPath: string,
     password: string
   ): Promise<string>;
+  unzipFiles(
+    from: string,
+    destinationPath: string,
+    entries: string[],
+    charset: string
+  ): Promise<string>;
+  unzipFilesWithPassword(
+    from: string,
+    destinationPath: string,
+    entries: string[],
+    password: string
+  ): Promise<string>;
+  listContents(source: string, charset: string): Promise<ZipEntry[]>;
   zipFolder(
     from: string,
     destinationPath: string,

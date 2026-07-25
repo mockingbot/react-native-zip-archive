@@ -64,6 +64,38 @@ export const unzipWithPassword = (source, target, password) => {
   );
 };
 
+export const listContents = (source, charset = "UTF-8") => {
+  return getRNZipArchive().listContents(normalizeFilePath(source), charset);
+};
+
+export const unzipFiles = (source, target, entries, charset = "UTF-8") => {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return Promise.reject(
+      new Error("unzipFiles requires a non-empty entries array")
+    );
+  }
+  return getRNZipArchive().unzipFiles(
+    normalizeFilePath(source),
+    normalizeFilePath(target),
+    entries,
+    charset
+  );
+};
+
+export const unzipFilesWithPassword = (source, target, entries, password) => {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return Promise.reject(
+      new Error("unzipFilesWithPassword requires a non-empty entries array")
+    );
+  }
+  return getRNZipArchive().unzipFilesWithPassword(
+    normalizeFilePath(source),
+    normalizeFilePath(target),
+    entries,
+    password
+  );
+};
+
 export const zipWithPassword = (
   source,
   target,

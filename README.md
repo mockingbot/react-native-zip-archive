@@ -38,6 +38,9 @@ import {
   zipWithPassword,
   unzip,
   unzipWithPassword,
+  unzipFiles,
+  unzipFilesWithPassword,
+  listContents,
   unzipAssets,
   subscribe,
   isPasswordProtected,
@@ -129,6 +132,54 @@ unzipWithPassword(sourcePath, targetPath, 'password')
   .catch((error) => console.error(error))
 ```
 
+### `listContents(source: string, charset?: string): Promise<ZipEntry[]>`
+
+List archive entries without extracting.
+
+```ts
+type ZipEntry = {
+  path: string
+  size: number           // uncompressed size in bytes
+  compressedSize: number
+  isDirectory: boolean
+  isEncrypted: boolean
+}
+```
+
+> The `charset` parameter is only supported on Android (default: `UTF-8`). On iOS it is ignored.
+
+```js
+listContents(sourcePath)
+  .then((entries) => {
+    entries.forEach((entry) => {
+      console.log(entry.path, entry.size, entry.isDirectory)
+    })
+  })
+  .catch((error) => console.error(error))
+```
+
+### `unzipFiles(source: string, target: string, entries: string[], charset?: string): Promise<string>`
+
+Extract only the listed entry paths. Directory names match that entry and all nested children (e.g. `'docs'` extracts `docs/` and `docs/readme.md`).
+
+> The `charset` parameter is only supported on Android (default: `UTF-8`). On iOS it is ignored.
+
+```js
+unzipFiles(sourcePath, targetPath, ['readme.md', 'docs'])
+  .then((path) => console.log(`selective unzip completed at ${path}`))
+  .catch((error) => console.error(error))
+```
+
+### `unzipFilesWithPassword(source: string, target: string, entries: string[], password: string): Promise<string>`
+
+Selective extract for a password-protected archive.
+
+```js
+unzipFilesWithPassword(sourcePath, targetPath, ['secret.txt'], 'password')
+  .then((path) => console.log(`selective unzip completed at ${path}`))
+  .catch((error) => console.error(error))
+```
+
 ### `unzipAssets(assetPath: string, target: string): Promise<string>`
 
 Unzip a file from the Android `assets` folder. **Android only.**
@@ -189,6 +240,9 @@ useEffect(() => {
 | `zipWithPassword` (files array) | ⚠️ | ✅ | iOS: only `STANDARD` encryption |
 | `unzip` | ✅ | ✅ | Charset ignored on iOS |
 | `unzipWithPassword` | ✅ | ✅ | — |
+| `listContents` | ✅ | ✅ | Charset ignored on iOS |
+| `unzipFiles` | ✅ | ✅ | Charset ignored on iOS |
+| `unzipFilesWithPassword` | ✅ | ✅ | — |
 | `unzipAssets` | ❌ | ✅ | Android only |
 | `isPasswordProtected` | ✅ | ✅ | — |
 | `getUncompressedSize` | ✅ | ✅ | Charset ignored on iOS |
