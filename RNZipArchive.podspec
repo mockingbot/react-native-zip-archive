@@ -19,6 +19,9 @@ Pod::Spec.new do |s|
     s.dependency 'React-Core'
   end
   s.dependency 'SSZipArchive', '~>2.5.5'
+  s.pod_target_xcconfig = {
+    'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/SSZipArchive" "${PODS_ROOT}/SSZipArchive/SSZipArchive/minizip" "${PODS_TARGET_SRCROOT}/../SSZipArchive/SSZipArchive/minizip"'
+  }
 
   s.source_files = 'ios/*.{h,m,mm}'
   s.public_header_files = ['ios/RNZipArchive.h']
