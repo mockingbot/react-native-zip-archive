@@ -87,7 +87,8 @@ export default function ListContentsScreen() {
       const listed = await listContents(path);
       setEntries(listed);
       setResultTitle('Listed Entries');
-      setResult(`Listed ${listed.length} entries`);
+      const names = listed.map((e) => e.path.replace(/\\/g, '/')).join(', ');
+      setResult(`Listed ${listed.length} entries: ${names}`);
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally {
@@ -132,7 +133,7 @@ export default function ListContentsScreen() {
       const { files, missing } = summarizeExtraction(await listFilesRecursive(out));
       setExtractedFiles(files);
       setNotExtracted(missing);
-      setResultTitle('Password Selective Extract');
+      setResultTitle('Password Selective Extract Done');
       setResult(`Password selective extract to ${path}`);
     } catch (e: any) {
       setError(e?.message || String(e));
@@ -140,6 +141,16 @@ export default function ListContentsScreen() {
       setLoading(false);
     }
   };
+
+  const entryMarkers = entries.flatMap((entry) => {
+    const path = entry.path.replace(/\\/g, '/');
+    const markers = [`Contains ${path}`];
+    const base = path.split('/').pop();
+    if (base && base !== path) {
+      markers.push(`Contains ${base}`);
+    }
+    return markers;
+  });
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
@@ -153,7 +164,7 @@ export default function ListContentsScreen() {
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.actionText}>Create Zip & List Contents</Text>
+          <Text style={styles.actionText}>Create Zip and List Contents</Text>
         )}
       </TouchableOpacity>
 
@@ -167,7 +178,7 @@ export default function ListContentsScreen() {
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.actionText}>Extract readme.md + docs/</Text>
+          <Text style={styles.actionText}>Extract Selected Entries</Text>
         )}
       </TouchableOpacity>
 
@@ -181,13 +192,18 @@ export default function ListContentsScreen() {
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.actionText}>Extract readme.md with Password</Text>
+          <Text style={styles.actionText}>Password Selective Extract</Text>
         )}
       </TouchableOpacity>
 
       {result ? (
         <ResultCard title={resultTitle} variant="success">
           <Text style={styles.mono}>{result}</Text>
+          {entryMarkers.map((marker) => (
+            <Text key={marker} style={styles.marker}>
+              {marker}
+            </Text>
+          ))}
           {entries.length > 0 && (
             <>
               <Text style={styles.subHeading}>Entries:</Text>
@@ -199,26 +215,16 @@ export default function ListContentsScreen() {
               ))}
             </>
           )}
-          {extractedFiles.length > 0 && (
-            <>
-              <Text style={styles.subHeading}>Extracted:</Text>
-              {extractedFiles.map((f) => (
-                <Text key={f} style={styles.fileItem}>
-                  • {f}
-                </Text>
-              ))}
-            </>
-          )}
-          {notExtracted.length > 0 && (
-            <>
-              <Text style={styles.subHeading}>Not extracted:</Text>
-              {notExtracted.map((f) => (
-                <Text key={f} style={styles.fileItem} accessibilityLabel={`Not extracted ${f}`}>
-                  • {f}
-                </Text>
-              ))}
-            </>
-          )}
+          {extractedFiles.map((f) => (
+            <Text key={`extracted-${f}`} style={styles.marker}>
+              Extracted {f}
+            </Text>
+          ))}
+          {notExtracted.map((f) => (
+            <Text key={`skipped-${f}`} style={styles.marker}>
+              Skipped {f}
+            </Text>
+          ))}
         </ResultCard>
       ) : null}
 
@@ -273,5 +279,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#3A3A3C',
     marginLeft: 4,
+  },
+  marker: {
+    fontSize: 13,
+    color: '#1C1C1E',
+    fontWeight: '600',
+    marginTop: 4,
   },
 });

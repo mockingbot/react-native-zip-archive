@@ -10,43 +10,47 @@ appId: ${APP_ID}
       text: "List & Selective Extract"
     direction: DOWN
 - tapOn: "List & Selective Extract"
-- assertVisible: "Create Zip & List Contents"
-- tapOn: "Create Zip & List Contents"
-- waitForAnimationToEnd:
+- extendedWaitUntil:
+    visible: "Create Zip and List Contents"
     timeout: 15000
+- tapOn: "Create Zip and List Contents"
 - extendedWaitUntil:
     visible: "Listed Entries"
     timeout: 20000
 - assertVisible: "Listed Entries"
-- assertVisible: "hello.txt"
-- assertVisible: "readme.md"
 - scrollUntilVisible:
     element:
-      text: "Extract readme.md + docs/"
+      text: "Contains hello.txt"
     direction: DOWN
-- tapOn: "Extract readme.md + docs/"
-- waitForAnimationToEnd:
-    timeout: 15000
+    timeout: 10000
+- assertVisible: "Contains hello.txt"
+- assertVisible: "Contains readme.md"
+- scrollUntilVisible:
+    element:
+      text: "Extract Selected Entries"
+    direction: DOWN
+- tapOn: "Extract Selected Entries"
 - extendedWaitUntil:
     visible: "Selective Extract"
     timeout: 20000
 - assertVisible: "Selective Extract"
-- assertVisible: "readme.md"
-- assertVisible: "docs/guide.md"
-- assertVisible: "Not extracted:"
-- assertVisible: "hello.txt"
 - scrollUntilVisible:
     element:
-      text: "Extract readme.md with Password"
+      text: "Extracted docs/guide.md"
     direction: DOWN
-- tapOn: "Extract readme.md with Password"
-- waitForAnimationToEnd:
-    timeout: 20000
+    timeout: 10000
+- assertVisible: "Extracted readme.md"
+- assertVisible: "Extracted docs/guide.md"
+- assertVisible: "Skipped hello.txt"
+- scrollUntilVisible:
+    element:
+      text: "Password Selective Extract"
+    direction: DOWN
+- tapOn: "Password Selective Extract"
 - extendedWaitUntil:
-    visible: "Password Selective Extract"
+    visible: "Password Selective Extract Done"
     timeout: 30000
-- assertVisible: "Password Selective Extract"
-- assertVisible: "readme.md"
-- assertVisible: "Not extracted:"
-- assertVisible: "hello.txt"
+- assertVisible: "Password Selective Extract Done"
+- assertVisible: "Extracted readme.md"
+- assertVisible: "Skipped hello.txt"
 - back
