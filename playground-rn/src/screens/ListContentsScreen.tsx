@@ -9,29 +9,34 @@ import {
 import RNFS from 'react-native-fs';
 import { ResultCard } from '../components/ResultCard';
 import { CodePreview } from '../components/CodePreview';
-import { ensureDir, listFiles } from '../utils/fileSystem';
+import { ensureDir, listFilesRecursive } from '../utils/fileSystem';
 import {
   zip,
+  zipWithPassword,
   listContents,
   unzip,
+  unzipWithPassword,
   type ZipEntry,
 } from 'react-native-zip-archive';
 
-const SOURCE_CODE = `import { listContents, unzip } from 'react-native-zip-archive';
+const SOURCE_CODE = `import { listContents, unzip, unzipWithPassword } from 'react-native-zip-archive';
 
 const entries = await listContents(sourceZip);
-await unzip(sourceZip, outputFolder, ['readme.md']);
+await unzip(sourceZip, outputFolder, ['readme.md', 'docs']);
+await unzipWithPassword(sourceZip, outputFolder, 'secret', ['readme.md']);
 `;
 
 export default function ListContentsScreen() {
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState<ZipEntry[]>([]);
   const [extractedFiles, setExtractedFiles] = useState<string[]>([]);
+  const [resultTitle, setResultTitle] = useState('Result');
   const [result, setResult] = useState<string>('');
+  const [notExtracted, setNotExtracted] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
   const [zipPath, setZipPath] = useState<string>('');
 
-  const createDemoZip = async () => {
+  const createPlainDemoZip = async () => {
     const dir = RNFS.DocumentDirectoryPath + '/demo-list/';
     await ensureDir(dir);
     await ensureDir(dir + 'docs/');
@@ -46,17 +51,42 @@ export default function ListContentsScreen() {
     return target;
   };
 
+  const createPasswordDemoZip = async () => {
+    const dir = RNFS.DocumentDirectoryPath + '/demo-list-pw/';
+    await ensureDir(dir);
+    await ensureDir(dir + 'docs/');
+    await RNFS.writeFile(dir + 'hello.txt', 'Hello from zip!', 'utf8');
+    await RNFS.writeFile(dir + 'readme.md', '# Demo', 'utf8');
+    await RNFS.writeFile(dir + 'docs/guide.md', '# Guide', 'utf8');
+    const target = RNFS.DocumentDirectoryPath + '/demo-list-password.zip';
+    try {
+      if (await RNFS.exists(target)) await RNFS.unlink(target);
+    } catch {}
+    await zipWithPassword(dir, target, 'secret', 'STANDARD', 0);
+    return target;
+  };
+
+  const summarizeExtraction = (files: string[]) => {
+    const normalized = files.map((f) => f.replace(/\\/g, '/'));
+    const missing = ['hello.txt'].filter(
+      (name) => !normalized.some((f) => f === name || f.endsWith('/' + name))
+    );
+    return { files: normalized, missing };
+  };
+
   const handleList = async () => {
     setLoading(true);
     setError('');
     setEntries([]);
     setExtractedFiles([]);
+    setNotExtracted([]);
     setResult('');
     try {
-      const path = await createDemoZip();
+      const path = await createPlainDemoZip();
       setZipPath(path);
       const listed = await listContents(path);
       setEntries(listed);
+      setResultTitle('Listed Entries');
       setResult(`Listed ${listed.length} entries`);
     } catch (e: any) {
       setError(e?.message || String(e));
@@ -70,13 +100,40 @@ export default function ListContentsScreen() {
     setLoading(true);
     setError('');
     setExtractedFiles([]);
+    setNotExtracted([]);
     try {
       const out = RNFS.DocumentDirectoryPath + '/selective/' + Date.now() + '/';
       await ensureDir(out);
       const path = await unzip(zipPath, out, ['readme.md', 'docs']);
-      const files = await listFiles(out);
+      const { files, missing } = summarizeExtraction(await listFilesRecursive(out));
       setExtractedFiles(files);
+      setNotExtracted(missing);
+      setResultTitle('Selective Extract');
       setResult(`Selective extract to ${path}`);
+    } catch (e: any) {
+      setError(e?.message || String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordSelective = async () => {
+    setLoading(true);
+    setError('');
+    setEntries([]);
+    setExtractedFiles([]);
+    setNotExtracted([]);
+    setResult('');
+    try {
+      const source = await createPasswordDemoZip();
+      const out = RNFS.DocumentDirectoryPath + '/selective-pw/' + Date.now() + '/';
+      await ensureDir(out);
+      const path = await unzipWithPassword(source, out, 'secret', ['readme.md']);
+      const { files, missing } = summarizeExtraction(await listFilesRecursive(out));
+      setExtractedFiles(files);
+      setNotExtracted(missing);
+      setResultTitle('Password Selective Extract');
+      setResult(`Password selective extract to ${path}`);
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally {
@@ -87,7 +144,12 @@ export default function ListContentsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
       <Text style={styles.section}>Demo: List Contents</Text>
-      <TouchableOpacity style={styles.actionBtn} onPress={handleList} disabled={loading}>
+      <TouchableOpacity
+        style={styles.actionBtn}
+        onPress={handleList}
+        disabled={loading}
+        accessibilityLabel="Create Zip and List Contents"
+      >
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
@@ -109,8 +171,22 @@ export default function ListContentsScreen() {
         )}
       </TouchableOpacity>
 
+      <Text style={styles.section}>Demo: Password Selective Extract</Text>
+      <TouchableOpacity
+        style={styles.actionBtn}
+        onPress={handlePasswordSelective}
+        disabled={loading}
+        accessibilityLabel="Password Selective Extract"
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.actionText}>Extract readme.md with Password</Text>
+        )}
+      </TouchableOpacity>
+
       {result ? (
-        <ResultCard title="Result" variant="success">
+        <ResultCard title={resultTitle} variant="success">
           <Text style={styles.mono}>{result}</Text>
           {entries.length > 0 && (
             <>
@@ -128,6 +204,16 @@ export default function ListContentsScreen() {
               <Text style={styles.subHeading}>Extracted:</Text>
               {extractedFiles.map((f) => (
                 <Text key={f} style={styles.fileItem}>
+                  • {f}
+                </Text>
+              ))}
+            </>
+          )}
+          {notExtracted.length > 0 && (
+            <>
+              <Text style={styles.subHeading}>Not extracted:</Text>
+              {notExtracted.map((f) => (
+                <Text key={f} style={styles.fileItem} accessibilityLabel={`Not extracted ${f}`}>
                   • {f}
                 </Text>
               ))}

@@ -1,0 +1,4 @@
+appId: ${APP_ID}
+---
+- runFlow: _setup.yaml
+- runFlow: _list-contents-test.yaml

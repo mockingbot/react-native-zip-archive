@@ -1,0 +1,52 @@
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      notVisible: "List & Selective Extract"
+    commands:
+      - tapOn: "Playground"
+- scrollUntilVisible:
+    element:
+      text: "List & Selective Extract"
+    direction: DOWN
+- tapOn: "List & Selective Extract"
+- assertVisible: "Create Zip & List Contents"
+- tapOn: "Create Zip & List Contents"
+- waitForAnimationToEnd:
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "Listed Entries"
+    timeout: 20000
+- assertVisible: "Listed Entries"
+- assertVisible: "hello.txt"
+- assertVisible: "readme.md"
+- scrollUntilVisible:
+    element:
+      text: "Extract readme.md + docs/"
+    direction: DOWN
+- tapOn: "Extract readme.md + docs/"
+- waitForAnimationToEnd:
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "Selective Extract"
+    timeout: 20000
+- assertVisible: "Selective Extract"
+- assertVisible: "readme.md"
+- assertVisible: "docs/guide.md"
+- assertVisible: "Not extracted:"
+- assertVisible: "hello.txt"
+- scrollUntilVisible:
+    element:
+      text: "Extract readme.md with Password"
+    direction: DOWN
+- tapOn: "Extract readme.md with Password"
+- waitForAnimationToEnd:
+    timeout: 20000
+- extendedWaitUntil:
+    visible: "Password Selective Extract"
+    timeout: 30000
+- assertVisible: "Password Selective Extract"
+- assertVisible: "readme.md"
+- assertVisible: "Not extracted:"
+- assertVisible: "hello.txt"
+- back
