@@ -28,8 +28,30 @@ declare module "react-native-zip-archive" {
     compressionLevel?: number
   ): Promise<string>;
 
-  export function unzip(source: string, target: string, charset?: string): Promise<string>;
-  export function unzipWithPassword(source: string, target: string, password: string): Promise<string>;
+  /**
+   * Unzip an archive. Pass `entries` to extract only those paths
+   * (directories include nested children). When using `entries`, you may
+   * omit charset (`unzip(src, dest, ['a.txt'])`) or pass it explicitly
+   * (`unzip(src, dest, 'GBK', ['a.txt'])`).
+   */
+  export function unzip(
+    source: string,
+    target: string,
+    charset?: string | string[],
+    entries?: string[]
+  ): Promise<string>;
+
+  /**
+   * Unzip a password-protected archive. Pass `entries` to extract only
+   * those paths (directories include nested children).
+   */
+  export function unzipWithPassword(
+    source: string,
+    target: string,
+    password: string,
+    entries?: string[]
+  ): Promise<string>;
+
   export function unzipAssets(assetPath: string, target: string): Promise<string>;
 
   export type ZipEntry = {
@@ -41,20 +63,6 @@ declare module "react-native-zip-archive" {
   };
 
   export function listContents(source: string, charset?: string): Promise<ZipEntry[]>;
-
-  export function unzipFiles(
-    source: string,
-    target: string,
-    entries: string[],
-    charset?: string
-  ): Promise<string>;
-
-  export function unzipFilesWithPassword(
-    source: string,
-    target: string,
-    entries: string[],
-    password: string
-  ): Promise<string>;
 
   export function subscribe(
     callback: ({ progress, filePath }: { progress: number; filePath: string }) => void

@@ -4,8 +4,7 @@
 
 ### Added
 - `listContents(source, charset?)` — inspect archive entries (path, sizes, directory/encrypted flags) without extracting (#365)
-- `unzipFiles(source, target, entries, charset?)` — extract only selected entry paths; directory names include nested children (#365)
-- `unzipFilesWithPassword(source, target, entries, password)` — selective extract for password-protected archives (#365)
+- Optional `entries` on `unzip` / `unzipWithPassword` — extract only selected entry paths; directory names include nested children (#365)
 - Android unit tests for selective-extract entry matching
 
 ## [9.0.2] - 2026-07-22

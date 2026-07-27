@@ -3,8 +3,6 @@ const {
   zipWithPassword,
   unzip,
   unzipWithPassword,
-  unzipFiles,
-  unzipFilesWithPassword,
   listContents,
   unzipAssets,
   isPasswordProtected,
@@ -28,8 +26,6 @@ describe('react-native-zip-archive API', () => {
     expect(typeof zipWithPassword).toBe('function');
     expect(typeof unzip).toBe('function');
     expect(typeof unzipWithPassword).toBe('function');
-    expect(typeof unzipFiles).toBe('function');
-    expect(typeof unzipFilesWithPassword).toBe('function');
     expect(typeof listContents).toBe('function');
     expect(typeof unzipAssets).toBe('function');
     expect(typeof isPasswordProtected).toBe('function');
@@ -87,29 +83,83 @@ describe('react-native-zip-archive API', () => {
   describe('unzip', () => {
     test('unzip with default charset', async () => {
       await unzip('/source.zip', '/dest');
-      expect(mockRNZipArchive.unzip).toHaveBeenCalledWith('/source.zip', '/dest', 'UTF-8');
+      expect(mockRNZipArchive.unzip).toHaveBeenCalledWith('/source.zip', '/dest', 'UTF-8', null);
     });
 
     test('unzip with custom charset', async () => {
       await unzip('/source.zip', '/dest', 'GBK');
-      expect(mockRNZipArchive.unzip).toHaveBeenCalledWith('/source.zip', '/dest', 'GBK');
+      expect(mockRNZipArchive.unzip).toHaveBeenCalledWith('/source.zip', '/dest', 'GBK', null);
     });
 
     test('unzip normalizes file:// paths', async () => {
       await unzip('file:///source.zip', 'file:///dest');
-      expect(mockRNZipArchive.unzip).toHaveBeenCalledWith('/source.zip', '/dest', 'UTF-8');
+      expect(mockRNZipArchive.unzip).toHaveBeenCalledWith('/source.zip', '/dest', 'UTF-8', null);
+    });
+
+    test('unzip with entries array as third arg', async () => {
+      await unzip('/source.zip', '/dest', ['a.txt', 'b.txt']);
+      expect(mockRNZipArchive.unzip).toHaveBeenCalledWith(
+        '/source.zip',
+        '/dest',
+        'UTF-8',
+        ['a.txt', 'b.txt']
+      );
+    });
+
+    test('unzip with charset and entries', async () => {
+      await unzip('/source.zip', '/dest', 'GBK', ['a.txt']);
+      expect(mockRNZipArchive.unzip).toHaveBeenCalledWith(
+        '/source.zip',
+        '/dest',
+        'GBK',
+        ['a.txt']
+      );
+    });
+
+    test('unzip rejects empty entries', async () => {
+      await expect(unzip('/source.zip', '/dest', [])).rejects.toThrow(
+        'unzip: entries must be a non-empty array when provided'
+      );
     });
   });
 
   describe('unzipWithPassword', () => {
     test('unzipWithPassword calls native module', async () => {
       await unzipWithPassword('/source.zip', '/dest', 'password');
-      expect(mockRNZipArchive.unzipWithPassword).toHaveBeenCalledWith('/source.zip', '/dest', 'password');
+      expect(mockRNZipArchive.unzipWithPassword).toHaveBeenCalledWith(
+        '/source.zip',
+        '/dest',
+        'password',
+        null
+      );
     });
 
     test('unzipWithPassword normalizes file:// paths', async () => {
       await unzipWithPassword('file:///source.zip', 'file:///dest', 'password');
-      expect(mockRNZipArchive.unzipWithPassword).toHaveBeenCalledWith('/source.zip', '/dest', 'password');
+      expect(mockRNZipArchive.unzipWithPassword).toHaveBeenCalledWith(
+        '/source.zip',
+        '/dest',
+        'password',
+        null
+      );
+    });
+
+    test('unzipWithPassword with entries', async () => {
+      await unzipWithPassword('/source.zip', '/dest', 'secret', ['a.txt']);
+      expect(mockRNZipArchive.unzipWithPassword).toHaveBeenCalledWith(
+        '/source.zip',
+        '/dest',
+        'secret',
+        ['a.txt']
+      );
+    });
+
+    test('unzipWithPassword rejects empty entries', async () => {
+      await expect(
+        unzipWithPassword('/source.zip', '/dest', 'secret', [])
+      ).rejects.toThrow(
+        'unzipWithPassword: entries must be a non-empty array when provided'
+      );
     });
   });
 
@@ -131,52 +181,6 @@ describe('react-native-zip-archive API', () => {
     test('listContents normalizes file:// paths', async () => {
       await listContents('file:///source.zip', 'GBK');
       expect(mockRNZipArchive.listContents).toHaveBeenCalledWith('/source.zip', 'GBK');
-    });
-  });
-
-  describe('unzipFiles', () => {
-    test('unzipFiles with default charset', async () => {
-      await unzipFiles('/source.zip', '/dest', ['a.txt', 'b.txt']);
-      expect(mockRNZipArchive.unzipFiles).toHaveBeenCalledWith(
-        '/source.zip',
-        '/dest',
-        ['a.txt', 'b.txt'],
-        'UTF-8'
-      );
-    });
-
-    test('unzipFiles rejects empty entries', async () => {
-      await expect(unzipFiles('/source.zip', '/dest', [])).rejects.toThrow(
-        'unzipFiles requires a non-empty entries array'
-      );
-    });
-
-    test('unzipFiles normalizes file:// paths', async () => {
-      await unzipFiles('file:///source.zip', 'file:///dest', ['a.txt'], 'GBK');
-      expect(mockRNZipArchive.unzipFiles).toHaveBeenCalledWith(
-        '/source.zip',
-        '/dest',
-        ['a.txt'],
-        'GBK'
-      );
-    });
-  });
-
-  describe('unzipFilesWithPassword', () => {
-    test('unzipFilesWithPassword calls native module', async () => {
-      await unzipFilesWithPassword('/source.zip', '/dest', ['a.txt'], 'secret');
-      expect(mockRNZipArchive.unzipFilesWithPassword).toHaveBeenCalledWith(
-        '/source.zip',
-        '/dest',
-        ['a.txt'],
-        'secret'
-      );
-    });
-
-    test('unzipFilesWithPassword rejects empty entries', async () => {
-      await expect(
-        unzipFilesWithPassword('/source.zip', '/dest', [], 'secret')
-      ).rejects.toThrow('unzipFilesWithPassword requires a non-empty entries array');
     });
   });
 

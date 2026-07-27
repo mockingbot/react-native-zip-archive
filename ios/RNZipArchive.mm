@@ -59,16 +59,37 @@ RCT_EXPORT_MODULE()
 - (void)unzip:(NSString *)from
 destinationPath:(NSString *)destinationPath
       charset:(NSString *)charset
+      entries:(NSArray *)entries
      resolve:(RCTPromiseResolveBlock)resolve
       reject:(RCTPromiseRejectBlock)reject {
+    (void)charset;
+    if (entries != nil && entries.count > 0) {
+        [self unzipSelectedEntries:from
+                   destinationPath:destinationPath
+                           entries:entries
+                          password:nil
+                           resolve:resolve
+                            reject:reject];
+        return;
+    }
     [self unzipFile:from destinationPath:destinationPath password:nil resolve:resolve reject:reject];
 }
 
 - (void)unzipWithPassword:(NSString *)from
         destinationPath:(NSString *)destinationPath
                password:(NSString *)password
+                entries:(NSArray *)entries
                resolve:(RCTPromiseResolveBlock)resolve
                 reject:(RCTPromiseRejectBlock)reject {
+    if (entries != nil && entries.count > 0) {
+        [self unzipSelectedEntries:from
+                   destinationPath:destinationPath
+                           entries:entries
+                          password:password
+                           resolve:resolve
+                            reject:reject];
+        return;
+    }
     [self unzipFile:from destinationPath:destinationPath password:password resolve:resolve reject:reject];
 }
 
@@ -177,35 +198,6 @@ destinationPath:(NSString *)destinationPath
     NSString *standardizedFull = [fullPath stringByStandardizingPath];
     return [standardizedFull hasPrefix:standardizedDest] ||
            [standardizedFull isEqualToString:[destinationPath stringByStandardizingPath]];
-}
-
-- (void)unzipFiles:(NSString *)from
- destinationPath:(NSString *)destinationPath
-         entries:(NSArray *)entries
-         charset:(NSString *)charset
-         resolve:(RCTPromiseResolveBlock)resolve
-          reject:(RCTPromiseRejectBlock)reject {
-    (void)charset;
-    [self unzipSelectedEntries:from
-               destinationPath:destinationPath
-                       entries:entries
-                      password:nil
-                       resolve:resolve
-                        reject:reject];
-}
-
-- (void)unzipFilesWithPassword:(NSString *)from
-               destinationPath:(NSString *)destinationPath
-                       entries:(NSArray *)entries
-                      password:(NSString *)password
-                       resolve:(RCTPromiseResolveBlock)resolve
-                        reject:(RCTPromiseRejectBlock)reject {
-    [self unzipSelectedEntries:from
-               destinationPath:destinationPath
-                       entries:entries
-                      password:password
-                       resolve:resolve
-                        reject:reject];
 }
 
 - (void)unzipSelectedEntries:(NSString *)from

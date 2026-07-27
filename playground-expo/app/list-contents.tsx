@@ -13,14 +13,14 @@ import { ensureDir, listFiles } from '../utils/fileSystem';
 import {
   zip,
   listContents,
-  unzipFiles,
+  unzip,
   type ZipEntry,
 } from 'react-native-zip-archive';
 
-const SOURCE_CODE = `import { listContents, unzipFiles } from 'react-native-zip-archive';
+const SOURCE_CODE = `import { listContents, unzip } from 'react-native-zip-archive';
 
 const entries = await listContents(sourceZip);
-await unzipFiles(sourceZip, outputFolder, ['readme.md']);
+await unzip(sourceZip, outputFolder, ['readme.md']);
 `;
 
 export default function ListContentsScreen() {
@@ -73,7 +73,7 @@ export default function ListContentsScreen() {
     try {
       const out = FileSystem.documentDirectory + 'selective/' + Date.now() + '/';
       await ensureDir(out);
-      const path = await unzipFiles(zipPath, out, ['readme.md', 'docs']);
+      const path = await unzip(zipPath, out, ['readme.md', 'docs']);
       const files = await listFiles(out);
       setExtractedFiles(files);
       setResult(`Selective extract to ${path}`);

@@ -38,8 +38,6 @@ import {
   zipWithPassword,
   unzip,
   unzipWithPassword,
-  unzipFiles,
-  unzipFilesWithPassword,
   listContents,
   unzipAssets,
   subscribe,
@@ -107,9 +105,21 @@ zipWithPassword(sourcePath, targetPath, 'password', 'STANDARD')
   .catch((error) => console.error(error))
 ```
 
-### `unzip(source: string, target: string, charset?: string): Promise<string>`
+### `unzip(source: string, target: string, charset?: string | string[], entries?: string[]): Promise<string>`
 
-Unzip from source to target.
+Unzip from source to target. Pass `entries` to extract only those paths; directory names match that entry and all nested children (e.g. `'docs'` extracts `docs/` and `docs/readme.md`).
+
+You can pass entries as the third argument when using the default charset:
+
+```js
+unzip(sourcePath, targetPath, ['readme.md', 'docs'])
+```
+
+Or with an explicit charset:
+
+```js
+unzip(sourcePath, targetPath, 'UTF-8', ['readme.md', 'docs'])
+```
 
 > The `charset` parameter is only supported on Android (default: `UTF-8`). On iOS it is ignored.
 
@@ -122,13 +132,17 @@ unzip(sourcePath, targetPath, 'UTF-8')
   .catch((error) => console.error(error))
 ```
 
-### `unzipWithPassword(source: string, target: string, password: string): Promise<string>`
+### `unzipWithPassword(source: string, target: string, password: string, entries?: string[]): Promise<string>`
 
-Unzip a password-protected archive.
+Unzip a password-protected archive. Pass `entries` to extract only those paths.
 
 ```js
 unzipWithPassword(sourcePath, targetPath, 'password')
   .then((path) => console.log(`unzip completed at ${path}`))
+  .catch((error) => console.error(error))
+
+unzipWithPassword(sourcePath, targetPath, 'password', ['secret.txt'])
+  .then((path) => console.log(`selective unzip completed at ${path}`))
   .catch((error) => console.error(error))
 ```
 
@@ -155,28 +169,6 @@ listContents(sourcePath)
       console.log(entry.path, entry.size, entry.isDirectory)
     })
   })
-  .catch((error) => console.error(error))
-```
-
-### `unzipFiles(source: string, target: string, entries: string[], charset?: string): Promise<string>`
-
-Extract only the listed entry paths. Directory names match that entry and all nested children (e.g. `'docs'` extracts `docs/` and `docs/readme.md`).
-
-> The `charset` parameter is only supported on Android (default: `UTF-8`). On iOS it is ignored.
-
-```js
-unzipFiles(sourcePath, targetPath, ['readme.md', 'docs'])
-  .then((path) => console.log(`selective unzip completed at ${path}`))
-  .catch((error) => console.error(error))
-```
-
-### `unzipFilesWithPassword(source: string, target: string, entries: string[], password: string): Promise<string>`
-
-Selective extract for a password-protected archive.
-
-```js
-unzipFilesWithPassword(sourcePath, targetPath, ['secret.txt'], 'password')
-  .then((path) => console.log(`selective unzip completed at ${path}`))
   .catch((error) => console.error(error))
 ```
 
@@ -238,11 +230,9 @@ useEffect(() => {
 | `zip` (files array) | ✅ | ✅ | Compression level ignored on iOS |
 | `zipWithPassword` (folder) | ✅ | ✅ | AES encryption supported |
 | `zipWithPassword` (files array) | ⚠️ | ✅ | iOS: only `STANDARD` encryption |
-| `unzip` | ✅ | ✅ | Charset ignored on iOS |
-| `unzipWithPassword` | ✅ | ✅ | — |
+| `unzip` | ✅ | ✅ | Optional `entries` for selective extract; charset ignored on iOS |
+| `unzipWithPassword` | ✅ | ✅ | Optional `entries` for selective extract |
 | `listContents` | ✅ | ✅ | Charset ignored on iOS |
-| `unzipFiles` | ✅ | ✅ | Charset ignored on iOS |
-| `unzipFilesWithPassword` | ✅ | ✅ | — |
 | `unzipAssets` | ❌ | ✅ | Android only |
 | `isPasswordProtected` | ✅ | ✅ | — |
 | `getUncompressedSize` | ✅ | ✅ | Charset ignored on iOS |

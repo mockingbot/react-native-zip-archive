@@ -11,23 +11,17 @@ export type ZipEntry = {
 
 export interface Spec extends TurboModule {
   isPasswordProtected(file: string): Promise<boolean>;
-  unzip(from: string, destinationPath: string, charset: string): Promise<string>;
+  unzip(
+    from: string,
+    destinationPath: string,
+    charset: string,
+    entries?: Array<string> | null
+  ): Promise<string>;
   unzipWithPassword(
     from: string,
     destinationPath: string,
-    password: string
-  ): Promise<string>;
-  unzipFiles(
-    from: string,
-    destinationPath: string,
-    entries: string[],
-    charset: string
-  ): Promise<string>;
-  unzipFilesWithPassword(
-    from: string,
-    destinationPath: string,
-    entries: string[],
-    password: string
+    password: string,
+    entries?: Array<string> | null
   ): Promise<string>;
   listContents(source: string, charset: string): Promise<ZipEntry[]>;
   zipFolder(

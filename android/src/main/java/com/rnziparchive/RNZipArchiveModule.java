@@ -88,7 +88,16 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
   @Override
   public void unzipWithPassword(final String zipFilePath, final String destDirectory,
-                                final String password, final Promise promise) {
+                                final String password, final ReadableArray entries,
+                                final Promise promise) {
+    final List<String> entryList = optionalEntriesList(entries, promise);
+    if (entryList == REJECTED_ENTRIES) {
+      return;
+    }
+    if (entryList != null) {
+      extractSelectedEntries(zipFilePath, destDirectory, entryList, "UTF-8", password, promise);
+      return;
+    }
     executor.submit(() -> {
       try (net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath)) {
         if (zipFile.isEncrypted()) {
@@ -122,7 +131,16 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   }
 
   @Override
-  public void unzip(final String zipFilePath, final String destDirectory, final String charset, final Promise promise) {
+  public void unzip(final String zipFilePath, final String destDirectory, final String charset,
+                    final ReadableArray entries, final Promise promise) {
+    final List<String> entryList = optionalEntriesList(entries, promise);
+    if (entryList == REJECTED_ENTRIES) {
+      return;
+    }
+    if (entryList != null) {
+      extractSelectedEntries(zipFilePath, destDirectory, entryList, charset, null, promise);
+      return;
+    }
     executor.submit(() -> {
       if (zipFilePath == null) {
         promise.reject("RNZipArchiveError", "Couldn't open file null. ");
@@ -165,6 +183,33 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     });
   }
 
+  /**
+   * Sentinel meaning {@link #optionalEntriesList} already rejected the promise.
+   * Distinct from {@code null} (full extract) and a non-empty list (selective).
+   */
+  private static final List<String> REJECTED_ENTRIES = new ArrayList<>();
+
+  /**
+   * @return {@code null} for full extract, a non-empty list for selective extract,
+   *         or {@link #REJECTED_ENTRIES} when the promise was already rejected.
+   */
+  private List<String> optionalEntriesList(ReadableArray entries, Promise promise) {
+    if (entries == null || entries.size() == 0) {
+      return null;
+    }
+    try {
+      List<String> entryList = readableArrayToStringList(entries);
+      if (entryList.isEmpty()) {
+        promise.reject("RNZipArchiveError", "entries must be a non-empty array");
+        return REJECTED_ENTRIES;
+      }
+      return entryList;
+    } catch (IllegalArgumentException ex) {
+      promise.reject("RNZipArchiveError", "Invalid entries array: " + ex.getMessage());
+      return REJECTED_ENTRIES;
+    }
+  }
+
   @Override
   public void listContents(final String zipFilePath, final String charset, final Promise promise) {
     executor.submit(() -> {
@@ -194,33 +239,6 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         promise.reject("RNZipArchiveError", "Failed to list contents: " + ex.getLocalizedMessage());
       }
     });
-  }
-
-  @Override
-  public void unzipFiles(final String zipFilePath, final String destDirectory,
-                         final ReadableArray entries, final String charset, final Promise promise) {
-    final List<String> entryList;
-    try {
-      entryList = readableArrayToStringList(entries);
-    } catch (IllegalArgumentException ex) {
-      promise.reject("RNZipArchiveError", "Invalid entries array: " + ex.getMessage());
-      return;
-    }
-    extractSelectedEntries(zipFilePath, destDirectory, entryList, charset, null, promise);
-  }
-
-  @Override
-  public void unzipFilesWithPassword(final String zipFilePath, final String destDirectory,
-                                     final ReadableArray entries, final String password,
-                                     final Promise promise) {
-    final List<String> entryList;
-    try {
-      entryList = readableArrayToStringList(entries);
-    } catch (IllegalArgumentException ex) {
-      promise.reject("RNZipArchiveError", "Invalid entries array: " + ex.getMessage());
-      return;
-    }
-    extractSelectedEntries(zipFilePath, destDirectory, entryList, "UTF-8", password, promise);
   }
 
   private void extractSelectedEntries(final String zipFilePath, final String destDirectory,
