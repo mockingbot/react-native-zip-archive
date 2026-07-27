@@ -526,7 +526,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_128);
         }
       } else if ("STANDARD".equals(encryptionMethod)) {
-        parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG);
+        // ZipCrypto (ZIP_STANDARD). ZIP_STANDARD_VARIANT_STRONG is write-only in zip4j
+        // and fails extract with "encryption method is not supported".
+        parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
         Log.d(TAG, "Standard Encryption");
       } else {
         parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
