@@ -1,0 +1,56 @@
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      notVisible: "List & Selective Extract"
+    commands:
+      - tapOn: "Playground"
+- scrollUntilVisible:
+    element:
+      text: "List & Selective Extract"
+    direction: DOWN
+- tapOn: "List & Selective Extract"
+- extendedWaitUntil:
+    visible: "Create Zip and List Contents"
+    timeout: 15000
+- tapOn: "Create Zip and List Contents"
+- extendedWaitUntil:
+    visible: "Listed Entries"
+    timeout: 20000
+- assertVisible: "Listed Entries"
+- scrollUntilVisible:
+    element:
+      text: "Contains hello.txt"
+    direction: DOWN
+    timeout: 10000
+- assertVisible: "Contains hello.txt"
+- assertVisible: "Contains readme.md"
+- scrollUntilVisible:
+    element:
+      text: "Extract Selected Entries"
+    direction: DOWN
+- tapOn: "Extract Selected Entries"
+- extendedWaitUntil:
+    visible: "Selective Extract"
+    timeout: 20000
+- assertVisible: "Selective Extract"
+- scrollUntilVisible:
+    element:
+      text: "Extracted docs/guide.md"
+    direction: DOWN
+    timeout: 10000
+- assertVisible: "Extracted readme.md"
+- assertVisible: "Extracted docs/guide.md"
+- assertVisible: "Skipped hello.txt"
+- scrollUntilVisible:
+    element:
+      text: "Password Selective Extract"
+    direction: DOWN
+- tapOn: "Password Selective Extract"
+- extendedWaitUntil:
+    visible: "Password Selective Extract Done"
+    timeout: 30000
+- assertVisible: "Password Selective Extract Done"
+- assertVisible: "Extracted readme.md"
+- assertVisible: "Skipped hello.txt"
+- back

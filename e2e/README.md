@@ -61,8 +61,11 @@ For other platforms, see the [Maestro installation guide](https://maestro.mobile
 |------|-------------|
 | `home.yaml` | Verifies the home screen loads with all demo cards |
 | `zip-and-unzip.yaml` | Tests zipping a sample folder and unzipping it |
+| `list-contents.yaml` | Tests `listContents`, selective `unzip(..., entries)`, and selective `unzipWithPassword(..., entries)` |
 | `password.yaml` | Tests creating a password-protected zip and extracting it |
 | `progress.yaml` | Tests subscribing to progress events during a large zip operation |
+| `assets.yaml` | Tests unzipping a bundled archive via `unzipAssets` |
+| `ci-master.yaml` | Full CI suite (home + zip + unzip + list/selective + password + progress + assets) |
 
 ## Writing New Flows
 

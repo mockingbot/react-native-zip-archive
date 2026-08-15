@@ -20,6 +20,7 @@ import com.facebook.react.bridge.ReactModuleWithSpec;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.turbomodule.core.interfaces.TurboModule;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public abstract class NativeZipArchiveSpec extends ReactContextBaseJavaModule implements ReactModuleWithSpec, TurboModule {
   public static final String NAME = "RNZipArchive";
@@ -39,11 +40,15 @@ public abstract class NativeZipArchiveSpec extends ReactContextBaseJavaModule im
 
   @ReactMethod
   @DoNotStrip
-  public abstract void unzip(String from, String destinationPath, String charset, Promise promise);
+  public abstract void unzip(String from, String destinationPath, String charset, @Nullable ReadableArray entries, Promise promise);
 
   @ReactMethod
   @DoNotStrip
-  public abstract void unzipWithPassword(String from, String destinationPath, String password, Promise promise);
+  public abstract void unzipWithPassword(String from, String destinationPath, String password, @Nullable ReadableArray entries, Promise promise);
+
+  @ReactMethod
+  @DoNotStrip
+  public abstract void listContents(String source, String charset, Promise promise);
 
   @ReactMethod
   @DoNotStrip

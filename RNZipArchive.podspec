@@ -12,6 +12,9 @@ Pod::Spec.new do |s|
   s.source         = { :git => 'https://github.com/mockingbot/react-native-zip-archive.git', :tag => "#{s.version}"}
   s.platform       = :ios, '15.5'
   s.preserve_paths = '*.js'
+  s.pod_target_xcconfig = {
+    'HEADER_SEARCH_PATHS' => '$(inherited) "$(PODS_ROOT)/SSZipArchive/SSZipArchive/minizip"'
+  }
 
   if defined?(install_modules_dependencies) != nil
     install_modules_dependencies(s)

@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import HomeScreen from './screens/HomeScreen';
 import ZipScreen from './screens/ZipScreen';
 import UnzipScreen from './screens/UnzipScreen';
+import ListContentsScreen from './screens/ListContentsScreen';
 import PasswordScreen from './screens/PasswordScreen';
 import ProgressScreen from './screens/ProgressScreen';
 import BenchmarkScreen from './screens/BenchmarkScreen';
@@ -14,6 +15,7 @@ export type RootStackParamList = {
   Home: undefined;
   Zip: undefined;
   Unzip: undefined;
+  ListContents: undefined;
   Password: undefined;
   Progress: undefined;
   Benchmark: undefined;
@@ -30,6 +32,7 @@ function App(): React.JSX.Element {
           <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Playground' }} />
           <Stack.Screen name="Zip" component={ZipScreen} options={{ title: 'Zip Operations' }} />
           <Stack.Screen name="Unzip" component={UnzipScreen} options={{ title: 'Unzip Operations' }} />
+          <Stack.Screen name="ListContents" component={ListContentsScreen} options={{ title: 'List & Selective Extract' }} />
           <Stack.Screen name="Password" component={PasswordScreen} options={{ title: 'Password Protection' }} />
           <Stack.Screen name="Progress" component={ProgressScreen} options={{ title: 'Progress Events' }} />
           <Stack.Screen name="Benchmark" component={BenchmarkScreen} options={{ title: 'Benchmarks' }} />

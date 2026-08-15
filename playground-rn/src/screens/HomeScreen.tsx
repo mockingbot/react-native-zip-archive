@@ -15,6 +15,7 @@ type RootStackParamList = {
   Home: undefined;
   Zip: undefined;
   Unzip: undefined;
+  ListContents: undefined;
   Password: undefined;
   Progress: undefined;
   Benchmark: undefined;
@@ -26,6 +27,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const DEMOS = [
   { screen: 'Zip' as const, title: 'Zip Operations', desc: 'Zip folders & files with compression levels' },
   { screen: 'Unzip' as const, title: 'Unzip Operations', desc: 'Extract archives with charset support' },
+  { screen: 'ListContents' as const, title: 'List & Selective Extract', desc: 'Inspect entries and extract a subset' },
   { screen: 'Password' as const, title: 'Password Protection', desc: 'AES & standard encryption demos' },
   { screen: 'Progress' as const, title: 'Progress Events', desc: 'Real-time zip/unzip progress' },
   { screen: 'Benchmark' as const, title: 'Benchmarks', desc: 'Compare compression levels & speed' },

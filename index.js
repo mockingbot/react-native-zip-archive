@@ -42,11 +42,38 @@ export const NO_COMPRESSION = 0;
 export const BEST_SPEED = 1;
 export const BEST_COMPRESSION = 9;
 
-export const unzip = (source, target, charset = "UTF-8") => {
+function resolveUnzipArgs(charsetOrEntries, entries) {
+  let charset = "UTF-8";
+  let selected = entries;
+  if (Array.isArray(charsetOrEntries)) {
+    selected = charsetOrEntries;
+  } else if (charsetOrEntries != null && charsetOrEntries !== "") {
+    charset = charsetOrEntries;
+  }
+  if (selected !== undefined && selected !== null) {
+    if (!Array.isArray(selected) || selected.length === 0) {
+      return {
+        error: new Error(
+          "unzip: entries must be a non-empty array when provided"
+        ),
+      };
+    }
+  } else {
+    selected = null;
+  }
+  return { charset, entries: selected };
+}
+
+export const unzip = (source, target, charsetOrEntries = "UTF-8", entries) => {
+  const resolved = resolveUnzipArgs(charsetOrEntries, entries);
+  if (resolved.error) {
+    return Promise.reject(resolved.error);
+  }
   return getRNZipArchive().unzip(
     normalizeFilePath(source),
     normalizeFilePath(target),
-    charset
+    resolved.charset,
+    resolved.entries
   );
 };
 
@@ -56,12 +83,26 @@ export const isPasswordProtected = (source) => {
     .then((isEncrypted) => !!isEncrypted);
 };
 
-export const unzipWithPassword = (source, target, password) => {
+export const unzipWithPassword = (source, target, password, entries) => {
+  if (entries !== undefined && entries !== null) {
+    if (!Array.isArray(entries) || entries.length === 0) {
+      return Promise.reject(
+        new Error(
+          "unzipWithPassword: entries must be a non-empty array when provided"
+        )
+      );
+    }
+  }
   return getRNZipArchive().unzipWithPassword(
     normalizeFilePath(source),
     normalizeFilePath(target),
-    password
+    password,
+    entries ?? null
   );
+};
+
+export const listContents = (source, charset = "UTF-8") => {
+  return getRNZipArchive().listContents(normalizeFilePath(source), charset);
 };
 
 export const zipWithPassword = (

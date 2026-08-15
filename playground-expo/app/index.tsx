@@ -13,6 +13,7 @@ import { Link } from 'expo-router';
 const DEMOS = [
   { href: '/zip' as const, title: 'Zip Operations', desc: 'Zip folders & files with compression levels' },
   { href: '/unzip' as const, title: 'Unzip Operations', desc: 'Extract archives with charset support' },
+  { href: '/list-contents' as const, title: 'List & Selective Extract', desc: 'Inspect entries and extract a subset' },
   { href: '/password' as const, title: 'Password Protection', desc: 'AES & standard encryption demos' },
   { href: '/progress' as const, title: 'Progress Events', desc: 'Real-time zip/unzip progress' },
   { href: '/benchmark' as const, title: 'Benchmarks', desc: 'Compare compression levels & speed' },

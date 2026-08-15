@@ -2,7 +2,16 @@ appId: ${APP_ID}
 ---
 - assertVisible: "Zip Operations"
 - assertVisible: "Unzip Operations"
+- assertVisible: "List & Selective Extract"
+- scrollUntilVisible:
+    element:
+      text: "Password Protection"
+    direction: DOWN
 - assertVisible: "Password Protection"
+- scrollUntilVisible:
+    element:
+      text: "Progress Events"
+    direction: DOWN
 - assertVisible: "Progress Events"
 - scrollUntilVisible:
     element:
