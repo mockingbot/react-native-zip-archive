@@ -92,7 +92,7 @@ Zip with password protection.
 - `compressionLevel` is ignored on iOS when the source is a file array.
 
 **Encryption Types:**
-- `'STANDARD'` — Standard ZIP encryption (default)
+- `'STANDARD'` — Traditional ZIP encryption / ZipCrypto (default). This is **not** PKWARE Strong Encryption. On Android this writes zip4j `ZIP_STANDARD` so iOS and common unzip tools can decrypt the archive.
 - `'AES-128'` — AES 128-bit
 - `'AES-256'` — AES 256-bit
 

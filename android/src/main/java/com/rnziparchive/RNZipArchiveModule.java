@@ -82,6 +82,11 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     cancelled.set(false);
   }
 
+  private void submitWork(Runnable work) {
+    beginOperation();
+    executor.submit(work);
+  }
+
   private boolean rejectIfCancelled(Promise promise) {
     if (cancelled.get()) {
       promise.reject(ZipErrorCodes.CANCELLED, "Operation cancelled");
@@ -107,8 +112,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
   @Override
   public void isPasswordProtected(final String zipFilePath, final Promise promise) {
-    executor.submit(() -> {
-      beginOperation();
+    submitWork(() -> {
       try (net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath)) {
         promise.resolve(zipFile.isEncrypted());
       } catch (Exception ex) {
@@ -129,8 +133,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       extractSelectedEntries(zipFilePath, destDirectory, entryList, "UTF-8", password, promise);
       return;
     }
-    executor.submit(() -> {
-      beginOperation();
+    submitWork(() -> {
       try (net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath)) {
         if (zipFile.isEncrypted()) {
           zipFile.setPassword(password.toCharArray());
@@ -176,8 +179,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       extractSelectedEntries(zipFilePath, destDirectory, entryList, charset, null, promise);
       return;
     }
-    executor.submit(() -> {
-      beginOperation();
+    submitWork(() -> {
       if (zipFilePath == null) {
         promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
         return;
@@ -251,8 +253,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
   @Override
   public void listContents(final String zipFilePath, final String charset, final Promise promise) {
-    executor.submit(() -> {
-      beginOperation();
+    submitWork(() -> {
       if (zipFilePath == null) {
         promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
         return;
@@ -284,8 +285,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   private void extractSelectedEntries(final String zipFilePath, final String destDirectory,
                                       final List<String> wantedEntries, final String charset,
                                       final String password, final Promise promise) {
-    executor.submit(() -> {
-      beginOperation();
+    submitWork(() -> {
       if (zipFilePath == null) {
         promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
         return;
@@ -406,8 +406,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
    */
   @Override
   public void unzipAssets(final String assetsPath, final String destDirectory, final Promise promise) {
-    executor.submit(() -> {
-      beginOperation();
+    submitWork(() -> {
       InputStream assetsInputStream = null;
       AssetFileDescriptor fileDescriptor = null;
       long compressedSize;
@@ -599,8 +598,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   }
 
   private void processZip(final List<String> entries, final String destFile, final ZipParameters parameters, final Promise promise, final char[] password) {
-    executor.submit(() -> {
-      beginOperation();
+    submitWork(() -> {
       try (net.lingala.zip4j.ZipFile zipFile = password != null
           ? new net.lingala.zip4j.ZipFile(destFile, password)
           : new net.lingala.zip4j.ZipFile(destFile)) {
@@ -657,8 +655,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
   @Override
   public void getUncompressedSize(String zipFilePath, String charset, final Promise promise) {
-    executor.submit(() -> {
-      beginOperation();
+    submitWork(() -> {
       try {
         long totalSize = getUncompressedSize(zipFilePath, charset);
         if (totalSize == -1) {

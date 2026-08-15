@@ -20,7 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, nullable) NSString *processedFilePath;
 @property (nonatomic) float progress;
 @property (nonatomic, copy, nullable) void (^progressHandler)(NSUInteger entryNumber, NSUInteger total);
-@property (nonatomic) BOOL cancelled;
+@property (atomic) BOOL cancelled;
 
 @end
 
