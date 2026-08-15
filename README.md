@@ -96,7 +96,7 @@ Zip with password protection.
 - `'AES-128'` — AES 128-bit
 - `'AES-256'` — AES 256-bit
 
-> **iOS:** Both AES-128 and AES-256 use AES-256 internally. AES encryption is **not supported** for file arrays on iOS — only `STANDARD` works.
+> **iOS:** Both AES-128 and AES-256 use AES-256 internally. File arrays honor `encryptionType` the same as folders. Prefer `'STANDARD'` (ZipCrypto) when the archive will be unzipped by Node, Java, or other non-WinZip tools.
 
 ```js
 const sourcePath = DocumentDirectoryPath
