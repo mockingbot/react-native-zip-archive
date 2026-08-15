@@ -9,8 +9,10 @@
 #import "RNZipArchive.h"
 #if __has_include(<SSZipArchive/minizip/mz_compat.h>)
 #import <SSZipArchive/minizip/mz_compat.h>
-#else
+#elif __has_include("mz_compat.h")
 #import "mz_compat.h"
+#else
+#import "unzip.h"
 #endif
 #import <zlib.h>
 #import <fcntl.h>
@@ -127,13 +129,35 @@ RCT_EXPORT_MODULE()
     }];
 }
 
+- (BOOL)isUtf8Charset:(NSString *)charset {
+    if (charset == nil || charset.length == 0) {
+        return YES;
+    }
+    NSString *normalized = [[charset stringByReplacingOccurrencesOfString:@"-" withString:@""]
+        lowercaseString];
+    return [normalized isEqualToString:@"utf8"];
+}
+
+- (BOOL)rejectIfUnsupportedCharset:(NSString *)charset
+                            reject:(RCTPromiseRejectBlock)reject {
+    if ([self isUtf8Charset:charset]) {
+        return NO;
+    }
+    reject(kZipErrUnsupported,
+           [NSString stringWithFormat:@"charset '%@' is not supported on iOS (UTF-8 only)", charset],
+           nil);
+    return YES;
+}
+
 - (void)unzip:(NSString *)from
 destinationPath:(NSString *)destinationPath
       charset:(NSString *)charset
       entries:(NSArray *)entries
      resolve:(RCTPromiseResolveBlock)resolve
       reject:(RCTPromiseRejectBlock)reject {
-    (void)charset;
+    if ([self rejectIfUnsupportedCharset:charset reject:reject]) {
+        return;
+    }
     [self beginOperation];
     [self runAsync:^{
         if (entries != nil && entries.count > 0) {
@@ -174,7 +198,9 @@ destinationPath:(NSString *)destinationPath
              charset:(NSString *)charset
              resolve:(RCTPromiseResolveBlock)resolve
               reject:(RCTPromiseRejectBlock)reject {
-    (void)charset; // iOS always reads entry names as UTF-8 / Latin-1 fallback
+    if ([self rejectIfUnsupportedCharset:charset reject:reject]) {
+        return;
+    }
     [self beginOperation];
     [self runAsync:^{
         zipFile zip = unzOpen(source.fileSystemRepresentation);
@@ -663,10 +689,11 @@ destinationPath:(NSString *)destinationPath
     }];
 }
 
-// Expands `paths` into (full path, entry name) pairs. Files keep their base
-// name; directory contents are added recursively with entry names relative to
-// the listed directory (e.g. "a.txt", "sub/b.txt"), matching Android's
-// zip(string[]) behavior (#339). Directory entries themselves are not written.
+// Expands `paths` into (full path, entry name, kind) triples.
+// kind is @"file" or @"dir". Files keep their base name; directory contents are
+// added recursively with entry names relative to the listed directory
+// (e.g. "a.txt", "sub/b.txt"), matching Android's zip(string[]) behavior (#339).
+// Empty directories are preserved as directory entries for Android parity (#368).
 // Returns nil if any path does not exist.
 - (NSArray<NSArray<NSString *> *> *)expandedZipEntries:(NSArray<NSString *> *)paths {
     NSFileManager *fileManager = [[NSFileManager alloc] init];
@@ -677,7 +704,7 @@ destinationPath:(NSString *)destinationPath
             return nil;
         }
         if (!isDirectory) {
-            [entries addObject:@[path, path.lastPathComponent]];
+            [entries addObject:@[path, path.lastPathComponent, @"file"]];
             continue;
         }
         NSDirectoryEnumerator *enumerator = [fileManager enumeratorAtPath:path];
@@ -687,9 +714,13 @@ destinationPath:(NSString *)destinationPath
             BOOL childIsDirectory = NO;
             [fileManager fileExistsAtPath:fullPath isDirectory:&childIsDirectory];
             if (childIsDirectory) {
+                NSArray *children = [fileManager contentsOfDirectoryAtPath:fullPath error:nil];
+                if (children.count == 0) {
+                    [entries addObject:@[fullPath, relativePath, @"dir"]];
+                }
                 continue;
             }
-            [entries addObject:@[fullPath, relativePath]];
+            [entries addObject:@[fullPath, relativePath, @"file"]];
         }
     }
     return entries;
@@ -744,7 +775,16 @@ destinationPath:(NSString *)destinationPath
                 success = NO;
                 break;
             }
-            success &= [zipArchive writeFileAtPath:entry[0] withFileName:entry[1] compressionLevel:compressionLevel password:password AES:aes];
+            NSString *kind = entry.count > 2 ? entry[2] : @"file";
+            if ([kind isEqualToString:@"dir"]) {
+                success &= [zipArchive writeFolderAtPath:entry[0] withFolderName:entry[1] withPassword:password];
+            } else {
+                success &= [zipArchive writeFileAtPath:entry[0]
+                                          withFileName:entry[1]
+                                      compressionLevel:compressionLevel
+                                              password:password
+                                                   AES:aes];
+            }
             if (self.progressHandler) {
                 complete++;
                 self.progressHandler(complete, total);
@@ -874,17 +914,19 @@ compressionLevel:(double)compressionLevel
                     charset:(NSString *)charset
                    resolve:(RCTPromiseResolveBlock)resolve
                     reject:(RCTPromiseRejectBlock)reject {
-    (void)charset;
+    if ([self rejectIfUnsupportedCharset:charset reject:reject]) {
+        return;
+    }
     [self beginOperation];
     [self runAsync:^{
-    NSError *error = nil;
-    NSNumber *wantedFileSize = [SSZipArchive payloadSizeForArchiveAtPath:path error:&error];
+        NSError *error = nil;
+        NSNumber *wantedFileSize = [SSZipArchive payloadSizeForArchiveAtPath:path error:&error];
 
-    if (error == nil) {
-        resolve(wantedFileSize);
-    } else {
-        resolve(@-1);
-    }
+        if (error == nil) {
+            resolve(wantedFileSize);
+        } else {
+            reject(kZipErrCorruptArchive, error.localizedDescription ?: @"Failed to get uncompressed size", error);
+        }
     }];
 }
 
@@ -892,9 +934,47 @@ compressionLevel:(double)compressionLevel
              target:(NSString *)target
             resolve:(RCTPromiseResolveBlock)resolve
              reject:(RCTPromiseRejectBlock)reject {
-    // iOS doesn't have assets like Android, return error
-    NSError *error = [NSError errorWithDomain:@"RNZipArchive" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"unzipAssets is not supported on iOS"}];
-    reject(kZipErrUnsupported, @"unzipAssets is not supported on iOS", error);
+    // Android reads from the APK assets/ folder. On iOS, map the same relative
+    // path onto the main app bundle so playground/docs can share one API (#368).
+    if (source.length == 0) {
+        reject(kZipErrInvalidArgs, @"asset path must not be empty", nil);
+        return;
+    }
+
+    NSString *normalized = source;
+    while ([normalized hasPrefix:@"./"]) {
+        normalized = [normalized substringFromIndex:2];
+    }
+    if ([normalized hasPrefix:@"/"]) {
+        normalized = [normalized substringFromIndex:1];
+    }
+
+    NSString *bundleRoot = [[NSBundle mainBundle] bundlePath];
+    NSString *assetPath = [bundleRoot stringByAppendingPathComponent:normalized];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:assetPath]) {
+        // Also try pathForResource for files copied as bundle resources without folders.
+        NSString *resourceName = normalized.stringByDeletingPathExtension.lastPathComponent;
+        NSString *resourceExt = normalized.pathExtension;
+        NSString *resourceDir = normalized.stringByDeletingLastPathComponent;
+        if (resourceDir.length == 0) {
+            resourceDir = nil;
+        }
+        assetPath = [[NSBundle mainBundle] pathForResource:resourceName
+                                                    ofType:resourceExt.length ? resourceExt : nil
+                                               inDirectory:resourceDir];
+    }
+
+    if (assetPath.length == 0 || ![[NSFileManager defaultManager] fileExistsAtPath:assetPath]) {
+        reject(kZipErrFileNotFound,
+               [NSString stringWithFormat:@"Asset file `%@` could not be opened from the app bundle", source],
+               nil);
+        return;
+    }
+
+    [self beginOperation];
+    [self runAsync:^{
+        [self unzipFile:assetPath destinationPath:target password:nil resolve:resolve reject:reject];
+    }];
 }
 
 - (void)addListener:(NSString *)eventName {

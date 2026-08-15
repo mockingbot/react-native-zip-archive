@@ -17,7 +17,7 @@ const DEMOS = [
   { href: '/password' as const, title: 'Password Protection', desc: 'AES & standard encryption demos' },
   { href: '/progress' as const, title: 'Progress Events', desc: 'Real-time zip/unzip progress' },
   { href: '/benchmark' as const, title: 'Benchmarks', desc: 'Compare compression levels & speed' },
-  { href: '/assets' as const, title: 'Assets (Android)', desc: 'Unzip bundled assets on Android' },
+  { href: '/assets' as const, title: 'Bundled Assets', desc: 'Unzip Android assets / iOS bundle resources' },
 ];
 
 export default function HomeScreen() {
