@@ -262,9 +262,9 @@ useEffect(() => {
 | Feature | iOS | Android | Notes |
 |---------|-----|---------|-------|
 | `zip` (folder) | ✅ | ✅ | — |
-| `zip` (files array) | ✅ | ✅ | Compression level ignored on iOS |
-| `zipWithPassword` (folder) | ✅ | ✅ | AES encryption supported |
-| `zipWithPassword` (files array) | ⚠️ | ✅ | iOS: only `STANDARD` encryption |
+| `zip` (files array) | ✅ | ✅ | — |
+| `zipWithPassword` (folder) | ✅ | ✅ | Prefer `STANDARD` for server unzip |
+| `zipWithPassword` (files array) | ✅ | ✅ | iOS honors `STANDARD` vs AES |
 | `unzip` | ✅ | ✅ | Optional `entries` for selective extract; charset ignored on iOS |
 | `unzipWithPassword` | ✅ | ✅ | Optional `entries` for selective extract |
 | `listContents` | ✅ | ✅ | Charset ignored on iOS |
@@ -276,10 +276,23 @@ useEffect(() => {
 
 ### Cross-Platform Notes
 
-- **Compression levels:** Android supports 0–9 for all operations. iOS supports them only for folder operations.
-- **Encryption:** Android supports AES-128, AES-256, and Standard ZIP encryption for all operations. iOS supports AES and Standard for folders, but only Standard for file arrays.
+- **Compression levels:** Android supports 0–9 for all operations. iOS supports 0–9 for folder and file-array zips.
+- **Encryption:** Android supports AES-128, AES-256, and Standard ZIP encryption for all operations. On iOS, pass `'STANDARD'` (default) for ZipCrypto archives that Node `unzipper` / Java `ZipInputStream` can read; `'AES-128'` / `'AES-256'` produce WinZip-AES archives that many server tools cannot open.
 - **Charset:** Android supports custom charsets (default UTF-8). iOS always uses UTF-8.
 - **unzipAssets:** Supports `assets/` folder and `content://` URIs on Android. Not supported on iOS.
+
+### Server-side unzip interoperability
+
+Plain (non-AES) zips created on iOS and Android are intended to open with common server unzippers (`unzip`, Node `unzipper`, Java `ZipInputStream`). Practical tips:
+
+- Prefer `zip(...)` or `zipWithPassword(..., 'STANDARD')` when the archive will be extracted off-device.
+- Avoid AES password zips if the consumer is stock Java/`unzipper` — use `'STANDARD'` instead.
+- Decode URL-encoded paths (`decodeURIComponent`) before passing them in; `%20` in paths has been mistaken for corrupt archives (#333).
+- After upgrading, you can sanity-check a produced file with:
+
+```bash
+node scripts/validate-zip-header.js /path/to/archive.zip
+```
 
 ## Expo
 
