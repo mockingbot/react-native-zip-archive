@@ -311,9 +311,9 @@ Two fully-featured playground apps are included to demonstrate every API method:
 
 Both apps consume the local library via `file:..` and include Maestro E2E tests.
 
-## Migrating from v7
+## Migrating
 
-See [MIGRATION.md](./MIGRATION.md) for detailed migration instructions.
+See [MIGRATION.md](./MIGRATION.md) for v7 → v8, v8 → v9.0, and v9.2–v9.4 notes.
 
 ## Testing
 
