@@ -7,7 +7,9 @@ const {
   unzipAssets,
   isPasswordProtected,
   getUncompressedSize,
+  cancel,
   subscribe,
+  ErrorCodes,
   DEFAULT_COMPRESSION,
   NO_COMPRESSION,
   BEST_SPEED,
@@ -30,6 +32,7 @@ describe('react-native-zip-archive API', () => {
     expect(typeof unzipAssets).toBe('function');
     expect(typeof isPasswordProtected).toBe('function');
     expect(typeof getUncompressedSize).toBe('function');
+    expect(typeof cancel).toBe('function');
     expect(typeof subscribe).toBe('function');
   });
 
@@ -38,6 +41,20 @@ describe('react-native-zip-archive API', () => {
     expect(NO_COMPRESSION).toBe(0);
     expect(BEST_SPEED).toBe(1);
     expect(BEST_COMPRESSION).toBe(9);
+  });
+
+  test('exports stable ErrorCodes', () => {
+    expect(ErrorCodes.CANCELLED).toBe('ERR_CANCELLED');
+    expect(ErrorCodes.WRONG_PASSWORD).toBe('ERR_WRONG_PASSWORD');
+    expect(ErrorCodes.UNSAFE_PATH).toBe('ERR_UNSAFE_PATH');
+    expect(ErrorCodes.FILE_NOT_FOUND).toBe('ERR_FILE_NOT_FOUND');
+  });
+
+  describe('cancel', () => {
+    test('cancel calls native module', async () => {
+      await cancel();
+      expect(mockRNZipArchive.cancel).toHaveBeenCalled();
+    });
   });
 
   describe('zip', () => {

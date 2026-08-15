@@ -40,9 +40,11 @@ import {
   unzipWithPassword,
   listContents,
   unzipAssets,
+  cancel,
   subscribe,
   isPasswordProtected,
   getUncompressedSize,
+  ErrorCodes,
   DEFAULT_COMPRESSION,
   NO_COMPRESSION,
   BEST_SPEED,
@@ -90,7 +92,7 @@ Zip with password protection.
 - `compressionLevel` is ignored on iOS when the source is a file array.
 
 **Encryption Types:**
-- `'STANDARD'` — Standard ZIP encryption (default)
+- `'STANDARD'` — Traditional ZIP encryption / ZipCrypto (default). This is **not** PKWARE Strong Encryption. On Android this writes zip4j `ZIP_STANDARD` so iOS and common unzip tools can decrypt the archive.
 - `'AES-128'` — AES 128-bit
 - `'AES-256'` — AES 256-bit
 
@@ -196,6 +198,39 @@ getUncompressedSize(sourcePath)
   .catch((error) => console.error(error))
 ```
 
+### `cancel(): Promise<void>`
+
+Cancel the in-flight zip/unzip operation (best-effort). The active operation's promise rejects with `ErrorCodes.CANCELLED` (`ERR_CANCELLED`).
+
+```js
+const unzipPromise = unzip(sourcePath, targetPath)
+cancel()
+unzipPromise.catch((error) => {
+  if (error.code === ErrorCodes.CANCELLED) {
+    console.log('unzip cancelled')
+  }
+})
+```
+
+### Error codes
+
+Native rejections use stable `error.code` values on both platforms:
+
+| Code | When |
+|------|------|
+| `ERR_FILE_NOT_FOUND` | Source missing |
+| `ERR_INVALID_PATH` | Bad / null path |
+| `ERR_INVALID_ARGS` | Empty password, empty entries, etc. |
+| `ERR_WRONG_PASSWORD` | Password decrypt failed |
+| `ERR_NOT_PASSWORD_PROTECTED` | Password API used on a plain archive |
+| `ERR_CORRUPT_ARCHIVE` | Not a zip / truncated / unreadable |
+| `ERR_UNSAFE_PATH` | Zip Slip / path traversal |
+| `ERR_CANCELLED` | `cancel()` interrupted the operation |
+| `ERR_ZIP` / `ERR_UNZIP` | Generic zip/unzip failure |
+| `ERR_UNSUPPORTED` | API not available on this platform |
+
+Also exported as the `ErrorCodes` constant map.
+
 ### `subscribe(callback: ({ progress: number, filePath: string }) => void): EmitterSubscription`
 
 Subscribe to progress events. Useful for showing a progress bar.
@@ -234,6 +269,7 @@ useEffect(() => {
 | `unzipWithPassword` | ✅ | ✅ | Optional `entries` for selective extract |
 | `listContents` | ✅ | ✅ | Charset ignored on iOS |
 | `unzipAssets` | ❌ | ✅ | Android only |
+| `cancel` | ✅ | ✅ | Best-effort mid-operation abort |
 | `isPasswordProtected` | ✅ | ✅ | — |
 | `getUncompressedSize` | ✅ | ✅ | Charset ignored on iOS |
 | Progress Events | ✅ | ✅ | File path empty on iOS for zip |

@@ -50,6 +50,7 @@ export interface Spec extends TurboModule {
   ): Promise<string>;
   getUncompressedSize(path: string, charset: string): Promise<number>;
   unzipAssets(source: string, target: string): Promise<string>;
+  cancel(): Promise<void>;
   addListener(eventName: string): void;
   removeListeners(count: number): void;
 }

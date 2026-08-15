@@ -1,11 +1,28 @@
 # Changelog
 
+## [9.2.0] - 2026-07-25
+
+### Added
+- `cancel()` — best-effort abort of the in-flight zip/unzip operation; rejects with `ERR_CANCELLED` (#366)
+- Stable cross-platform error codes (`ERR_FILE_NOT_FOUND`, `ERR_WRONG_PASSWORD`, `ERR_UNSAFE_PATH`, …) and JS `ErrorCodes` map (#366)
+
+### Fixed
+- iOS: `cancel()` now interrupts in-flight work. Zip/unzip run on a background serial queue so `cancel()` is not blocked behind the operation it is meant to stop.
+- Android: reset the cancel flag when enqueueing work, not when the worker starts — `cancel()` immediately after `unzip`/`zip` is no longer discarded.
+- iOS: selective extract checks `fwrite` byte counts and `unzCloseCurrentFile` CRC; wrong-password / not-protected cases map to `ERR_WRONG_PASSWORD` / `ERR_NOT_PASSWORD_PROTECTED` instead of generic `ERR_UNZIP`.
+- iOS: `listContents` uses 64-bit zip entry info (`unzGetCurrentFileInfo64`) so entries ≥ 4 GiB report correct sizes.
+- iOS: selective extract emits 0% progress on failure (matches Android) instead of a 100% event before reject.
+- Android: `unzipWithPassword` selective extract no longer forces UTF-8 charset, matching the full-extract path.
+
 ## [9.1.0] - 2026-07-25
 
 ### Added
 - `listContents(source, charset?)` — inspect archive entries (path, sizes, directory/encrypted flags) without extracting (#365)
 - Optional `entries` on `unzip` / `unzipWithPassword` — extract only selected entry paths; directory names include nested children (#365)
 - Android unit tests for selective-extract entry matching
+
+### Changed
+- Android: `'STANDARD'` password encryption writes ZipCrypto (`ZIP_STANDARD`). zip4j's `ZIP_STANDARD_VARIANT_STRONG` is write-only and produced archives that common unzippers (including this library) could not extract.
 
 ## [9.0.2] - 2026-07-22
 
