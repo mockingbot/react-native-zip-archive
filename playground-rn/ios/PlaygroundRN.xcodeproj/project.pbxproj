@@ -13,6 +13,7 @@
 		97523AD4E6E87C2182825509 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E5EBC47BA2EB7F034C1ACD13 /* main.m */; };
 		DB69DB97B85F813FDF0E001E /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = B21341DD1A1109A08737F2E2 /* AppDelegate.mm */; };
 		E0B8E392EC6F22AC59BCBB21 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		F7C3A1B25E9D4A0F8C2B6D11 /* sample.zip in Resources */ = {isa = PBXBuildFile; fileRef = F7C3A1B15E9D4A0F8C2B6D11 /* sample.zip */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		D55102F37F12E8BE1D6159A2 /* libPods-PlaygroundRN.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-PlaygroundRN.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5EBC47BA2EB7F034C1ACD13 /* main.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = main.m; path = PlaygroundRN/main.m; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F7C3A1B15E9D4A0F8C2B6D11 /* sample.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; name = sample.zip; path = PlaygroundRN/sample.zip; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +51,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				F7C3A1B15E9D4A0F8C2B6D11 /* sample.zip */,
 			);
 			name = PlaygroundRN;
 			sourceTree = "<group>";
@@ -166,6 +169,7 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				E0B8E392EC6F22AC59BCBB21 /* PrivacyInfo.xcprivacy in Resources */,
+				F7C3A1B25E9D4A0F8C2B6D11 /* sample.zip in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,5 +1,15 @@
 # Changelog
 
+## [9.4.0] - 2026-07-25
+
+### Added
+- iOS: `unzipAssets` reads archives from the main app bundle (parity with Android `assets/`) (#368)
+- iOS: preserve empty directories when zipping directory items in a files array (#368)
+
+### Changed
+- iOS: non-UTF-8 `charset` arguments now reject with `ERR_UNSUPPORTED` instead of being silently ignored (#368)
+- iOS: `getUncompressedSize` rejects on failure (previously resolved `-1`) for parity with Android
+
 ## [9.3.0] - 2026-07-25
 
 ### Changed
