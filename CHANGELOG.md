@@ -11,6 +11,8 @@
 - Android: reset the cancel flag when enqueueing work, not when the worker starts — `cancel()` immediately after `unzip`/`zip` is no longer discarded.
 - iOS: selective extract checks `fwrite` byte counts and `unzCloseCurrentFile` CRC; wrong-password / not-protected cases map to `ERR_WRONG_PASSWORD` / `ERR_NOT_PASSWORD_PROTECTED` instead of generic `ERR_UNZIP`.
 - iOS: `listContents` uses 64-bit zip entry info (`unzGetCurrentFileInfo64`) so entries ≥ 4 GiB report correct sizes.
+- iOS: selective extract emits 0% progress on failure (matches Android) instead of a 100% event before reject.
+- Android: `unzipWithPassword` selective extract no longer forces UTF-8 charset, matching the full-extract path.
 
 ## [9.1.0] - 2026-07-25
 

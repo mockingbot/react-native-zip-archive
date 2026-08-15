@@ -130,7 +130,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       return;
     }
     if (entryList != null) {
-      extractSelectedEntries(zipFilePath, destDirectory, entryList, "UTF-8", password, promise);
+      extractSelectedEntries(zipFilePath, destDirectory, entryList, null, password, promise);
       return;
     }
     submitWork(() -> {

@@ -538,14 +538,15 @@ destinationPath:(NSString *)destinationPath
 
     unzClose(zip);
 
-    self.progress = 1.0;
-    [self zipArchiveProgressEvent:1 total:1];
-
     if (success) {
+        self.progress = 1.0;
+        [self zipArchiveProgressEvent:1 total:1];
         resolve(destinationPath);
     } else if (self.cancelled) {
         reject(kZipErrCancelled, @"Operation cancelled", nil);
     } else {
+        self.progress = 0.0;
+        [self zipArchiveProgressEvent:0 total:1];
         NSString *message = extractError ? extractError.localizedDescription : @"unable to unzip selected entries";
         reject(extractCode, message, extractError);
     }
