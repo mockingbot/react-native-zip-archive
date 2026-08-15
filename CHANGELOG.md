@@ -1,5 +1,19 @@
 # Changelog
 
+## [9.3.0] - 2026-07-25
+
+### Changed
+- iOS: `zipWithPassword` with a files array now honors `encryptionType`. Omitting it (JS default, treated as `'STANDARD'`) writes ZipCrypto instead of the previous always-AES (WinZip-AES) default. ZipCrypto is weaker encryption than AES; pass `'AES-128'` or `'AES-256'` to keep AES. This matches Android's default and common server unzippers (#367).
+
+### Fixed
+- iOS: `zipFilesWithPassword` now honors `encryptionType` — `'STANDARD'` uses ZipCrypto instead of always writing WinZip-AES (improves server-side unzip with Node/Java tools) (#367, #333, #323)
+- iOS: fsync zip output after successful `zip` / `zipWithPassword` so immediate uploads/reads see full bytes (#367)
+- iOS: file-array `zip` / `zipWithPassword` now apply the requested compression level (previously always `Z_DEFAULT_COMPRESSION`)
+
+### Added
+- `scripts/validate-zip-header.js` — checks local-file and EOCD signatures for interoperability smoke tests
+- README guidance for server-side unzip compatibility
+
 ## [9.2.0] - 2026-07-25
 
 ### Added

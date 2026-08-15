@@ -7,8 +7,14 @@
 //
 
 #import "RNZipArchive.h"
+#if __has_include(<SSZipArchive/minizip/mz_compat.h>)
+#import <SSZipArchive/minizip/mz_compat.h>
+#else
 #import "mz_compat.h"
+#endif
 #import <zlib.h>
+#import <fcntl.h>
+#import <unistd.h>
 
 #if __has_include(<React/RCTEventDispatcher.h>)
 #import <React/RCTEventDispatcher.h>
@@ -636,10 +642,13 @@ destinationPath:(NSString *)destinationPath
     success = [SSZipArchive createZipFileAtPath:destinationPath
                         withContentsOfDirectory:from
                             keepParentDirectory:NO
-                               compressionLevel:compressionLevel
+                               compressionLevel:[self zlibCompressionLevel:compressionLevel]
                                        password:nil
                                             AES:NO
                                 progressHandler:self.progressHandler];
+    if (success) {
+        [self synchronizeZipFileAtPath:destinationPath];
+    }
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -686,6 +695,37 @@ destinationPath:(NSString *)destinationPath
     return entries;
 }
 
+- (int)zlibCompressionLevel:(double)compressionLevel {
+    // Map JS compression constants onto zlib levels. Negative values mean default.
+    if (compressionLevel < 0) {
+        return Z_DEFAULT_COMPRESSION;
+    }
+    if (compressionLevel > 9) {
+        return Z_BEST_COMPRESSION;
+    }
+    return (int)compressionLevel;
+}
+
+- (BOOL)usesAESForEncryptionType:(NSString *)encryptionType {
+    // Empty / STANDARD → traditional ZipCrypto for maximum server-side compatibility.
+    // AES-128 / AES-256 → WinZip AES (many Java/Node unzippers cannot read this).
+    return encryptionType.length > 0 && ![encryptionType isEqualToString:@"STANDARD"];
+}
+
+/**
+ * Flush zip bytes to durable storage before resolving. Callers that upload or hash
+ * the archive immediately after `zip(...)` otherwise risk reading a partial file
+ * (see #323 / #355-class races).
+ */
+- (void)synchronizeZipFileAtPath:(NSString *)path {
+    int fd = open(path.fileSystemRepresentation, O_RDONLY);
+    if (fd < 0) {
+        return;
+    }
+    fsync(fd);
+    close(fd);
+}
+
 - (BOOL)writeZipEntriesToPath:(NSString *)destinationPath
                         paths:(NSArray<NSString *> *)paths
              compressionLevel:(int)compressionLevel
@@ -711,6 +751,9 @@ destinationPath:(NSString *)destinationPath
             }
         }
         success &= [zipArchive close];
+        if (success) {
+            [self synchronizeZipFileAtPath:destinationPath];
+        }
     }
     return success;
 }
@@ -729,7 +772,13 @@ compressionLevel:(double)compressionLevel
     BOOL success;
     [self setProgressHandler];
 
-    success = [self writeZipEntriesToPath:destinationPath paths:from compressionLevel:Z_DEFAULT_COMPRESSION password:nil AES:NO];
+    // Honor the requested compression level (previously ignored for file arrays) and
+    // never enable AES for plaintext zips — both matter for Node/Java unzippers (#333, #323).
+    success = [self writeZipEntriesToPath:destinationPath
+                                    paths:from
+                         compressionLevel:[self zlibCompressionLevel:compressionLevel]
+                                 password:nil
+                                      AES:NO];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -759,14 +808,17 @@ compressionLevel:(double)compressionLevel
 
     BOOL success;
     [self setProgressHandler];
-    BOOL useAES = encryptionType && [encryptionType length] > 0 && ![encryptionType isEqualToString:@"STANDARD"];
+    BOOL useAES = [self usesAESForEncryptionType:encryptionType];
     success = [SSZipArchive createZipFileAtPath:destinationPath
                         withContentsOfDirectory:from
                             keepParentDirectory:NO
-                               compressionLevel:compressionLevel
+                               compressionLevel:[self zlibCompressionLevel:compressionLevel]
                                        password:password
                                             AES:useAES
                                 progressHandler:self.progressHandler];
+    if (success) {
+        [self synchronizeZipFileAtPath:destinationPath];
+    }
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -796,9 +848,14 @@ compressionLevel:(double)compressionLevel
 
     BOOL success;
     [self setProgressHandler];
-    // Note: entries are written with AES:YES, matching the previous behavior of
-    // createZipFileAtPath:withFilesAtPaths: (which routes through AES:YES writes)
-    success = [self writeZipEntriesToPath:destinationPath paths:from compressionLevel:Z_DEFAULT_COMPRESSION password:password AES:YES];
+    // Prefer STANDARD (ZipCrypto) unless the caller explicitly requests AES.
+    // Always-on AES was a common source of "works on device, fails on server" reports.
+    BOOL useAES = [self usesAESForEncryptionType:encryptionType];
+    success = [self writeZipEntriesToPath:destinationPath
+                                    paths:from
+                         compressionLevel:[self zlibCompressionLevel:compressionLevel]
+                                 password:password
+                                      AES:useAES];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
