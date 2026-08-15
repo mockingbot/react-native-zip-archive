@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  View,
   Text,
   StyleSheet,
   ScrollView,
@@ -44,26 +43,14 @@ export default function AssetsScreen() {
     }
   };
 
-  if (Platform.OS !== 'android') {
-    return (
-      <View style={styles.container}>
-        <ResultCard title="Not Supported" variant="error">
-          <Text style={styles.desc}>
-            unzipAssets is only available on Android. iOS apps should use the main bundle or other asset mechanisms.
-          </Text>
-        </ResultCard>
-        <CodePreview code={SOURCE_CODE} />
-      </View>
-    );
-  }
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
-      <Text style={styles.section}>Android Assets Demo</Text>
+      <Text style={styles.section}>Bundled Assets Demo</Text>
       <Text style={styles.desc}>
-        Unzip a pre-bundled asset file (<Text style={styles.mono}>sample.zip</Text>) from the Android assets folder.
-        Make sure <Text style={styles.mono}>sample.zip</Text> exists in{' '}
-        <Text style={styles.mono}>android/app/src/main/assets/</Text>.
+        Unzip a pre-bundled <Text style={styles.mono}>sample.zip</Text>
+        {Platform.OS === 'android'
+          ? ' from android/app/src/main/assets/.'
+          : ' from the iOS app bundle (Copy Bundle Resources).'}
       </Text>
 
       <TouchableOpacity style={styles.actionBtn} onPress={handleUnzipAssets} disabled={loading}>

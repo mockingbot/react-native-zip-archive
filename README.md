@@ -123,7 +123,7 @@ Or with an explicit charset:
 unzip(sourcePath, targetPath, 'UTF-8', ['readme.md', 'docs'])
 ```
 
-> The `charset` parameter is only supported on Android (default: `UTF-8`). On iOS it is ignored.
+> The `charset` parameter defaults to `UTF-8`. On Android, other charsets are supported. On iOS, non-UTF-8 values reject with `ERR_UNSUPPORTED`.
 
 ```js
 const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
@@ -162,7 +162,7 @@ type ZipEntry = {
 }
 ```
 
-> The `charset` parameter is only supported on Android (default: `UTF-8`). On iOS it is ignored.
+> The `charset` parameter defaults to `UTF-8`. On Android, other charsets are supported. On iOS, non-UTF-8 values reject with `ERR_UNSUPPORTED`.
 
 ```js
 listContents(sourcePath)
@@ -176,9 +176,12 @@ listContents(sourcePath)
 
 ### `unzipAssets(assetPath: string, target: string): Promise<string>`
 
-Unzip a file from the Android `assets` folder. **Android only.**
+Unzip a bundled archive.
 
-`assetPath` is the relative path inside the pre-bundled assets folder (e.g. `folder/myFile.zip`). Do not pass an absolute path.
+- **Android:** relative path inside the APK `assets/` folder (also accepts `content://` URIs).
+- **iOS:** relative path inside the main app bundle (e.g. a file copied with Xcode “Copy Bundle Resources”).
+
+Do not pass an absolute filesystem path.
 
 ```js
 unzipAssets('./myFile.zip', DocumentDirectoryPath)
@@ -265,21 +268,22 @@ useEffect(() => {
 | `zip` (files array) | ✅ | ✅ | — |
 | `zipWithPassword` (folder) | ✅ | ✅ | Prefer `STANDARD` for server unzip |
 | `zipWithPassword` (files array) | ✅ | ✅ | iOS honors `STANDARD` vs AES |
-| `unzip` | ✅ | ✅ | Optional `entries` for selective extract; charset ignored on iOS |
+| `unzip` | ✅ | ✅ | Optional `entries`; non-UTF-8 charset → `ERR_UNSUPPORTED` on iOS |
 | `unzipWithPassword` | ✅ | ✅ | Optional `entries` for selective extract |
-| `listContents` | ✅ | ✅ | Charset ignored on iOS |
-| `unzipAssets` | ❌ | ✅ | Android only |
+| `listContents` | ✅ | ✅ | Non-UTF-8 charset → `ERR_UNSUPPORTED` on iOS |
+| `unzipAssets` | ✅ | ✅ | Android `assets/` (+ `content://`); iOS main bundle |
 | `cancel` | ✅ | ✅ | Best-effort mid-operation abort |
 | `isPasswordProtected` | ✅ | ✅ | — |
-| `getUncompressedSize` | ✅ | ✅ | Charset ignored on iOS |
+| `getUncompressedSize` | ✅ | ✅ | Non-UTF-8 charset → `ERR_UNSUPPORTED` on iOS |
 | Progress Events | ✅ | ✅ | File path empty on iOS for zip |
 
 ### Cross-Platform Notes
 
 - **Compression levels:** Android supports 0–9 for all operations. iOS supports 0–9 for folder and file-array zips.
 - **Encryption:** Android supports AES-128, AES-256, and Standard ZIP encryption for all operations. On iOS, pass `'STANDARD'` (default) for ZipCrypto archives that Node `unzipper` / Java `ZipInputStream` can read; `'AES-128'` / `'AES-256'` produce WinZip-AES archives that many server tools cannot open.
-- **Charset:** Android supports custom charsets (default UTF-8). iOS always uses UTF-8.
-- **unzipAssets:** Supports `assets/` folder and `content://` URIs on Android. Not supported on iOS.
+- **Charset:** Android supports custom charsets (default UTF-8). iOS accepts only UTF-8; other values reject with `ERR_UNSUPPORTED`.
+- **unzipAssets:** Android reads `assets/` (and `content://`). iOS reads from the main app bundle using the same relative path.
+- **Empty directories:** Preserved when zipping directory contents via a files/folders array on both platforms.
 
 ### Server-side unzip interoperability
 
