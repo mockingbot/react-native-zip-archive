@@ -1,5 +1,11 @@
 # Changelog
 
+## [9.2.0] - 2026-07-25
+
+### Added
+- `cancel()` — best-effort abort of the in-flight zip/unzip operation; rejects with `ERR_CANCELLED` (#366)
+- Stable cross-platform error codes (`ERR_FILE_NOT_FOUND`, `ERR_WRONG_PASSWORD`, `ERR_UNSAFE_PATH`, …) and JS `ErrorCodes` map (#366)
+
 ## [9.1.0] - 2026-07-25
 
 ### Added

@@ -76,6 +76,10 @@ public abstract class NativeZipArchiveSpec extends ReactContextBaseJavaModule im
 
   @ReactMethod
   @DoNotStrip
+  public abstract void cancel(Promise promise);
+
+  @ReactMethod
+  @DoNotStrip
   public abstract void addListener(String eventName);
 
   @ReactMethod

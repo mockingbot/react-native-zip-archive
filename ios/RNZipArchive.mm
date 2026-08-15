@@ -17,6 +17,35 @@
 #import "RCTEventDispatcher.h"
 #endif
 
+static NSString *const kZipErrFileNotFound = @"ERR_FILE_NOT_FOUND";
+static NSString *const kZipErrInvalidPath = @"ERR_INVALID_PATH";
+static NSString *const kZipErrInvalidArgs = @"ERR_INVALID_ARGS";
+static NSString *const kZipErrWrongPassword = @"ERR_WRONG_PASSWORD";
+static NSString *const kZipErrNotPasswordProtected = @"ERR_NOT_PASSWORD_PROTECTED";
+static NSString *const kZipErrCorruptArchive = @"ERR_CORRUPT_ARCHIVE";
+static NSString *const kZipErrUnsafePath = @"ERR_UNSAFE_PATH";
+static NSString *const kZipErrCancelled = @"ERR_CANCELLED";
+static NSString *const kZipErrZip = @"ERR_ZIP";
+static NSString *const kZipErrUnzip = @"ERR_UNZIP";
+static NSString *const kZipErrUnsupported = @"ERR_UNSUPPORTED";
+
+@interface RNZipCancelDelegate : NSObject <SSZipArchiveDelegate>
+@property (nonatomic, weak) RNZipArchive *owner;
+@end
+
+@implementation RNZipCancelDelegate
+- (BOOL)zipArchiveShouldUnzipFileAtIndex:(NSInteger)fileIndex
+                              totalFiles:(NSInteger)totalFiles
+                             archivePath:(NSString *)archivePath
+                                fileInfo:(unz_file_info)fileInfo {
+    (void)fileIndex;
+    (void)totalFiles;
+    (void)archivePath;
+    (void)fileInfo;
+    return self.owner != nil && !self.owner.cancelled;
+}
+@end
+
 @implementation RNZipArchive
 {
   bool hasListeners;
@@ -49,9 +78,30 @@ RCT_EXPORT_MODULE()
   return @[@"zipArchiveProgressEvent"];
 }
 
+- (void)beginOperation {
+    self.cancelled = NO;
+}
+
+- (BOOL)rejectIfCancelled:(RCTPromiseRejectBlock)reject {
+    if (self.cancelled) {
+        reject(kZipErrCancelled, @"Operation cancelled", nil);
+        return YES;
+    }
+    return NO;
+}
+
+- (void)cancel:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject {
+    (void)reject;
+    self.cancelled = YES;
+    resolve(nil);
+}
+
 - (void)isPasswordProtected:(NSString *)file
                    resolve:(RCTPromiseResolveBlock)resolve
                     reject:(RCTPromiseRejectBlock)reject {
+    (void)reject;
+    [self beginOperation];
     BOOL isPasswordProtected = [SSZipArchive isFilePasswordProtectedAtPath:file];
     resolve([NSNumber numberWithBool:isPasswordProtected]);
 }
@@ -98,10 +148,11 @@ destinationPath:(NSString *)destinationPath
              resolve:(RCTPromiseResolveBlock)resolve
               reject:(RCTPromiseRejectBlock)reject {
     (void)charset; // iOS always reads entry names as UTF-8 / Latin-1 fallback
+    [self beginOperation];
 
     zipFile zip = unzOpen(source.fileSystemRepresentation);
     if (zip == NULL) {
-        reject(@"list_contents_error", @"failed to open zip file", nil);
+        reject(kZipErrFileNotFound, @"failed to open zip file", nil);
         return;
     }
 
@@ -114,14 +165,14 @@ destinationPath:(NSString *)destinationPath
         ret = unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
         if (ret != UNZ_OK) {
             unzClose(zip);
-            reject(@"list_contents_error", @"failed to retrieve info for zip entry", nil);
+            reject(kZipErrCorruptArchive, @"failed to retrieve info for zip entry", nil);
             return;
         }
 
         char *filename = (char *)malloc(fileInfo.size_filename + 1);
         if (filename == NULL) {
             unzClose(zip);
-            reject(@"list_contents_error", @"out of memory while listing zip contents", nil);
+            reject(kZipErrUnzip, @"out of memory while listing zip contents", nil);
             return;
         }
         unzGetCurrentFileInfo(zip, &fileInfo, filename, fileInfo.size_filename + 1, NULL, 0, NULL, 0);
@@ -206,8 +257,9 @@ destinationPath:(NSString *)destinationPath
                     password:(NSString *)password
                      resolve:(RCTPromiseResolveBlock)resolve
                       reject:(RCTPromiseRejectBlock)reject {
+    [self beginOperation];
     if (entries.count == 0) {
-        reject(@"unzip_files_error", @"entries must be a non-empty array", nil);
+        reject(kZipErrInvalidArgs, @"entries must be a non-empty array", nil);
         return;
     }
 
@@ -223,14 +275,14 @@ destinationPath:(NSString *)destinationPath
                                 attributes:nil
                                      error:&dirError];
         if (dirError != nil) {
-            reject(@"unzip_files_error", dirError.localizedDescription, dirError);
+            reject(kZipErrUnzip, dirError.localizedDescription, dirError);
             return;
         }
     }
 
     zipFile zip = unzOpen(from.fileSystemRepresentation);
     if (zip == NULL) {
-        reject(@"unzip_files_error", @"failed to open zip file", nil);
+        reject(kZipErrFileNotFound, @"failed to open zip file", nil);
         return;
     }
 
@@ -267,7 +319,7 @@ destinationPath:(NSString *)destinationPath
 
     if (matchCount == 0) {
         unzClose(zip);
-        reject(@"unzip_files_error", @"None of the requested entries were found in the archive", nil);
+        reject(kZipErrInvalidArgs, @"None of the requested entries were found in the archive", nil);
         return;
     }
 
@@ -315,6 +367,11 @@ destinationPath:(NSString *)destinationPath
             isDirectory = YES;
         }
         free(filename);
+
+        if ([self rejectIfCancelled:reject]) {
+            unzClose(zip);
+            return;
+        }
 
         if (strPath == nil || ![self entry:strPath matchesSelection:entries]) {
             ret = unzGoToNextFile(zip);
@@ -413,9 +470,17 @@ destinationPath:(NSString *)destinationPath
 
     if (success) {
         resolve(destinationPath);
+    } else if (self.cancelled) {
+        reject(kZipErrCancelled, @"Operation cancelled", nil);
     } else {
         NSString *message = extractError ? extractError.localizedDescription : @"unable to unzip selected entries";
-        reject(@"unzip_files_error", message, extractError);
+        NSString *code = kZipErrUnzip;
+        if ([message containsString:@"Zip Path Traversal"]) {
+            code = kZipErrUnsafePath;
+        } else if ([message.lowercaseString containsString:@"password"]) {
+            code = kZipErrWrongPassword;
+        }
+        reject(code, message, extractError);
     }
 }
 
@@ -424,6 +489,7 @@ destinationPath:(NSString *)destinationPath
       password:(NSString *)password
       resolve:(RCTPromiseResolveBlock)resolve
        reject:(RCTPromiseRejectBlock)reject {
+    [self beginOperation];
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -437,6 +503,8 @@ destinationPath:(NSString *)destinationPath
 
     __block unsigned long long extractedBytes = 0;
     __weak RNZipArchive *weakSelf = self;
+    RNZipCancelDelegate *cancelDelegate = [RNZipCancelDelegate new];
+    cancelDelegate.owner = self;
 
     BOOL success = [SSZipArchive unzipFileAtPath:from
                                   toDestination:destinationPath
@@ -445,7 +513,7 @@ destinationPath:(NSString *)destinationPath
                                  nestedZipLevel:0
                                        password:password
                                           error:&error
-                                       delegate:nil
+                                       delegate:cancelDelegate
                                 progressHandler:^(NSString *entry, unz_file_info zipInfo, long entryNumber, long total) {
                                     RNZipArchive *strongSelf = weakSelf;
                                     if (strongSelf == nil) {
@@ -464,11 +532,20 @@ destinationPath:(NSString *)destinationPath
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
-    if (success) {
+    if (self.cancelled) {
+        reject(kZipErrCancelled, @"Operation cancelled", nil);
+    } else if (success) {
         resolve(destinationPath);
     } else {
         NSString *errorMessage = error ? [error localizedDescription] : @"unable to unzip";
-        reject(@"unzip_error", errorMessage, error);
+        NSString *code = kZipErrUnzip;
+        NSString *lower = errorMessage.lowercaseString;
+        if ([lower containsString:@"password"]) {
+            code = kZipErrWrongPassword;
+        } else if ([lower containsString:@"failed to open zip"]) {
+            code = kZipErrFileNotFound;
+        }
+        reject(code, errorMessage, error);
     }
 }
 
@@ -477,6 +554,7 @@ destinationPath:(NSString *)destinationPath
  compressionLevel:(double)compressionLevel
          resolve:(RCTPromiseResolveBlock)resolve
           reject:(RCTPromiseRejectBlock)reject {
+    [self beginOperation];
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -495,11 +573,12 @@ destinationPath:(NSString *)destinationPath
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
-    if (success) {
+    if (self.cancelled) {
+        reject(kZipErrCancelled, @"Operation cancelled", nil);
+    } else if (success) {
         resolve(destinationPath);
     } else {
-        NSError *error = nil;
-        reject(@"zip_error", @"unable to zip", error);
+        reject(kZipErrZip, @"unable to zip", nil);
     }
 }
 
@@ -549,6 +628,10 @@ destinationPath:(NSString *)destinationPath
     if (success) {
         NSUInteger total = entries.count, complete = 0;
         for (NSArray<NSString *> *entry in entries) {
+            if (self.cancelled) {
+                success = NO;
+                break;
+            }
             success &= [zipArchive writeFileAtPath:entry[0] withFileName:entry[1] compressionLevel:compressionLevel password:password AES:aes];
             if (self.progressHandler) {
                 complete++;
@@ -565,6 +648,7 @@ destinationPath:(NSString *)destinationPath
 compressionLevel:(double)compressionLevel
         resolve:(RCTPromiseResolveBlock)resolve
          reject:(RCTPromiseRejectBlock)reject {
+    [self beginOperation];
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -577,11 +661,12 @@ compressionLevel:(double)compressionLevel
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
-    if (success) {
+    if (self.cancelled) {
+        reject(kZipErrCancelled, @"Operation cancelled", nil);
+    } else if (success) {
         resolve(destinationPath);
     } else {
-        NSError *error = nil;
-        reject(@"zip_error", @"unable to zip", error);
+        reject(kZipErrZip, @"unable to zip", nil);
     }
 }
 
@@ -592,6 +677,7 @@ compressionLevel:(double)compressionLevel
              compressionLevel:(double)compressionLevel
                       resolve:(RCTPromiseResolveBlock)resolve
                        reject:(RCTPromiseRejectBlock)reject {
+    [self beginOperation];
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -610,11 +696,12 @@ compressionLevel:(double)compressionLevel
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
-    if (success) {
+    if (self.cancelled) {
+        reject(kZipErrCancelled, @"Operation cancelled", nil);
+    } else if (success) {
         resolve(destinationPath);
     } else {
-        NSError *error = nil;
-        reject(@"zip_error", @"unable to zip", error);
+        reject(kZipErrZip, @"unable to zip", nil);
     }
 }
 
@@ -625,6 +712,7 @@ compressionLevel:(double)compressionLevel
             compressionLevel:(double)compressionLevel
                      resolve:(RCTPromiseResolveBlock)resolve
                       reject:(RCTPromiseRejectBlock)reject {
+    [self beginOperation];
     self.progress = 0.0;
     self.processedFilePath = @"";
     [self zipArchiveProgressEvent:0 total:1]; // force 0%
@@ -638,11 +726,12 @@ compressionLevel:(double)compressionLevel
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
 
-    if (success) {
+    if (self.cancelled) {
+        reject(kZipErrCancelled, @"Operation cancelled", nil);
+    } else if (success) {
         resolve(destinationPath);
     } else {
-        NSError *error = nil;
-        reject(@"zip_error", @"unable to zip", error);
+        reject(kZipErrZip, @"unable to zip", nil);
     }
 }
 
@@ -666,7 +755,7 @@ compressionLevel:(double)compressionLevel
              reject:(RCTPromiseRejectBlock)reject {
     // iOS doesn't have assets like Android, return error
     NSError *error = [NSError errorWithDomain:@"RNZipArchive" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"unzipAssets is not supported on iOS"}];
-    reject(@"unzip_assets_not_supported", @"unzipAssets is not supported on iOS", error);
+    reject(kZipErrUnsupported, @"unzipAssets is not supported on iOS", error);
 }
 
 - (void)addListener:(NSString *)eventName {

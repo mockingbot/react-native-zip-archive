@@ -46,8 +46,23 @@ jobs:
 
       - name: Install Maestro
         run: |
-          curl -fsSL "https://get.maestro.mobile.dev" | bash
-          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            echo "Installing Maestro (attempt $attempt)..."
+            if curl -fsSL "https://get.maestro.mobile.dev" | bash \
+              && test -x "$HOME/.maestro/bin/maestro"; then
+              break
+            fi
+            echo "Maestro install failed on attempt $attempt"
+            rm -rf "$HOME/.maestro"
+            if [ "$attempt" -eq 3 ]; then
+              echo "Maestro install failed after 3 attempts"
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+          "$HOME/.maestro/bin/maestro" --version
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -159,8 +174,23 @@ jobs:
 
       - name: Install Maestro
         run: |
-          curl -fsSL "https://get.maestro.mobile.dev" | bash
-          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            echo "Installing Maestro (attempt $attempt)..."
+            if curl -fsSL "https://get.maestro.mobile.dev" | bash \
+              && test -x "$HOME/.maestro/bin/maestro"; then
+              break
+            fi
+            echo "Maestro install failed on attempt $attempt"
+            rm -rf "$HOME/.maestro"
+            if [ "$attempt" -eq 3 ]; then
+              echo "Maestro install failed after 3 attempts"
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+          "$HOME/.maestro/bin/maestro" --version
 
       - name: Cache node_modules
         uses: actions/cache@v4

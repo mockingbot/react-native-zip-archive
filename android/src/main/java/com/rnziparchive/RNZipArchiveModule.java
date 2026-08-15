@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -53,6 +54,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       r -> new Thread(r, "RNZipArchiveWorker")
   );
   private final Handler mainHandler = new Handler(Looper.getMainLooper());
+  private final AtomicBoolean cancelled = new AtomicBoolean(false);
 
   public RNZipArchiveModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -75,13 +77,42 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     invalidate();
   }
 
+
+  private void beginOperation() {
+    cancelled.set(false);
+  }
+
+  private boolean rejectIfCancelled(Promise promise) {
+    if (cancelled.get()) {
+      promise.reject(ZipErrorCodes.CANCELLED, "Operation cancelled");
+      return true;
+    }
+    return false;
+  }
+
+  private void rejectMapped(Promise promise, Exception ex, String fallback) {
+    if (cancelled.get()) {
+      promise.reject(ZipErrorCodes.CANCELLED, "Operation cancelled");
+      return;
+    }
+    String message = ex.getMessage() != null ? ex.getMessage() : fallback;
+    promise.reject(ZipErrorCodes.mapException(ex, fallback), message);
+  }
+
+  @Override
+  public void cancel(final Promise promise) {
+    cancelled.set(true);
+    promise.resolve(null);
+  }
+
   @Override
   public void isPasswordProtected(final String zipFilePath, final Promise promise) {
     executor.submit(() -> {
+      beginOperation();
       try (net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath)) {
         promise.resolve(zipFile.isEncrypted());
       } catch (Exception ex) {
-        promise.reject("RNZipArchiveError", String.format("Unable to check for encryption due to: %s", getStackTrace(ex)));
+        rejectMapped(promise, ex, ZipErrorCodes.UNZIP);
       }
     });
   }
@@ -99,11 +130,12 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       return;
     }
     executor.submit(() -> {
+      beginOperation();
       try (net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath)) {
         if (zipFile.isEncrypted()) {
           zipFile.setPassword(password.toCharArray());
         } else {
-          promise.reject("RNZipArchiveError", String.format("Zip file: %s is not password protected", zipFilePath));
+          promise.reject(ZipErrorCodes.NOT_PASSWORD_PROTECTED, String.format("Zip file: %s is not password protected", zipFilePath));
           return;
         }
 
@@ -113,6 +145,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
         updateProgress(0, 1, zipFilePath); // force 0%
         for (FileHeader fileHeader : fileHeaderList) {
+          if (rejectIfCancelled(promise)) {
+            return;
+          }
           ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
 
           if (!fileHeader.isDirectory()) {
@@ -125,7 +160,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         promise.resolve(destDirectory);
       } catch (Exception ex) {
         updateProgress(0, 1, zipFilePath); // force 0%
-        promise.reject("RNZipArchiveError", String.format("Failed to unzip file, due to: %s", getStackTrace(ex)));
+        rejectMapped(promise, ex, ZipErrorCodes.UNZIP);
       }
     });
   }
@@ -142,13 +177,14 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       return;
     }
     executor.submit(() -> {
+      beginOperation();
       if (zipFilePath == null) {
-        promise.reject("RNZipArchiveError", "Couldn't open file null. ");
+        promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
         return;
       }
       File zipFileRef = new File(zipFilePath);
       if (!zipFileRef.exists()) {
-        promise.reject("RNZipArchiveError", "Couldn't open file " + zipFilePath + ". ");
+        promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "Couldn't open file " + zipFilePath + ".");
         return;
       }
 
@@ -165,6 +201,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
         updateProgress(0, 1, zipFilePath); // force 0%
         for (FileHeader fileHeader : fileHeaderList) {
+          if (rejectIfCancelled(promise)) {
+            return;
+          }
           ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
 
           if (!fileHeader.isDirectory()) {
@@ -178,7 +217,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         promise.resolve(destDirectory);
       } catch (Exception ex) {
         updateProgress(0, 1, zipFilePath); // force 0%
-        promise.reject("RNZipArchiveError", "Failed to extract file " + ex.getLocalizedMessage());
+        rejectMapped(promise, ex, ZipErrorCodes.UNZIP);
       }
     });
   }
@@ -200,12 +239,12 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     try {
       List<String> entryList = readableArrayToStringList(entries);
       if (entryList.isEmpty()) {
-        promise.reject("RNZipArchiveError", "entries must be a non-empty array");
+        promise.reject(ZipErrorCodes.INVALID_ARGS, "entries must be a non-empty array");
         return REJECTED_ENTRIES;
       }
       return entryList;
     } catch (IllegalArgumentException ex) {
-      promise.reject("RNZipArchiveError", "Invalid entries array: " + ex.getMessage());
+      promise.reject(ZipErrorCodes.INVALID_ARGS, "Invalid entries array: " + ex.getMessage());
       return REJECTED_ENTRIES;
     }
   }
@@ -213,13 +252,14 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   @Override
   public void listContents(final String zipFilePath, final String charset, final Promise promise) {
     executor.submit(() -> {
+      beginOperation();
       if (zipFilePath == null) {
-        promise.reject("RNZipArchiveError", "Couldn't open file null. ");
+        promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
         return;
       }
       File zipFileRef = new File(zipFilePath);
       if (!zipFileRef.exists()) {
-        promise.reject("RNZipArchiveError", "Couldn't open file " + zipFilePath + ". ");
+        promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "Couldn't open file " + zipFilePath + ".");
         return;
       }
 
@@ -236,7 +276,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         }
         promise.resolve(entries);
       } catch (Exception ex) {
-        promise.reject("RNZipArchiveError", "Failed to list contents: " + ex.getLocalizedMessage());
+        rejectMapped(promise, ex, ZipErrorCodes.UNZIP);
       }
     });
   }
@@ -245,24 +285,25 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
                                       final List<String> wantedEntries, final String charset,
                                       final String password, final Promise promise) {
     executor.submit(() -> {
+      beginOperation();
       if (zipFilePath == null) {
-        promise.reject("RNZipArchiveError", "Couldn't open file null. ");
+        promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
         return;
       }
       File zipFileRef = new File(zipFilePath);
       if (!zipFileRef.exists()) {
-        promise.reject("RNZipArchiveError", "Couldn't open file " + zipFilePath + ". ");
+        promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "Couldn't open file " + zipFilePath + ".");
         return;
       }
       if (wantedEntries == null || wantedEntries.isEmpty()) {
-        promise.reject("RNZipArchiveError", "entries must be a non-empty array");
+        promise.reject(ZipErrorCodes.INVALID_ARGS, "entries must be a non-empty array");
         return;
       }
 
       try (net.lingala.zip4j.ZipFile zipFile = openZipFile(zipFilePath, charset)) {
         if (password != null) {
           if (!zipFile.isEncrypted()) {
-            promise.reject("RNZipArchiveError",
+            promise.reject(ZipErrorCodes.NOT_PASSWORD_PROTECTED,
                 String.format("Zip file: %s is not password protected", zipFilePath));
             return;
           }
@@ -283,7 +324,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         }
 
         if (selected.isEmpty()) {
-          promise.reject("RNZipArchiveError", "None of the requested entries were found in the archive");
+          promise.reject(ZipErrorCodes.INVALID_ARGS, "None of the requested entries were found in the archive");
           return;
         }
 
@@ -292,6 +333,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
         updateProgress(0, 1, zipFilePath);
         for (FileHeader fileHeader : selected) {
+          if (rejectIfCancelled(promise)) {
+            return;
+          }
           ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
 
           if (!fileHeader.isDirectory()) {
@@ -309,7 +353,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         promise.resolve(destDirectory);
       } catch (Exception ex) {
         updateProgress(0, 1, zipFilePath);
-        promise.reject("RNZipArchiveError", "Failed to extract selected files: " + ex.getLocalizedMessage());
+        rejectMapped(promise, ex, ZipErrorCodes.UNZIP);
       }
     });
   }
@@ -363,6 +407,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   @Override
   public void unzipAssets(final String assetsPath, final String destDirectory, final Promise promise) {
     executor.submit(() -> {
+      beginOperation();
       InputStream assetsInputStream = null;
       AssetFileDescriptor fileDescriptor = null;
       long compressedSize;
@@ -394,7 +439,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         }
 
         if (assetsInputStream == null) {
-          promise.reject("RNZipArchiveError", String.format("Asset file `%s` could not be opened", assetsPath));
+          promise.reject(ZipErrorCodes.FILE_NOT_FOUND, String.format("Asset file `%s` could not be opened", assetsPath));
           return;
         }
 
@@ -412,6 +457,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           updateProgress(extractedBytes, compressedSize, assetsPath); // force 0%
 
           while ((entry = zipIn.getNextEntry()) != null) {
+            if (rejectIfCancelled(promise)) {
+              return;
+            }
             if (entry.isDirectory()) continue;
 
             Log.i("rnziparchive", "Extracting: " + entry.getName());
@@ -445,7 +493,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       } catch (Exception ex) {
         Log.e(TAG, "Failed to extract asset: " + assetsPath, ex);
         updateProgress(0, 1, assetsPath); // force 0%
-        promise.reject("RNZipArchiveError", ex.getMessage());
+        rejectMapped(promise, ex, ZipErrorCodes.UNZIP);
       } finally {
         if (fileDescriptor != null) {
           try {
@@ -469,7 +517,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     try {
       fileList = readableArrayToStringList(files);
     } catch (IllegalArgumentException ex) {
-      promise.reject("RNZipArchiveError", "Invalid files array: " + ex.getMessage());
+      promise.reject(ZipErrorCodes.INVALID_ARGS, "Invalid files array: " + ex.getMessage());
       return;
     }
     zip(fileList, destDirectory, compressionLevel, promise);
@@ -489,7 +537,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     try {
       fileList = readableArrayToStringList(files);
     } catch (IllegalArgumentException ex) {
-      promise.reject("RNZipArchiveError", "Invalid files array: " + ex.getMessage());
+      promise.reject(ZipErrorCodes.INVALID_ARGS, "Invalid files array: " + ex.getMessage());
       return;
     }
     zipWithPassword(fileList, destFile, password, encryptionMethod, compressionLevel, promise);
@@ -509,7 +557,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       ZipParameters parameters = buildZipParameters(compressionLevel);
 
       if (password == null || password.isEmpty()) {
-        promise.reject("RNZipArchiveError", "Password is empty");
+        promise.reject(ZipErrorCodes.INVALID_ARGS, "Password is empty");
         return;
       }
 
@@ -537,7 +585,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
       processZip(filesOrDirectory, destFile, parameters, promise, password.toCharArray());
     } catch (Exception ex) {
-      promise.reject("RNZipArchiveError", ex.getMessage());
+      rejectMapped(promise, ex, ZipErrorCodes.ZIP);
     }
   }
 
@@ -546,12 +594,13 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       ZipParameters parameters = buildZipParameters(compressionLevel);
       processZip(filesOrDirectory, destFile, parameters, promise, null);
     } catch (Exception ex) {
-      promise.reject("RNZipArchiveError", ex.getMessage());
+      rejectMapped(promise, ex, ZipErrorCodes.ZIP);
     }
   }
 
   private void processZip(final List<String> entries, final String destFile, final ZipParameters parameters, final Promise promise, final char[] password) {
     executor.submit(() -> {
+      beginOperation();
       try (net.lingala.zip4j.ZipFile zipFile = password != null
           ? new net.lingala.zip4j.ZipFile(destFile, password)
           : new net.lingala.zip4j.ZipFile(destFile)) {
@@ -562,6 +611,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         int fileCounter = 0;
 
         for (int i = 0; i < entries.size(); i++) {
+          if (rejectIfCancelled(promise)) {
+            return;
+          }
           File f = new File(entries.get(i));
 
           if (f.exists()) {
@@ -571,6 +623,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
               totalFiles += files.size();
               for (int j = 0; j < files.size(); j++) {
+                if (rejectIfCancelled(promise)) {
+                  return;
+                }
                 if (files.get(j).isDirectory()) {
                   zipFile.addFolder(files.get(j), parameters);
                 } else {
@@ -587,12 +642,12 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
               updateProgress(fileCounter, totalFiles, destFile);
             }
           } else {
-            promise.reject("RNZipArchiveError", "File or folder does not exist");
+            promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "File or folder does not exist");
             return;
           }
         }
       } catch (Exception ex) {
-        promise.reject("RNZipArchiveError", ex.getMessage());
+        rejectMapped(promise, ex, ZipErrorCodes.ZIP);
         return;
       }
       updateProgress(1, 1, destFile); // force 100%
@@ -603,15 +658,16 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   @Override
   public void getUncompressedSize(String zipFilePath, String charset, final Promise promise) {
     executor.submit(() -> {
+      beginOperation();
       try {
         long totalSize = getUncompressedSize(zipFilePath, charset);
         if (totalSize == -1) {
-          promise.reject("RNZipArchiveError", "Failed to get uncompressed size");
+          promise.reject(ZipErrorCodes.CORRUPT_ARCHIVE, "Failed to get uncompressed size");
         } else {
           promise.resolve((double) totalSize);
         }
       } catch (Exception e) {
-        promise.reject("RNZipArchiveError", "Failed to get uncompressed size: " + e.getMessage());
+        rejectMapped(promise, e, ZipErrorCodes.UNZIP);
       }
     });
   }

@@ -10,6 +10,7 @@ const mockRNZipArchive = {
   unzipAssets: jest.fn(() => Promise.resolve('/mock/dest')),
   isPasswordProtected: jest.fn(() => Promise.resolve(true)),
   getUncompressedSize: jest.fn(() => Promise.resolve(1024)),
+  cancel: jest.fn(() => Promise.resolve()),
   addListener: jest.fn(),
   removeListeners: jest.fn(),
 };

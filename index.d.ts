@@ -7,6 +7,21 @@ declare module "react-native-zip-archive" {
     AES_256 = "AES-256",
   }
 
+  export const ErrorCodes: {
+    FILE_NOT_FOUND: "ERR_FILE_NOT_FOUND";
+    INVALID_PATH: "ERR_INVALID_PATH";
+    INVALID_ARGS: "ERR_INVALID_ARGS";
+    WRONG_PASSWORD: "ERR_WRONG_PASSWORD";
+    NOT_PASSWORD_PROTECTED: "ERR_NOT_PASSWORD_PROTECTED";
+    CORRUPT_ARCHIVE: "ERR_CORRUPT_ARCHIVE";
+    UNSAFE_PATH: "ERR_UNSAFE_PATH";
+    CANCELLED: "ERR_CANCELLED";
+    BUSY: "ERR_BUSY";
+    ZIP: "ERR_ZIP";
+    UNZIP: "ERR_UNZIP";
+    UNSUPPORTED: "ERR_UNSUPPORTED";
+  };
+
   export const DEFAULT_COMPRESSION: number;
   export const NO_COMPRESSION: number;
   export const BEST_SPEED: number;
@@ -69,4 +84,6 @@ declare module "react-native-zip-archive" {
   ): NativeEventSubscription;
 
   export function getUncompressedSize(source: string, charset?: string): Promise<number>;
+
+  export function cancel(): Promise<void>;
 }
