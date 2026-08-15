@@ -631,14 +631,15 @@ destinationPath:(NSString *)destinationPath
                                 }
                               completionHandler:nil];
 
-    self.progress = 1.0;
-    [self zipArchiveProgressEvent:1 total:1]; // force 100%
-
     if (self.cancelled) {
         reject(kZipErrCancelled, @"Operation cancelled", nil);
     } else if (success) {
+        self.progress = 1.0;
+        [self zipArchiveProgressEvent:1 total:1]; // force 100%
         resolve(destinationPath);
     } else {
+        self.progress = 0.0;
+        [self zipArchiveProgressEvent:0 total:1];
         NSString *errorMessage = error ? [error localizedDescription] : @"unable to unzip";
         NSString *code = kZipErrUnzip;
         NSString *lower = errorMessage.lowercaseString;
@@ -937,6 +938,7 @@ compressionLevel:(double)compressionLevel
     // Android reads from the APK assets/ folder. On iOS, map the same relative
     // path onto the main app bundle so playground/docs can share one API (#368).
     if (source.length == 0) {
+        [self zipArchiveProgressEvent:0 total:1];
         reject(kZipErrInvalidArgs, @"asset path must not be empty", nil);
         return;
     }
@@ -965,6 +967,7 @@ compressionLevel:(double)compressionLevel
     }
 
     if (assetPath.length == 0 || ![[NSFileManager defaultManager] fileExistsAtPath:assetPath]) {
+        [self zipArchiveProgressEvent:0 total:1];
         reject(kZipErrFileNotFound,
                [NSString stringWithFormat:@"Asset file `%@` could not be opened from the app bundle", source],
                nil);

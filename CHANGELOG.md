@@ -10,6 +10,9 @@
 - iOS: non-UTF-8 `charset` arguments now reject with `ERR_UNSUPPORTED` instead of being silently ignored (#368)
 - iOS: `getUncompressedSize` rejects on failure (previously resolved `-1`) for parity with Android
 
+### Fixed
+- iOS: `unzip` / `unzipAssets` emit 0% progress on failure (matches Android) instead of a 100% event before reject
+
 ## [9.3.0] - 2026-07-25
 
 ### Changed
