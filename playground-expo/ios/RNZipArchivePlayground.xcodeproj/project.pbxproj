@@ -14,6 +14,7 @@
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		DBAA7EA6CD08B42E8510EF79 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EFB54E4CD17F3FB2EC627D4B /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		A1B2C3D45E6F708192A3B4C5 /* sample.zip in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D35E6F708192A3B4C5 /* sample.zip */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = RNZipArchivePlayground/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* RNZipArchivePlayground-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "RNZipArchivePlayground-Bridging-Header.h"; path = "RNZipArchivePlayground/RNZipArchivePlayground-Bridging-Header.h"; sourceTree = "<group>"; };
 		F3CD0FA6E823EC0EFCAB415A /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-RNZipArchivePlayground/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		A1B2C3D35E6F708192A3B4C5 /* sample.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; name = sample.zip; path = RNZipArchivePlayground/sample.zip; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +64,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				EFB54E4CD17F3FB2EC627D4B /* PrivacyInfo.xcprivacy */,
+				A1B2C3D35E6F708192A3B4C5 /* sample.zip */,
 			);
 			name = RNZipArchivePlayground;
 			sourceTree = "<group>";
@@ -198,6 +201,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				DBAA7EA6CD08B42E8510EF79 /* PrivacyInfo.xcprivacy in Resources */,
+				A1B2C3D45E6F708192A3B4C5 /* sample.zip in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

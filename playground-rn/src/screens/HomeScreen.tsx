@@ -31,7 +31,7 @@ const DEMOS = [
   { screen: 'Password' as const, title: 'Password Protection', desc: 'AES & standard encryption demos' },
   { screen: 'Progress' as const, title: 'Progress Events', desc: 'Real-time zip/unzip progress' },
   { screen: 'Benchmark' as const, title: 'Benchmarks', desc: 'Compare compression levels & speed' },
-  { screen: 'Assets' as const, title: 'Assets (Android)', desc: 'Unzip bundled assets on Android' },
+  { screen: 'Assets' as const, title: 'Bundled Assets', desc: 'Unzip Android assets / iOS bundle resources' },
 ];
 
 export default function HomeScreen() {

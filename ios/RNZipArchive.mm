@@ -7,8 +7,16 @@
 //
 
 #import "RNZipArchive.h"
+#if __has_include(<SSZipArchive/minizip/mz_compat.h>)
+#import <SSZipArchive/minizip/mz_compat.h>
+#elif __has_include("mz_compat.h")
 #import "mz_compat.h"
+#else
+#import "unzip.h"
+#endif
 #import <zlib.h>
+#import <fcntl.h>
+#import <unistd.h>
 
 #if __has_include(<React/RCTEventDispatcher.h>)
 #import <React/RCTEventDispatcher.h>
@@ -121,13 +129,35 @@ RCT_EXPORT_MODULE()
     }];
 }
 
+- (BOOL)isUtf8Charset:(NSString *)charset {
+    if (charset == nil || charset.length == 0) {
+        return YES;
+    }
+    NSString *normalized = [[charset stringByReplacingOccurrencesOfString:@"-" withString:@""]
+        lowercaseString];
+    return [normalized isEqualToString:@"utf8"];
+}
+
+- (BOOL)rejectIfUnsupportedCharset:(NSString *)charset
+                            reject:(RCTPromiseRejectBlock)reject {
+    if ([self isUtf8Charset:charset]) {
+        return NO;
+    }
+    reject(kZipErrUnsupported,
+           [NSString stringWithFormat:@"charset '%@' is not supported on iOS (UTF-8 only)", charset],
+           nil);
+    return YES;
+}
+
 - (void)unzip:(NSString *)from
 destinationPath:(NSString *)destinationPath
       charset:(NSString *)charset
       entries:(NSArray *)entries
      resolve:(RCTPromiseResolveBlock)resolve
       reject:(RCTPromiseRejectBlock)reject {
-    (void)charset;
+    if ([self rejectIfUnsupportedCharset:charset reject:reject]) {
+        return;
+    }
     [self beginOperation];
     [self runAsync:^{
         if (entries != nil && entries.count > 0) {
@@ -168,7 +198,9 @@ destinationPath:(NSString *)destinationPath
              charset:(NSString *)charset
              resolve:(RCTPromiseResolveBlock)resolve
               reject:(RCTPromiseRejectBlock)reject {
-    (void)charset; // iOS always reads entry names as UTF-8 / Latin-1 fallback
+    if ([self rejectIfUnsupportedCharset:charset reject:reject]) {
+        return;
+    }
     [self beginOperation];
     [self runAsync:^{
         zipFile zip = unzOpen(source.fileSystemRepresentation);
@@ -599,14 +631,15 @@ destinationPath:(NSString *)destinationPath
                                 }
                               completionHandler:nil];
 
-    self.progress = 1.0;
-    [self zipArchiveProgressEvent:1 total:1]; // force 100%
-
     if (self.cancelled) {
         reject(kZipErrCancelled, @"Operation cancelled", nil);
     } else if (success) {
+        self.progress = 1.0;
+        [self zipArchiveProgressEvent:1 total:1]; // force 100%
         resolve(destinationPath);
     } else {
+        self.progress = 0.0;
+        [self zipArchiveProgressEvent:0 total:1];
         NSString *errorMessage = error ? [error localizedDescription] : @"unable to unzip";
         NSString *code = kZipErrUnzip;
         NSString *lower = errorMessage.lowercaseString;
@@ -636,10 +669,13 @@ destinationPath:(NSString *)destinationPath
     success = [SSZipArchive createZipFileAtPath:destinationPath
                         withContentsOfDirectory:from
                             keepParentDirectory:NO
-                               compressionLevel:compressionLevel
+                               compressionLevel:[self zlibCompressionLevel:compressionLevel]
                                        password:nil
                                             AES:NO
                                 progressHandler:self.progressHandler];
+    if (success) {
+        [self synchronizeZipFileAtPath:destinationPath];
+    }
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -654,10 +690,11 @@ destinationPath:(NSString *)destinationPath
     }];
 }
 
-// Expands `paths` into (full path, entry name) pairs. Files keep their base
-// name; directory contents are added recursively with entry names relative to
-// the listed directory (e.g. "a.txt", "sub/b.txt"), matching Android's
-// zip(string[]) behavior (#339). Directory entries themselves are not written.
+// Expands `paths` into (full path, entry name, kind) triples.
+// kind is @"file" or @"dir". Files keep their base name; directory contents are
+// added recursively with entry names relative to the listed directory
+// (e.g. "a.txt", "sub/b.txt"), matching Android's zip(string[]) behavior (#339).
+// Empty directories are preserved as directory entries for Android parity (#368).
 // Returns nil if any path does not exist.
 - (NSArray<NSArray<NSString *> *> *)expandedZipEntries:(NSArray<NSString *> *)paths {
     NSFileManager *fileManager = [[NSFileManager alloc] init];
@@ -668,7 +705,7 @@ destinationPath:(NSString *)destinationPath
             return nil;
         }
         if (!isDirectory) {
-            [entries addObject:@[path, path.lastPathComponent]];
+            [entries addObject:@[path, path.lastPathComponent, @"file"]];
             continue;
         }
         NSDirectoryEnumerator *enumerator = [fileManager enumeratorAtPath:path];
@@ -678,12 +715,47 @@ destinationPath:(NSString *)destinationPath
             BOOL childIsDirectory = NO;
             [fileManager fileExistsAtPath:fullPath isDirectory:&childIsDirectory];
             if (childIsDirectory) {
+                NSArray *children = [fileManager contentsOfDirectoryAtPath:fullPath error:nil];
+                if (children.count == 0) {
+                    [entries addObject:@[fullPath, relativePath, @"dir"]];
+                }
                 continue;
             }
-            [entries addObject:@[fullPath, relativePath]];
+            [entries addObject:@[fullPath, relativePath, @"file"]];
         }
     }
     return entries;
+}
+
+- (int)zlibCompressionLevel:(double)compressionLevel {
+    // Map JS compression constants onto zlib levels. Negative values mean default.
+    if (compressionLevel < 0) {
+        return Z_DEFAULT_COMPRESSION;
+    }
+    if (compressionLevel > 9) {
+        return Z_BEST_COMPRESSION;
+    }
+    return (int)compressionLevel;
+}
+
+- (BOOL)usesAESForEncryptionType:(NSString *)encryptionType {
+    // Empty / STANDARD → traditional ZipCrypto for maximum server-side compatibility.
+    // AES-128 / AES-256 → WinZip AES (many Java/Node unzippers cannot read this).
+    return encryptionType.length > 0 && ![encryptionType isEqualToString:@"STANDARD"];
+}
+
+/**
+ * Flush zip bytes to durable storage before resolving. Callers that upload or hash
+ * the archive immediately after `zip(...)` otherwise risk reading a partial file
+ * (see #323 / #355-class races).
+ */
+- (void)synchronizeZipFileAtPath:(NSString *)path {
+    int fd = open(path.fileSystemRepresentation, O_RDONLY);
+    if (fd < 0) {
+        return;
+    }
+    fsync(fd);
+    close(fd);
 }
 
 - (BOOL)writeZipEntriesToPath:(NSString *)destinationPath
@@ -704,13 +776,25 @@ destinationPath:(NSString *)destinationPath
                 success = NO;
                 break;
             }
-            success &= [zipArchive writeFileAtPath:entry[0] withFileName:entry[1] compressionLevel:compressionLevel password:password AES:aes];
+            NSString *kind = entry.count > 2 ? entry[2] : @"file";
+            if ([kind isEqualToString:@"dir"]) {
+                success &= [zipArchive writeFolderAtPath:entry[0] withFolderName:entry[1] withPassword:password];
+            } else {
+                success &= [zipArchive writeFileAtPath:entry[0]
+                                          withFileName:entry[1]
+                                      compressionLevel:compressionLevel
+                                              password:password
+                                                   AES:aes];
+            }
             if (self.progressHandler) {
                 complete++;
                 self.progressHandler(complete, total);
             }
         }
         success &= [zipArchive close];
+        if (success) {
+            [self synchronizeZipFileAtPath:destinationPath];
+        }
     }
     return success;
 }
@@ -729,7 +813,13 @@ compressionLevel:(double)compressionLevel
     BOOL success;
     [self setProgressHandler];
 
-    success = [self writeZipEntriesToPath:destinationPath paths:from compressionLevel:Z_DEFAULT_COMPRESSION password:nil AES:NO];
+    // Honor the requested compression level (previously ignored for file arrays) and
+    // never enable AES for plaintext zips — both matter for Node/Java unzippers (#333, #323).
+    success = [self writeZipEntriesToPath:destinationPath
+                                    paths:from
+                         compressionLevel:[self zlibCompressionLevel:compressionLevel]
+                                 password:nil
+                                      AES:NO];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -759,14 +849,17 @@ compressionLevel:(double)compressionLevel
 
     BOOL success;
     [self setProgressHandler];
-    BOOL useAES = encryptionType && [encryptionType length] > 0 && ![encryptionType isEqualToString:@"STANDARD"];
+    BOOL useAES = [self usesAESForEncryptionType:encryptionType];
     success = [SSZipArchive createZipFileAtPath:destinationPath
                         withContentsOfDirectory:from
                             keepParentDirectory:NO
-                               compressionLevel:compressionLevel
+                               compressionLevel:[self zlibCompressionLevel:compressionLevel]
                                        password:password
                                             AES:useAES
                                 progressHandler:self.progressHandler];
+    if (success) {
+        [self synchronizeZipFileAtPath:destinationPath];
+    }
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -796,9 +889,14 @@ compressionLevel:(double)compressionLevel
 
     BOOL success;
     [self setProgressHandler];
-    // Note: entries are written with AES:YES, matching the previous behavior of
-    // createZipFileAtPath:withFilesAtPaths: (which routes through AES:YES writes)
-    success = [self writeZipEntriesToPath:destinationPath paths:from compressionLevel:Z_DEFAULT_COMPRESSION password:password AES:YES];
+    // Prefer STANDARD (ZipCrypto) unless the caller explicitly requests AES.
+    // Always-on AES was a common source of "works on device, fails on server" reports.
+    BOOL useAES = [self usesAESForEncryptionType:encryptionType];
+    success = [self writeZipEntriesToPath:destinationPath
+                                    paths:from
+                         compressionLevel:[self zlibCompressionLevel:compressionLevel]
+                                 password:password
+                                      AES:useAES];
 
     self.progress = 1.0;
     [self zipArchiveProgressEvent:1 total:1]; // force 100%
@@ -817,17 +915,19 @@ compressionLevel:(double)compressionLevel
                     charset:(NSString *)charset
                    resolve:(RCTPromiseResolveBlock)resolve
                     reject:(RCTPromiseRejectBlock)reject {
-    (void)charset;
+    if ([self rejectIfUnsupportedCharset:charset reject:reject]) {
+        return;
+    }
     [self beginOperation];
     [self runAsync:^{
-    NSError *error = nil;
-    NSNumber *wantedFileSize = [SSZipArchive payloadSizeForArchiveAtPath:path error:&error];
+        NSError *error = nil;
+        NSNumber *wantedFileSize = [SSZipArchive payloadSizeForArchiveAtPath:path error:&error];
 
-    if (error == nil) {
-        resolve(wantedFileSize);
-    } else {
-        resolve(@-1);
-    }
+        if (error == nil) {
+            resolve(wantedFileSize);
+        } else {
+            reject(kZipErrCorruptArchive, error.localizedDescription ?: @"Failed to get uncompressed size", error);
+        }
     }];
 }
 
@@ -835,9 +935,49 @@ compressionLevel:(double)compressionLevel
              target:(NSString *)target
             resolve:(RCTPromiseResolveBlock)resolve
              reject:(RCTPromiseRejectBlock)reject {
-    // iOS doesn't have assets like Android, return error
-    NSError *error = [NSError errorWithDomain:@"RNZipArchive" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"unzipAssets is not supported on iOS"}];
-    reject(kZipErrUnsupported, @"unzipAssets is not supported on iOS", error);
+    // Android reads from the APK assets/ folder. On iOS, map the same relative
+    // path onto the main app bundle so playground/docs can share one API (#368).
+    if (source.length == 0) {
+        [self zipArchiveProgressEvent:0 total:1];
+        reject(kZipErrInvalidArgs, @"asset path must not be empty", nil);
+        return;
+    }
+
+    NSString *normalized = source;
+    while ([normalized hasPrefix:@"./"]) {
+        normalized = [normalized substringFromIndex:2];
+    }
+    if ([normalized hasPrefix:@"/"]) {
+        normalized = [normalized substringFromIndex:1];
+    }
+
+    NSString *bundleRoot = [[NSBundle mainBundle] bundlePath];
+    NSString *assetPath = [bundleRoot stringByAppendingPathComponent:normalized];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:assetPath]) {
+        // Also try pathForResource for files copied as bundle resources without folders.
+        NSString *resourceName = normalized.stringByDeletingPathExtension.lastPathComponent;
+        NSString *resourceExt = normalized.pathExtension;
+        NSString *resourceDir = normalized.stringByDeletingLastPathComponent;
+        if (resourceDir.length == 0) {
+            resourceDir = nil;
+        }
+        assetPath = [[NSBundle mainBundle] pathForResource:resourceName
+                                                    ofType:resourceExt.length ? resourceExt : nil
+                                               inDirectory:resourceDir];
+    }
+
+    if (assetPath.length == 0 || ![[NSFileManager defaultManager] fileExistsAtPath:assetPath]) {
+        [self zipArchiveProgressEvent:0 total:1];
+        reject(kZipErrFileNotFound,
+               [NSString stringWithFormat:@"Asset file `%@` could not be opened from the app bundle", source],
+               nil);
+        return;
+    }
+
+    [self beginOperation];
+    [self runAsync:^{
+        [self unzipFile:assetPath destinationPath:target password:nil resolve:resolve reject:reject];
+    }];
 }
 
 - (void)addListener:(NSString *)eventName {

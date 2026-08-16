@@ -1,5 +1,34 @@
 # Migration Guide
 
+## v9.2 / v9.3 / v9.4
+
+These releases add APIs and align iOS with Android. Most JavaScript call sites keep working; the notes below are the native/default changes that existing apps may observe.
+
+### iOS file-array `zipWithPassword` default is ZipCrypto (9.3.0)
+
+On iOS, `zipWithPassword([files], target, password)` used to always write **WinZip-AES**, even when `encryptionType` was omitted. It now follows `encryptionType` the same way folders and Android do:
+
+| Call | Before 9.3 (iOS file array) | 9.3+ |
+|---|---|---|
+| `zipWithPassword(files, dest, password)` | WinZip-AES | ZipCrypto (`STANDARD`) |
+| `zipWithPassword(files, dest, password, 'STANDARD')` | WinZip-AES | ZipCrypto |
+| `zipWithPassword(files, dest, password, 'AES-256')` | WinZip-AES | WinZip-AES |
+
+ZipCrypto is **weaker encryption** than AES. It is the default so Node `unzipper`, Java `ZipInputStream`, and stock `unzip` can open the archive. Pass `'AES-128'` or `'AES-256'` if you need AES.
+
+Existing AES archives are unchanged; only newly created file-array zips on iOS pick up the new default.
+
+### Other 9.2–9.4 notes
+
+- **9.2:** `cancel()` and stable `ErrorCodes` (`ERR_CANCELLED`, `ERR_WRONG_PASSWORD`, …).
+- **9.2:** Android `'STANDARD'` encryption is ZipCrypto (`ZIP_STANDARD`), not PKWARE Strong Encryption.
+- **9.4:** iOS `unzipAssets` reads from the app bundle; non-UTF-8 `charset` rejects with `ERR_UNSUPPORTED`; `getUncompressedSize` rejects on failure instead of resolving `-1`.
+
+```bash
+npm install react-native-zip-archive@^9.4.0
+cd ios && pod install && cd ..
+```
+
 ## v8.x to v9.0
 
 ### What's Changed

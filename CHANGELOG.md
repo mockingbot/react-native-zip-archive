@@ -1,5 +1,32 @@
 # Changelog
 
+## [9.4.0] - 2026-07-25
+
+### Added
+- iOS: `unzipAssets` reads archives from the main app bundle (parity with Android `assets/`) (#368)
+- iOS: preserve empty directories when zipping directory items in a files array (#368)
+
+### Changed
+- iOS: non-UTF-8 `charset` arguments now reject with `ERR_UNSUPPORTED` instead of being silently ignored (#368)
+- iOS: `getUncompressedSize` rejects on failure (previously resolved `-1`) for parity with Android
+
+### Fixed
+- iOS: `unzip` / `unzipAssets` emit 0% progress on failure (matches Android) instead of a 100% event before reject
+
+## [9.3.0] - 2026-07-25
+
+### Changed
+- iOS: `zipWithPassword` with a files array now honors `encryptionType`. Omitting it (JS default, treated as `'STANDARD'`) writes ZipCrypto instead of the previous always-AES (WinZip-AES) default. ZipCrypto is weaker encryption than AES; pass `'AES-128'` or `'AES-256'` to keep AES. This matches Android's default and common server unzippers (#367).
+
+### Fixed
+- iOS: `zipFilesWithPassword` now honors `encryptionType` — `'STANDARD'` uses ZipCrypto instead of always writing WinZip-AES (improves server-side unzip with Node/Java tools) (#367, #333, #323)
+- iOS: fsync zip output after successful `zip` / `zipWithPassword` so immediate uploads/reads see full bytes (#367)
+- iOS: file-array `zip` / `zipWithPassword` now apply the requested compression level (previously always `Z_DEFAULT_COMPRESSION`)
+
+### Added
+- `scripts/validate-zip-header.js` — checks local-file and EOCD signatures for interoperability smoke tests
+- README guidance for server-side unzip compatibility
+
 ## [9.2.0] - 2026-07-25
 
 ### Added
