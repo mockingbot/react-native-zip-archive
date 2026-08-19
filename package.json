@@ -1,7 +1,7 @@
 {
   "name": "react-native-zip-archive",
   "version": "9.4.0",
-  "description": "A TurboModule wrapper on ZipArchive for React Native's New Architecture",
+  "description": "Zip and unzip files in React Native and Expo (iOS & Android)",
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -25,7 +25,12 @@
     "zip",
     "archive",
     "zip-archive",
-    "unzip"
+    "unzip",
+    "expo",
+    "eas",
+    "password",
+    "aes",
+    "turbo-module"
   ],
   "author": "Perry Poon <plrthink@gmail.com> (https://github.com/plrthink)",
   "homepage": "https://github.com/mockingbot/react-native-zip-archive",
@@ -52,6 +57,9 @@
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-native": ">=0.70.0"
+  },
+  "expo": {
+    "plugin": "./app.plugin.js"
   },
   "codegenConfig": {
     "name": "NativeZipArchiveSpec",
