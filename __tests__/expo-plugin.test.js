@@ -9,8 +9,8 @@ describe('Expo config plugin (RNZA-10)', () => {
     expect(typeof plugin).toBe('function');
   });
 
-  test('package.json points Expo at ./app.plugin.js', () => {
-    expect(pkg.expo).toEqual({ plugin: './app.plugin.js' });
+  test('ships app.plugin.js at the package root (Expo resolution order)', () => {
+    expect(pkg.expo).toBeUndefined();
     expect(fs.existsSync(path.join(__dirname, '..', 'app.plugin.js'))).toBe(true);
   });
 
