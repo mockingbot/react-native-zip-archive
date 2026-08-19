@@ -6,7 +6,7 @@
 
 ### 1. Install dependencies
 ```bash
-cd playground
+cd playground-expo
 npm install
 ```
 

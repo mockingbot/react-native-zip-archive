@@ -2,10 +2,14 @@
 
 Zip archive utility for React Native.
 
-> **v8.0** requires React Native ≥ 0.70 with New Architecture enabled. For older RN versions, use v7.x:
+> Latest **v8+ / v9** targets React Native ≥ 0.70 with TurboModules. **New Architecture is recommended.**
+>
+> Use `^7.0.0` only if you are on React Native **< 0.70**:
 > ```bash
 > npm install react-native-zip-archive@^7.0.0
 > ```
+> If the native module fails to load on an old-architecture 0.70+ app, fall back to v7 until Interop Layer support is confirmed.
+>
 > **iOS:** Version 7.0.0+ requires a deployment target of iOS 15.5+ to comply with App Store privacy policy.
 
 ## Requirements
@@ -17,7 +21,22 @@ Zip archive utility for React Native.
 | iOS | >= 15.5 |
 | Android | >= API 23 (Android 6.0) |
 
+## Comparison
+
+| | This library | JSZip in React Native | Nitro (`react-native-nitro-unzip` / `react-native-nitro-archive`) |
+|---|---|---|---|
+| Zip / unzip | Native iOS + Android | Pure JS (not a native unzip) | Native via Nitro |
+| Password-protected zip | Yes | Fine for small in-memory archives | Check those packages |
+| Expo | Development builds / EAS (not Expo Go) | Can run in Expo Go | Native — needs a development build |
+| Extra native dependency | None beyond this package | None | `react-native-nitro-modules` |
+| Large files | Native I/O | Memory-heavy | Speed / extra-format claims |
+| Install base | Production RN apps | Very widely used as JS | Much smaller today |
+
+Use this library for native zip/unzip on device. Use JSZip when you only need small archives in JS. Nitro may fit if you want additional archive formats and accept the extra Nitro dependency and smaller install base.
+
 ## Installation
+
+### React Native (bare)
 
 ```bash
 npm install react-native-zip-archive
@@ -28,7 +47,27 @@ npm install react-native-zip-archive
 cd ios && pod install
 ```
 
-> To enable New Architecture, see [MIGRATION.md](./MIGRATION.md).
+New Architecture is recommended. See [MIGRATION.md](./MIGRATION.md).
+
+### Expo
+
+Works in **Expo development builds / EAS**. Does **not** work in Expo Go (this package includes custom native code).
+
+```bash
+npx expo install react-native-zip-archive
+```
+
+Add the config plugin in `app.json`:
+
+```json
+{
+  "expo": {
+    "plugins": ["react-native-zip-archive"]
+  }
+}
+```
+
+See [playground-expo](./playground-expo/) for a working Expo Development Build example.
 
 ## Usage
 
@@ -52,10 +91,18 @@ import {
 } from 'react-native-zip-archive'
 ```
 
-You may also want to use [react-native-fs](https://github.com/johanneslumpe/react-native-fs) to access the file system:
+**Bare React Native** — [react-native-fs](https://github.com/johanneslumpe/react-native-fs):
 
 ```js
 import { DocumentDirectoryPath } from 'react-native-fs'
+```
+
+**Expo** — [playground-expo](./playground-expo/) uses `expo-file-system/legacy`:
+
+```js
+import * as FileSystem from 'expo-file-system/legacy'
+
+const DocumentDirectoryPath = FileSystem.documentDirectory
 ```
 
 ## API
@@ -65,8 +112,8 @@ import { DocumentDirectoryPath } from 'react-native-fs'
 Zip a folder (string) or an array of files to the target path.
 
 - To zip a single file, pass it as an array: `zip([file], target)`.
-- Array items may also be directories: their contents are added recursively with entry paths relative to the listed directory (the directory's own name is not included). This behaves the same on Android and iOS, except that empty directories are preserved on Android only.
-- `compressionLevel` is ignored on iOS when the source is a file array. Use a directory source for custom compression on iOS.
+- Array items may also be directories: their contents are added recursively with entry paths relative to the listed directory (the directory's own name is not included). This behaves the same on Android and iOS. Empty directories are preserved on both platforms.
+- `compressionLevel` applies on both platforms for folder and file-array sources.
 
 **Compression Level Constants:**
 - `DEFAULT_COMPRESSION` (-1)
@@ -88,8 +135,8 @@ zip(sourcePath, targetPath)
 Zip with password protection.
 
 - To zip a single file, pass it as an array: `zipWithPassword([file], target, password)`.
-- Array items may also be directories: their contents are added recursively with entry paths relative to the listed directory (the directory's own name is not included). This behaves the same on Android and iOS, except that empty directories are preserved on Android only.
-- `compressionLevel` is ignored on iOS when the source is a file array.
+- Array items may also be directories: their contents are added recursively with entry paths relative to the listed directory (the directory's own name is not included). This behaves the same on Android and iOS. Empty directories are preserved on both platforms.
+- `compressionLevel` applies on both platforms for folder and file-array sources.
 
 **Encryption Types:**
 - `'STANDARD'` — Traditional ZIP encryption / ZipCrypto (default). This is **not** PKWARE Strong Encryption. On Android this writes zip4j `ZIP_STANDARD` so iOS and common unzip tools can decrypt the archive.
@@ -205,6 +252,8 @@ getUncompressedSize(sourcePath)
 
 Cancel the in-flight zip/unzip operation (best-effort). The active operation's promise rejects with `ErrorCodes.CANCELLED` (`ERR_CANCELLED`).
 
+Zip/unzip work is serialized. Android runs operations on a **single-thread executor**; concurrent calls queue FIFO and do not run in parallel. iOS uses a background serial queue similarly, so `cancel()` is not blocked behind the operation it is meant to stop.
+
 ```js
 const unzipPromise = unzip(sourcePath, targetPath)
 cancel()
@@ -264,10 +313,10 @@ useEffect(() => {
 
 | Feature | iOS | Android | Notes |
 |---------|-----|---------|-------|
-| `zip` (folder) | ✅ | ✅ | — |
-| `zip` (files array) | ✅ | ✅ | — |
+| `zip` (folder) | ✅ | ✅ | `compressionLevel` 0–9 |
+| `zip` (files array) | ✅ | ✅ | `compressionLevel` applies on both platforms |
 | `zipWithPassword` (folder) | ✅ | ✅ | Prefer `STANDARD` for server unzip |
-| `zipWithPassword` (files array) | ✅ | ✅ | iOS honors `STANDARD` vs AES |
+| `zipWithPassword` (files array) | ✅ | ✅ | iOS honors `STANDARD` vs AES; `compressionLevel` applies |
 | `unzip` | ✅ | ✅ | Optional `entries`; non-UTF-8 charset → `ERR_UNSUPPORTED` on iOS |
 | `unzipWithPassword` | ✅ | ✅ | Optional `entries` for selective extract |
 | `listContents` | ✅ | ✅ | Non-UTF-8 charset → `ERR_UNSUPPORTED` on iOS |
@@ -279,11 +328,12 @@ useEffect(() => {
 
 ### Cross-Platform Notes
 
-- **Compression levels:** Android supports 0–9 for all operations. iOS supports 0–9 for folder and file-array zips.
+- **Compression levels:** Android and iOS apply `compressionLevel` (0–9) for folder and file-array `zip` / `zipWithPassword`.
 - **Encryption:** Android supports AES-128, AES-256, and Standard ZIP encryption for all operations. On iOS, pass `'STANDARD'` (default) for ZipCrypto archives that Node `unzipper` / Java `ZipInputStream` can read; `'AES-128'` / `'AES-256'` produce WinZip-AES archives that many server tools cannot open.
 - **Charset:** Android supports custom charsets (default UTF-8). iOS accepts only UTF-8; other values reject with `ERR_UNSUPPORTED`.
 - **unzipAssets:** Android reads `assets/` (and `content://`). iOS reads from the main app bundle using the same relative path.
 - **Empty directories:** Preserved when zipping directory contents via a files/folders array on both platforms.
+- **Concurrent operations:** Android zip/unzip run on a single-thread executor; concurrent calls queue FIFO and do not run in parallel. iOS uses a background serial queue similarly (so `cancel()` is not blocked behind in-flight work).
 
 ### Server-side unzip interoperability
 
@@ -300,7 +350,7 @@ node scripts/validate-zip-header.js /path/to/archive.zip
 
 ## Expo
 
-This library **requires an Expo Development Build** and does not work in Expo Go because it includes custom native code. See [playground-expo](./playground-expo/) for a working Expo Development Build example.
+Works in Expo development builds / EAS only — not Expo Go. Install and plugin setup are under [Installation](#installation). See [playground-expo](./playground-expo/) for a working example.
 
 ## Playground
 
@@ -313,7 +363,11 @@ Both apps consume the local library via `file:..` and include Maestro E2E tests.
 
 ## Migrating
 
-See [MIGRATION.md](./MIGRATION.md) for v7 → v8, v8 → v9.0, and v9.2–v9.4 notes.
+Coming from v7? Start with [Upgrade from v7](./MIGRATION.md#upgrade-from-v7). See [MIGRATION.md](./MIGRATION.md) for v7 → v8, v8 → v9.0, and v9.2–v9.4 notes.
+
+## Security
+
+See [SECURITY.md](./SECURITY.md) for supported versions and how to report vulnerabilities.
 
 ## Testing
 

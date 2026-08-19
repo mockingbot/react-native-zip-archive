@@ -1,5 +1,26 @@
 # Migration Guide
 
+## Upgrade from v7
+
+The JavaScript API is unchanged from v7 through v9 — no call-site changes. You need a native rebuild.
+
+1. Install the latest release:
+   ```bash
+   npm install react-native-zip-archive
+   ```
+   Expo: `npx expo install react-native-zip-archive`
+2. iOS: `cd ios && pod install`
+3. Android: rebuild the native app (a Metro reload is not enough).
+4. Verify `zip` / `unzip` (and password variants if you use them).
+5. Rollback if needed:
+   ```bash
+   npm install react-native-zip-archive@^7.0.0
+   ```
+
+Working examples: [playground-expo](./playground-expo/) and [playground-rn](./playground-rn/).
+
+Stay on v7 only for React Native **< 0.70**. On 0.70+, New Architecture is recommended. If the native module fails to load on an old-architecture 0.70+ app, fall back to v7 until Interop is confirmed.
+
 ## v9.2 / v9.3 / v9.4
 
 These releases add APIs and align iOS with Android. Most JavaScript call sites keep working; the notes below are the native/default changes that existing apps may observe.
@@ -20,9 +41,11 @@ Existing AES archives are unchanged; only newly created file-array zips on iOS p
 
 ### Other 9.2–9.4 notes
 
-- **9.2:** `cancel()` and stable `ErrorCodes` (`ERR_CANCELLED`, `ERR_WRONG_PASSWORD`, …).
+- **9.2:** `cancel()` and stable `ErrorCodes` (`ERR_CANCELLED`, `ERR_WRONG_PASSWORD`, …). iOS zip/unzip run on a background serial queue so `cancel()` is not blocked behind in-flight work (FIFO, same as Android’s single-thread executor).
 - **9.2:** Android `'STANDARD'` encryption is ZipCrypto (`ZIP_STANDARD`), not PKWARE Strong Encryption.
+- **9.3:** File-array `zip` / `zipWithPassword` apply `compressionLevel` on iOS (previously always `Z_DEFAULT_COMPRESSION`).
 - **9.4:** iOS `unzipAssets` reads from the app bundle; non-UTF-8 `charset` rejects with `ERR_UNSUPPORTED`; `getUncompressedSize` rejects on failure instead of resolving `-1`.
+- **9.4:** Empty directories are preserved on iOS when zipping directory items in a files array (already true on Android).
 
 ```bash
 npm install react-native-zip-archive@^9.4.0
@@ -43,7 +66,7 @@ v9.0 hardens the native implementations and aligns progress reporting across pla
 | `unzip` progress (iOS) | Effectively start/end events only | Byte-weighted, per-entry granularity |
 | `unzip` event `filePath` (iOS) | Full destination path | Zip entry name (e.g. `folder/file.txt`) |
 | `zip` progress with files array (iOS) | Only 0% and 100% events | Per-file progress events |
-| Concurrent operations (Android) | Ran in parallel | Serialized on a single worker thread |
+| Concurrent operations (Android) | Ran in parallel (one thread per call) | **Serialized FIFO** on a single-thread executor — concurrent zip/unzip calls queue; they do **not** run in parallel |
 | Malicious/traversal zip entries (Android) | Extracted outside destination | Rejected (Zip Slip protection) |
 
 ### Migration Steps
@@ -56,9 +79,14 @@ If you subscribe to `zipArchiveProgressEvent`:
 - **Don't assume the final 100% event arrives before the promise resolves.** On Android, events are now posted to the main thread and the last event may land after `.then()` runs. Gate completion logic on the promise, not the event.
 - Progress is byte-weighted per entry for `unzip`: with archives containing one very large file, expect the bar to jump rather than advance smoothly within that file.
 
-#### Step 2: Check concurrent usage (Android)
+#### Step 2: Check concurrent usage
 
-If you kick off multiple zip/unzip operations simultaneously, they now execute one at a time in call order. Await them sequentially, or expect later calls to take longer.
+If you kick off multiple zip/unzip operations simultaneously, they execute **one at a time in call order** (FIFO). They do not run in parallel.
+
+- **Android:** a single-thread executor (`Executors.newSingleThreadExecutor`). Later calls wait until earlier ones finish.
+- **iOS:** a background serial work queue (same FIFO behavior; this is what lets `cancel()` run).
+
+Await operations sequentially, or expect later calls to take longer because they are queued.
 
 #### Step 3: Rebuild
 
@@ -76,7 +104,7 @@ cd ios && pod install && cd ..
 
 ### What's Changed
 
-v8.0 migrates `react-native-zip-archive` from Legacy Native Modules to **TurboModules** (React Native New Architecture). This brings:
+v8.0 migrates `react-native-zip-archive` from Legacy Native Modules to **TurboModules**. This brings:
 - Better performance through lazy loading
 - Type safety via Codegen
 - Support for React 18 concurrent features
@@ -88,9 +116,11 @@ v8.0 migrates `react-native-zip-archive` from Legacy Native Modules to **TurboMo
 | React Native | >= 0.60.0 | >= 0.70.0 |
 | React | >= 16.8.6 | >= 18.0.0 |
 | Android API | >= 21 | >= 23 |
-| Architecture | Legacy | New Architecture (TurboModules) |
+| Architecture | Legacy Native Modules | TurboModules (New Architecture recommended) |
 
-**JavaScript API is unchanged.** No code changes needed in your app other than enabling New Architecture.
+**JavaScript API is unchanged.** No JavaScript call-site changes are required.
+
+Use v8+/v9 on React Native >= 0.70. Stay on v7 only if you are on React Native **< 0.70**. New Architecture is recommended; old-architecture Interop on 0.70+ is not confirmed — if the native module fails to load, fall back to v7 or enable New Architecture (see Troubleshooting).
 
 ### Migration Steps
 
@@ -100,11 +130,9 @@ v8.0 migrates `react-native-zip-archive` from Legacy Native Modules to **TurboMo
 npx react-native --version
 ```
 
-If you're on React Native < 0.70, you must either:
-- **Upgrade React Native** to 0.70+ (recommended)
-- **Stay on v7.x** of this library
+If you're on React Native < 0.70, stay on v7.x of this library (or upgrade React Native to 0.70+ first).
 
-#### Step 2: Enable New Architecture
+#### Step 2: New Architecture (recommended)
 
 Follow the [official React Native guide](https://reactnative.dev/docs/new-architecture-intro).
 
@@ -159,7 +187,7 @@ npm install react-native-zip-archive@^7.0.0
 
 | Issue | Solution |
 |-------|----------|
-| "Native module not found" | Ensure New Architecture is enabled in your app |
+| "Native module not found" | Enable New Architecture first. On an old-architecture 0.70+ app, fall back to `^7.0.0` until Interop is confirmed. |
 | Build fails on iOS | Delete `ios/Pods` and `ios/Podfile.lock`, then `pod install` |
 | Build fails on Android | Run `./gradlew clean` and clear Metro cache |
 | Works on Android but not iOS | Ensure you ran `RCT_NEW_ARCH_ENABLED=1 pod install` |
@@ -167,5 +195,5 @@ npm install react-native-zip-archive@^7.0.0
 
 ### Need Help?
 
-- Check the [playground app](./playground/) for working examples
+- Check [playground-expo](./playground-expo/) and [playground-rn](./playground-rn/) for working examples
 - Open an issue on GitHub
