@@ -1,6 +1,6 @@
 # End-to-End Testing
 
-This directory contains end-to-end (E2E) tests for the `react-native-zip-archive` playground app.
+This directory contains end-to-end (E2E) tests for the `react-native-zip-archive` playground apps (`playground-expo` and `playground-rn`). The Maestro flows live in `.maestro/flows/` at the repo root.
 
 ## Test Framework: Maestro
 
@@ -26,9 +26,9 @@ For other platforms, see the [Maestro installation guide](https://maestro.mobile
 
 ### iOS Simulator
 
-1. Build the iOS app:
+1. Build the iOS app (Expo playground shown; for the bare RN app use `playground-rn/ios` and `PlaygroundRN`):
    ```bash
-   cd playground/ios
+   cd playground-expo/ios
    xcodebuild -workspace RNZipArchivePlayground.xcworkspace \
      -scheme RNZipArchivePlayground \
      -configuration Debug \
@@ -45,7 +45,7 @@ For other platforms, see the [Maestro installation guide](https://maestro.mobile
 
 1. Build the Android app:
    ```bash
-   cd playground/android
+   cd playground-expo/android
    ./gradlew :app:assembleDebug
    ```
 
@@ -73,7 +73,7 @@ Maestro flows are YAML files that describe user interactions. See the [Maestro d
 
 Example:
 ```yaml
-appId: com.example.rnziparchive.playground
+appId: com.rnziparchive.playground.expo
 ---
 - launchApp
 - tapOn: "Zip Operations"

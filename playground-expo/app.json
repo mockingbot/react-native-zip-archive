@@ -18,7 +18,8 @@
       "package": "com.rnziparchive.playground.expo"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "react-native-zip-archive"
     ],
     "scheme": "rnziparchive",
     "newArchEnabled": true
