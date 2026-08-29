@@ -37,23 +37,6 @@ static NSString *const kZipErrZip = @"ERR_ZIP";
 static NSString *const kZipErrUnzip = @"ERR_UNZIP";
 static NSString *const kZipErrUnsupported = @"ERR_UNSUPPORTED";
 
-@interface RNZipCancelDelegate : NSObject <SSZipArchiveDelegate>
-@property (nonatomic, weak) RNZipArchive *owner;
-@end
-
-@implementation RNZipCancelDelegate
-- (BOOL)zipArchiveShouldUnzipFileAtIndex:(NSInteger)fileIndex
-                              totalFiles:(NSInteger)totalFiles
-                             archivePath:(NSString *)archivePath
-                                fileInfo:(unz_file_info)fileInfo {
-    (void)fileIndex;
-    (void)totalFiles;
-    (void)archivePath;
-    (void)fileInfo;
-    return self.owner != nil && !self.owner.cancelled;
-}
-@end
-
 @implementation RNZipArchive
 {
   bool hasListeners;
@@ -160,16 +143,12 @@ destinationPath:(NSString *)destinationPath
     }
     [self beginOperation];
     [self runAsync:^{
-        if (entries != nil && entries.count > 0) {
-            [self unzipSelectedEntries:from
-                       destinationPath:destinationPath
-                               entries:entries
-                              password:nil
-                               resolve:resolve
-                                reject:reject];
-            return;
-        }
-        [self unzipFile:from destinationPath:destinationPath password:nil resolve:resolve reject:reject];
+        [self extractZipArchive:from
+                destinationPath:destinationPath
+                       password:nil
+                  filterEntries:(entries != nil && entries.count > 0) ? entries : nil
+                        resolve:resolve
+                         reject:reject];
     }];
 }
 
@@ -181,16 +160,12 @@ destinationPath:(NSString *)destinationPath
                 reject:(RCTPromiseRejectBlock)reject {
     [self beginOperation];
     [self runAsync:^{
-        if (entries != nil && entries.count > 0) {
-            [self unzipSelectedEntries:from
-                       destinationPath:destinationPath
-                               entries:entries
-                              password:password
-                               resolve:resolve
-                                reject:reject];
-            return;
-        }
-        [self unzipFile:from destinationPath:destinationPath password:password resolve:resolve reject:reject];
+        [self extractZipArchive:from
+                destinationPath:destinationPath
+                       password:password
+                  filterEntries:(entries != nil && entries.count > 0) ? entries : nil
+                        resolve:resolve
+                         reject:reject];
     }];
 }
 
@@ -225,6 +200,8 @@ destinationPath:(NSString *)destinationPath
                             compressedSize:&compressedSize
                                isDirectory:&isDirectory
                                isEncrypted:&isEncrypted
+                                   version:NULL
+                                externalFa:NULL
                                      error:&entryError]) {
                 unzClose(zip);
                 reject(kZipErrCorruptArchive, entryError ?: @"failed to retrieve info for zip entry", nil);
@@ -253,6 +230,8 @@ destinationPath:(NSString *)destinationPath
              compressedSize:(unsigned long long *)outCompressedSize
                 isDirectory:(BOOL *)outIsDirectory
                 isEncrypted:(BOOL *)outIsEncrypted
+                    version:(uLong *)outVersion
+                 externalFa:(uLong *)outExternalFa
                       error:(NSString **)outError {
     unz_file_info64 fileInfo;
     memset(&fileInfo, 0, sizeof(fileInfo));
@@ -302,7 +281,36 @@ destinationPath:(NSString *)destinationPath
     if (outIsEncrypted != NULL) {
         *outIsEncrypted = (fileInfo.flag & 1) != 0;
     }
+    if (outVersion != NULL) {
+        *outVersion = fileInfo.version;
+    }
+    if (outExternalFa != NULL) {
+        *outExternalFa = fileInfo.external_fa;
+    }
     return YES;
+}
+
+- (BOOL)isSymlinkZipEntryVersion:(uLong)version externalFa:(uLong)externalFa {
+    // Matches SSZipArchive _fileIsSymbolicLink — UNIX version + symlink mode in external attributes.
+    const uLong ZipUNIXVersion = 3;
+    const uLong BSD_SFMT = 0170000;
+    const uLong BSD_IFLNK = 0120000;
+    return ((version >> 8) == ZipUNIXVersion) && BSD_IFLNK == (BSD_SFMT & (externalFa >> 16));
+}
+
+- (BOOL)shouldSkipZipEntry:(NSString *)entryName
+                   version:(uLong)version
+                externalFa:(uLong)externalFa {
+    if (entryName.length == 0) {
+        return YES;
+    }
+    if ([entryName hasPrefix:@"__MACOSX/"]) {
+        return YES;
+    }
+    if ([self isSymlinkZipEntryVersion:version externalFa:externalFa]) {
+        return YES;
+    }
+    return NO;
 }
 
 - (NSString *)normalizedZipPath:(NSString *)path {
@@ -345,16 +353,18 @@ destinationPath:(NSString *)destinationPath
            [standardizedFull isEqualToString:[destinationPath stringByStandardizingPath]];
 }
 
-- (void)unzipSelectedEntries:(NSString *)from
-             destinationPath:(NSString *)destinationPath
-                     entries:(NSArray *)entries
-                    password:(NSString *)password
-                     resolve:(RCTPromiseResolveBlock)resolve
-                      reject:(RCTPromiseRejectBlock)reject {
+- (void)extractZipArchive:(NSString *)from
+          destinationPath:(NSString *)destinationPath
+                 password:(NSString *)password
+            filterEntries:(NSArray *)filterEntries
+                  resolve:(RCTPromiseResolveBlock)resolve
+                   reject:(RCTPromiseRejectBlock)reject {
     if ([self rejectIfCancelled:reject]) {
         return;
     }
-    if (entries.count == 0) {
+
+    BOOL selectiveExtract = filterEntries != nil;
+    if (selectiveExtract && filterEntries.count == 0) {
         reject(kZipErrInvalidArgs, @"entries must be a non-empty array", nil);
         return;
     }
@@ -389,7 +399,7 @@ destinationPath:(NSString *)destinationPath
         return;
     }
 
-    // First pass: compute total uncompressed size of matching entries for progress.
+    // First pass: compute total uncompressed size of entries that will be extracted.
     unsigned long long totalSize = 0;
     NSUInteger matchCount = 0;
     int ret = unzGoToFirstFile(zip);
@@ -400,21 +410,41 @@ destinationPath:(NSString *)destinationPath
         }
         NSString *path = nil;
         unsigned long long size = 0;
-        if ([self readCurrentZipEntry:zip
-                                 path:&path
-                                 size:&size
-                       compressedSize:NULL
-                          isDirectory:NULL
-                          isEncrypted:NULL
-                                error:NULL] &&
-            [self entry:path matchesSelection:entries]) {
-            matchCount += 1;
-            totalSize += size;
+        uLong version = 0;
+        uLong externalFa = 0;
+        if (![self readCurrentZipEntry:zip
+                                  path:&path
+                                  size:&size
+                        compressedSize:NULL
+                           isDirectory:NULL
+                           isEncrypted:NULL
+                               version:&version
+                            externalFa:&externalFa
+                                 error:NULL]) {
+            ret = unzGoToNextFile(zip);
+            continue;
         }
+        if ([self shouldSkipZipEntry:path version:version externalFa:externalFa]) {
+            ret = unzGoToNextFile(zip);
+            continue;
+        }
+        if (selectiveExtract && ![self entry:path matchesSelection:filterEntries]) {
+            ret = unzGoToNextFile(zip);
+            continue;
+        }
+        if (![self isSafeExtractPath:path intoDestination:destinationPath]) {
+            unzClose(zip);
+            reject(kZipErrUnsafePath,
+                   [NSString stringWithFormat:@"Found Zip Path Traversal Vulnerability with %@", path],
+                   nil);
+            return;
+        }
+        matchCount += 1;
+        totalSize += size;
         ret = unzGoToNextFile(zip);
     }
 
-    if (matchCount == 0) {
+    if (selectiveExtract && matchCount == 0) {
         unzClose(zip);
         reject(kZipErrInvalidArgs, @"None of the requested entries were found in the archive", nil);
         return;
@@ -424,7 +454,7 @@ destinationPath:(NSString *)destinationPath
         totalSize = 1;
     }
 
-    // Second pass: extract matching entries.
+    // Second pass: extract entries (skipping symlinks and __MACOSX, with Zip Slip checks).
     unsigned long long extractedBytes = 0;
     BOOL success = YES;
     NSError *extractError = nil;
@@ -434,6 +464,8 @@ destinationPath:(NSString *)destinationPath
         NSString *strPath = nil;
         unsigned long long uncompressedSize = 0;
         BOOL isDirectory = NO;
+        uLong version = 0;
+        uLong externalFa = 0;
         NSString *entryError = nil;
         if (![self readCurrentZipEntry:zip
                                   path:&strPath
@@ -441,6 +473,8 @@ destinationPath:(NSString *)destinationPath
                         compressedSize:NULL
                            isDirectory:&isDirectory
                            isEncrypted:NULL
+                               version:&version
+                            externalFa:&externalFa
                                  error:&entryError]) {
             success = NO;
             extractError = [NSError errorWithDomain:@"RNZipArchive"
@@ -454,12 +488,12 @@ destinationPath:(NSString *)destinationPath
             return;
         }
 
-        if (strPath.length == 0 || ![self entry:strPath matchesSelection:entries]) {
+        if ([self shouldSkipZipEntry:strPath version:version externalFa:externalFa]) {
             ret = unzGoToNextFile(zip);
             continue;
         }
 
-        if ([strPath hasPrefix:@"__MACOSX/"]) {
+        if (selectiveExtract && ![self entry:strPath matchesSelection:filterEntries]) {
             ret = unzGoToNextFile(zip);
             continue;
         }
@@ -579,76 +613,8 @@ destinationPath:(NSString *)destinationPath
     } else {
         self.progress = 0.0;
         [self zipArchiveProgressEvent:0 total:1];
-        NSString *message = extractError ? extractError.localizedDescription : @"unable to unzip selected entries";
+        NSString *message = extractError ? extractError.localizedDescription : @"unable to unzip";
         reject(extractCode, message, extractError);
-    }
-}
-
-- (void)unzipFile:(NSString *)from
-destinationPath:(NSString *)destinationPath
-      password:(NSString *)password
-      resolve:(RCTPromiseResolveBlock)resolve
-       reject:(RCTPromiseRejectBlock)reject {
-    if ([self rejectIfCancelled:reject]) {
-        return;
-    }
-    self.progress = 0.0;
-    self.processedFilePath = @"";
-    [self zipArchiveProgressEvent:0 total:1]; // force 0%
-
-    NSError *error = nil;
-
-    // Total uncompressed size, used for byte-weighted progress. If it can't be
-    // determined, fall back to per-entry progress (entryNumber / total).
-    NSNumber *payloadSize = [SSZipArchive payloadSizeForArchiveAtPath:from error:nil];
-    unsigned long long totalSize = payloadSize ? [payloadSize unsignedLongLongValue] : 0;
-
-    __block unsigned long long extractedBytes = 0;
-    __weak RNZipArchive *weakSelf = self;
-    RNZipCancelDelegate *cancelDelegate = [RNZipCancelDelegate new];
-    cancelDelegate.owner = self;
-
-    BOOL success = [SSZipArchive unzipFileAtPath:from
-                                  toDestination:destinationPath
-                             preserveAttributes:NO
-                                      overwrite:YES
-                                 nestedZipLevel:0
-                                       password:password
-                                          error:&error
-                                       delegate:cancelDelegate
-                                progressHandler:^(NSString *entry, unz_file_info zipInfo, long entryNumber, long total) {
-                                    RNZipArchive *strongSelf = weakSelf;
-                                    if (strongSelf == nil) {
-                                        return;
-                                    }
-                                    strongSelf.processedFilePath = entry;
-                                    if (totalSize > 0) {
-                                        extractedBytes += zipInfo.uncompressed_size;
-                                        [strongSelf zipArchiveProgressEvent:extractedBytes total:totalSize];
-                                    } else {
-                                        [strongSelf zipArchiveProgressEvent:entryNumber total:total];
-                                    }
-                                }
-                              completionHandler:nil];
-
-    if (self.cancelled) {
-        reject(kZipErrCancelled, @"Operation cancelled", nil);
-    } else if (success) {
-        self.progress = 1.0;
-        [self zipArchiveProgressEvent:1 total:1]; // force 100%
-        resolve(destinationPath);
-    } else {
-        self.progress = 0.0;
-        [self zipArchiveProgressEvent:0 total:1];
-        NSString *errorMessage = error ? [error localizedDescription] : @"unable to unzip";
-        NSString *code = kZipErrUnzip;
-        NSString *lower = errorMessage.lowercaseString;
-        if ([lower containsString:@"password"]) {
-            code = kZipErrWrongPassword;
-        } else if ([lower containsString:@"failed to open zip"]) {
-            code = kZipErrFileNotFound;
-        }
-        reject(code, errorMessage, error);
     }
 }
 
@@ -976,7 +942,12 @@ compressionLevel:(double)compressionLevel
 
     [self beginOperation];
     [self runAsync:^{
-        [self unzipFile:assetPath destinationPath:target password:nil resolve:resolve reject:reject];
+        [self extractZipArchive:assetPath
+                destinationPath:target
+                       password:nil
+                  filterEntries:nil
+                        resolve:resolve
+                         reject:reject];
     }];
 }
 

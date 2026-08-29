@@ -1,5 +1,10 @@
 # Changelog
 
+## [9.4.1] - 2026-08-29
+
+### Fixed
+- iOS: full `unzip` / `unzipWithPassword` / `unzipAssets` now use the same minizip extract path as selective extract — rejects Zip Slip entries with `ERR_UNSAFE_PATH` and skips symlink entries instead of materializing them (#357 parity with Android)
+
 ## [9.4.0] - 2026-07-25
 
 ### Added
