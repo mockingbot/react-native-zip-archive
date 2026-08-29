@@ -10,7 +10,7 @@
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventEmitter.h>
 
-@interface RNZipArchive : RCTEventEmitter<RCTBridgeModule, SSZipArchiveDelegate>
+@interface RNZipArchive : RCTEventEmitter<RCTBridgeModule>
 
 @property (nonatomic) NSString *processedFilePath;
 @property (nonatomic) float progress;

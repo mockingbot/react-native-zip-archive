@@ -38,7 +38,6 @@ import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
-import net.lingala.zip4j.progress.ProgressMonitor;
 
 import java.nio.charset.Charset;
 
@@ -80,6 +79,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             zipFile.setPassword(password.toCharArray());
           } else {
             promise.reject("RNZipArchiveError", String.format("Zip file: %s is not password protected", zipFilePath));
+            return;
           }
 
           List fileHeaderList = zipFile.getFileHeaders();
@@ -90,16 +90,10 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
           for (int i = 0; i < totalFiles; i++) {
             FileHeader fileHeader = (FileHeader) fileHeaderList.get(i);
 
-            File fout = new File(destDirectory, fileHeader.getFileName());
-            String canonicalPath = fout.getCanonicalPath();
-            String destDirCanonicalPath = (new File(destDirectory).getCanonicalPath()) + File.separator;
-
-            if (!canonicalPath.startsWith(destDirCanonicalPath)) {
-              throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
-            }
+            ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
 
             if (!fileHeader.isDirectory()) {
-              zipFile.extractFile(fileHeader, destDirectory);
+              zipFile.extractFile(fileHeader, destDirectory, ZipSecurity.createExtractParameters());
               extractedFileNames.add(fileHeader.getFileName());
             }
             updateProgress(i + 1, totalFiles, zipFilePath);
@@ -127,10 +121,6 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
         }
 
         try {
-          // Find the total uncompressed size of every file in the zip, so we can
-          // get an accurate progress measurement
-          final long totalUncompressedBytes = getUncompressedSize(zipFilePath, charset);
-
           File destDir = new File(destDirectory);
           if (!destDir.exists()) {
             //noinspection ResultOfMethodCallIgnored
@@ -139,12 +129,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
 
           updateProgress(0, 1, zipFilePath); // force 0%
 
-          // We use arrays here so we can update values
-          // from inside the callback
-          final long[] extractedBytes = {0};
-          final int[] lastPercentage = {0};
-
-          net.lingala.zip4j.ZipFile zipFile = null;
+          net.lingala.zip4j.ZipFile zipFile;
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
             zipFile.setCharset(Charset.forName(charset));
@@ -152,26 +137,32 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
             zipFile = new net.lingala.zip4j.ZipFile(zipFilePath);
           }
 
-          ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
-
-          zipFile.setRunInThread(true);
-          zipFile.extractAll(destDirectory);
-
-          while (!progressMonitor.getState().equals(ProgressMonitor.State.READY)) {
-            updateProgress(progressMonitor.getWorkCompleted(), progressMonitor.getTotalWork(), zipFilePath);
-
-            Thread.sleep(100);
+          List<FileHeader> fileHeaderList = zipFile.getFileHeaders();
+          long totalUncompressedBytes = 0;
+          for (FileHeader header : fileHeaderList) {
+            long size = header.getUncompressedSize();
+            if (size > 0) {
+              totalUncompressedBytes += size;
+            }
+          }
+          if (totalUncompressedBytes == 0) {
+            totalUncompressedBytes = 1;
           }
 
-          if (progressMonitor.getResult().equals(ProgressMonitor.Result.SUCCESS)) {
-            zipFile.close();
-            updateProgress(1, 1, zipFilePath); // force 100%
-            promise.resolve(destDirectory);
-          } else if (progressMonitor.getResult().equals(ProgressMonitor.Result.ERROR)) {
-            throw new Exception("Error occurred. Error message: " + progressMonitor.getException().getMessage());
-          } else if (progressMonitor.getResult().equals(ProgressMonitor.Result.CANCELLED)) {
-            throw new Exception("Task cancelled");
+          long extractedBytes = 0;
+          for (FileHeader fileHeader : fileHeaderList) {
+            ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
+            zipFile.extractFile(fileHeader, destDirectory, ZipSecurity.createExtractParameters());
+            long size = fileHeader.getUncompressedSize();
+            if (size > 0) {
+              extractedBytes += size;
+            }
+            updateProgress(extractedBytes, totalUncompressedBytes, zipFilePath);
           }
+
+          zipFile.close();
+          updateProgress(1, 1, zipFilePath); // force 100%
+          promise.resolve(destDirectory);
         } catch (Exception ex) {
           updateProgress(0, 1, zipFilePath); // force 0%
           promise.reject("RNZipArchiveError", "Failed to extract file " + ex.getLocalizedMessage());
@@ -238,12 +229,7 @@ public class RNZipArchiveModule extends ReactContextBaseJavaModule {
               Log.i("rnziparchive", "Extracting: " + entry.getName());
 
               fout = new File(destDirectory, entry.getName());
-              String canonicalPath = fout.getCanonicalPath();
-              String destDirCanonicalPath = (new File(destDirectory).getCanonicalPath()) + File.separator;
-
-              if (!canonicalPath.startsWith(destDirCanonicalPath)) {
-                throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
-              }
+              ZipSecurity.validateExtractPath(destDirectory, entry.getName());
 
               if (!fout.exists()) {
                 //noinspection ResultOfMethodCallIgnored
