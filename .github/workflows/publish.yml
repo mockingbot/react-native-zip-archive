@@ -35,6 +35,9 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      id-token: write
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -93,7 +96,7 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.npm_version.outputs.published != 'true' && startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@a6da7724381a0961281428ea8863f4e2e8b8184a # v2.2.0
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
         with:
           generate_release_notes: true
         env:
