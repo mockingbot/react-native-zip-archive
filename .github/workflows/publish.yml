@@ -91,8 +91,8 @@ jobs:
         run: |
           MAJOR=$(node -p "require('./package.json').version.split('.')[0]")
           if [ "$MAJOR" = "7" ]; then
-            echo "tag=v7" >> "$GITHUB_OUTPUT"
-            echo "Using dist-tag v7 (maintenance line; latest remains 9.x)."
+            echo "tag=maintenance-7" >> "$GITHUB_OUTPUT"
+            echo "Using dist-tag maintenance-7 (7.x line; latest remains 9.x)."
           else
             echo "tag=latest" >> "$GITHUB_OUTPUT"
             echo "Using dist-tag latest."
