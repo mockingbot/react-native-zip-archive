@@ -9,7 +9,7 @@
 | **7.x** | Security fixes only through **2027-02-19**. After that, 7.x is unsupported. Stay on 7.x if you are on React Native &lt; 0.70 until you upgrade RN. 7.x will not be deleted or unpublished. |
 | **&lt; 7** | Unsupported except for critical issues |
 
-Zip Slip / symlink fixes shipped in 9.x will be **evaluated for 7.x backports**. If a patch is warranted, it will be published as `7.x.y`. Those backports are not done yet.
+Zip Slip / symlink fixes shipped in 9.x will be **evaluated for 7.x backports**. If a patch is warranted, it will be published as `7.x.y`. **7.1.1** backports Zip Slip validation and symlink skipping for Android and iOS extract paths.
 
 ## Reporting a vulnerability
 
@@ -33,4 +33,4 @@ In scope:
 - **Android Zip Slip** protection: 9.0.0 — extract rejects entries whose path escapes the destination.
 - **Android symlink extract**: 9.0.2 — `unzip` / `unzipWithPassword` no longer materialize symlink entries.
 
-iOS (verified in `ios/RNZipArchive.mm`): selective extract rejects Zip Slip via `isSafeExtractPath`. Full unzip goes through SSZipArchive; this policy does not claim extra checks there. `ios/` does not skip symlink entries.
+iOS (verified in `ios/RNZipArchive.mm`): full and selective extract use minizip with `isSafeExtractPath` (Zip Slip) and skip symlink entries (`shouldSkipZipEntry`), matching Android #357 behavior. Full unzip no longer delegates extract to SSZipArchive.

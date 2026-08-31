@@ -63,11 +63,15 @@ describe('docs claims vs native source (RNZA-7/15/17/19)', () => {
   test('SECURITY.md matches the Android Zip Slip / symlink helpers that exist', () => {
     const security = read('SECURITY.md');
     const zipSecurity = read('android/src/main/java/com/rnziparchive/ZipSecurity.java');
+    const ios = read('ios/RNZipArchive.mm');
     expect(security).toMatch(/9\.x/);
     expect(security).toMatch(/2027-02-19/);
     expect(zipSecurity).toMatch(/setExtractSymbolicLinks\(false\)/);
     expect(zipSecurity).toMatch(/Zip Path Traversal Vulnerability/);
-    expect(read('ios/RNZipArchive.mm')).toMatch(/isSafeExtractPath/);
+    expect(ios).toMatch(/isSafeExtractPath/);
+    expect(ios).toMatch(/shouldSkipZipEntry/);
+    expect(ios).toMatch(/isSymlinkZipEntryVersion/);
+    expect(ios).not.toMatch(/SSZipArchive unzipFileAtPath/);
   });
 
   test('README does not claim old-arch Interop is proven', () => {
