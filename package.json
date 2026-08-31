@@ -35,6 +35,9 @@
   "author": "Perry Poon <plrthink@gmail.com> (https://github.com/plrthink)",
   "homepage": "https://github.com/mockingbot/react-native-zip-archive",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@babel/core": "*",
     "@babel/preset-env": "^7.29.2",
