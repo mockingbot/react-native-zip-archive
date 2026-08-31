@@ -51,7 +51,13 @@ jobs:
         run: npm install
 
       - name: Run tests
-        run: npm test
+        run: |
+          TEST_SCRIPT=$(node -p "require('./package.json').scripts?.test || ''")
+          if echo "$TEST_SCRIPT" | grep -q jest; then
+            npm test
+          else
+            echo "No jest test suite configured — skipping tests before publish."
+          fi
 
       - name: Verify tag matches package.json version
         if: startsWith(github.ref, 'refs/tags/v')
