@@ -24,7 +24,11 @@ describe('npm listing (RNZA-13) and packed files', () => {
     });
     expect(packed.status).toBe(0);
     const parsed = JSON.parse(packed.stdout);
-    const files = parsed[0].files.map((f) => f.path);
+    const packMeta = Array.isArray(parsed)
+      ? parsed[0]
+      : parsed[pkg.name] ?? Object.values(parsed)[0];
+    expect(packMeta?.files).toBeDefined();
+    const files = packMeta.files.map((f) => f.path);
     expect(files).toContain('app.plugin.js');
     expect(files).toContain('SECURITY.md');
     expect(files).toContain('package.json');
