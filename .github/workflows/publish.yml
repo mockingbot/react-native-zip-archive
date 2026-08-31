@@ -86,9 +86,21 @@ jobs:
             echo "Version ${VERSION} is not on npm yet — will publish."
           fi
 
+      - name: Determine npm dist-tag
+        id: dist_tag
+        run: |
+          MAJOR=$(node -p "require('./package.json').version.split('.')[0]")
+          if [ "$MAJOR" = "7" ]; then
+            echo "tag=v7" >> "$GITHUB_OUTPUT"
+            echo "Using dist-tag v7 (maintenance line; latest remains 9.x)."
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+            echo "Using dist-tag latest."
+          fi
+
       - name: Publish to npm
         if: steps.npm_version.outputs.published != 'true'
-        run: npm publish --access public
+        run: npm publish --access public --tag ${{ steps.dist_tag.outputs.tag }}
         env:
           # When unset, npm 11.5+ uses OIDC if Trusted Publisher is configured.
           # When set, uses classic token auth instead.
