@@ -1,0 +1,100 @@
+name: Publish to npm
+
+# Modern replacement for the deprecated pascalgn/npm-publish-action workflow.
+#
+# Setup (pick one):
+#   A) npm Trusted Publishing (recommended): https://docs.npmjs.com/trusted-publishers
+#      - Package settings → Trusted Publisher → GitHub Actions
+#      - Repository: mockingbot/react-native-zip-archive
+#      - Workflow filename: publish.yml
+#      - No NPM_AUTH_TOKEN secret required
+#   B) Legacy token: add NPM_AUTH_TOKEN (npm granular publish token) to repo secrets
+#
+# Release:
+#   1. Bump version in package.json on master (9.x) or 7.x
+#   2. git tag vX.Y.Z && git push origin vX.Y.Z
+#      Tag must match package.json version (e.g. v9.4.1)
+#   Or: Actions → Publish to npm → Run workflow (manual dispatch)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  id-token: write # npm Trusted Publishing (OIDC)
+  contents: read
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Upgrade npm (Trusted Publishing requires npm 11.5.1+)
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: |
+          TEST_SCRIPT=$(node -p "require('./package.json').scripts?.test || ''")
+          if echo "$TEST_SCRIPT" | grep -q jest; then
+            npm test
+          else
+            echo "No jest test suite configured — skipping tests before publish."
+          fi
+
+      - name: Verify tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "::error::Tag v${TAG} does not match package.json version ${VERSION}"
+            exit 1
+          fi
+          echo "Publishing version ${VERSION} (tag v${TAG})"
+
+      - name: Check if version is already on npm
+        id: npm_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          if npm view "react-native-zip-archive@${VERSION}" version 2>/dev/null | grep -qxF "${VERSION}"; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "Version ${VERSION} is already on npm — skipping publish."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "Version ${VERSION} is not on npm yet — will publish."
+          fi
+
+      - name: Publish to npm
+        if: steps.npm_version.outputs.published != 'true'
+        run: npm publish --access public
+        env:
+          # When unset, npm 11.5+ uses OIDC if Trusted Publisher is configured.
+          # When set, uses classic token auth instead.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+
+      - name: Create GitHub Release
+        if: steps.npm_version.outputs.published != 'true' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@a6da7724381a0961281428ea8863f4e2e8b8184a # v2.2.0
+        with:
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
