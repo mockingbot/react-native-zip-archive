@@ -34,6 +34,7 @@ describe('npm listing (RNZA-13) and packed files', () => {
     expect(files).toContain('package.json');
     expect(files).toContain('README.md');
     expect(files).not.toContain('playground-expo/app.json');
+    expect(files.some((f) => f.startsWith('fixtures/'))).toBe(false);
   });
 });
 
@@ -70,6 +71,8 @@ describe('docs claims vs native source (RNZA-7/15/17/19)', () => {
     const ios = read('ios/RNZipArchive.mm');
     expect(security).toMatch(/9\.x/);
     expect(security).toMatch(/2027-02-19/);
+    expect(security).toMatch(/7\.1\.2/);
+    expect(security).toMatch(/maintenance-7/);
     expect(zipSecurity).toMatch(/setExtractSymbolicLinks\(false\)/);
     expect(zipSecurity).toMatch(/Zip Path Traversal Vulnerability/);
     expect(ios).toMatch(/isSafeExtractPath/);
@@ -82,5 +85,12 @@ describe('docs claims vs native source (RNZA-7/15/17/19)', () => {
     const readme = read('README.md');
     expect(readme).toMatch(/old-architecture 0\.70\+ app/);
     expect(readme).not.toMatch(/old architecture is (fully )?supported/i);
+  });
+
+  test('README records tar/7z non-goal and no Nitro rewrite for growth', () => {
+    const readme = read('README.md');
+    expect(readme).toMatch(/tar and 7z are out of scope/i);
+    expect(readme).toMatch(/Nitro rewrite is not a growth plan/i);
+    expect(readme).toMatch(/test:interop/);
   });
 });

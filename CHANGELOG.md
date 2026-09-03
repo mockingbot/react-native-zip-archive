@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- CI + npm publish gate: non-password zip fixtures must extract with Node `unzipper` and Java `ZipInputStream`; WinZip-AES extra field `0x9901` fails the job (RNZA-16, #333 / #323 class)
+
+### Changed
+- README: tar/7z is an explicit non-goal; Nitro rewrite is not a growth plan (RNZA-23, RNZA-24)
+- SECURITY.md: 7.x Zip Slip / symlink backport is **7.1.2** (`maintenance-7`), not 7.1.1
+
 ## [9.4.1] - 2026-08-29
 
 ### Fixed

@@ -34,6 +34,8 @@ Zip archive utility for React Native.
 
 Use this library for native zip/unzip on device. Use JSZip when you only need small archives in JS. Nitro may fit if you want additional archive formats and accept the extra Nitro dependency and smaller install base.
 
+**Non-goals:** tar and 7z are out of scope unless a dependent asks in writing — this package stays zip-excellent. A Nitro rewrite is not a growth plan; revisit only if Interop + Expo are done and a named app is still blocked on performance.
+
 ## Installation
 
 ### React Native (bare)
@@ -347,6 +349,8 @@ Plain (non-AES) zips created on iOS and Android are intended to open with common
 ```bash
 node scripts/validate-zip-header.js /path/to/archive.zip
 ```
+
+CI and the npm publish workflow also extract a committed non-password fixture with Node `unzipper` and Java `ZipInputStream` (`npm run test:interop`). A WinZip-AES archive fails that gate — that was the #333 / #323 class of iOS default-AES zips.
 
 ## Expo
 
