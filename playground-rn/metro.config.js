@@ -10,6 +10,10 @@ const path = require('path');
 const config = {
   watchFolders: [path.resolve(__dirname, '..')],
   resolver: {
+    nodeModulesPaths: [
+      path.resolve(__dirname, 'node_modules'),
+      path.resolve(__dirname, '..', 'node_modules'),
+    ],
     resolveRequest: (context, moduleName, platform) => {
       if (moduleName === 'react-native') {
         return {

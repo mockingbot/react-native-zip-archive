@@ -33,12 +33,11 @@ export const NO_COMPRESSION = 0;
 export const BEST_SPEED = 1;
 export const BEST_COMPRESSION = 9;
 
-export class ZipError extends Error {
-  constructor(code, message) {
-    super(message);
-    this.name = "ZipError";
-    this.code = code;
-  }
+export function ZipError(code, message) {
+  const err = new Error(message);
+  err.name = "ZipError";
+  err.code = code;
+  return err;
 }
 
 function zipError(code, message) {

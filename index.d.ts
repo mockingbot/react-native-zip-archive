@@ -21,11 +21,11 @@ export const ErrorCodes: {
 
 export type ZipErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
 
-export class ZipError extends Error {
+/** Runtime is a factory (not an ES class) so Metro does not inject @babel/runtime helpers. */
+export function ZipError(code: ZipErrorCode, message: string): Error & {
   name: "ZipError";
   code: ZipErrorCode;
-  constructor(code: ZipErrorCode, message: string);
-}
+};
 
 export const DEFAULT_COMPRESSION: -1;
 export const NO_COMPRESSION: 0;
