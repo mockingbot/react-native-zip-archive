@@ -3,6 +3,7 @@
   "version": "9.4.1",
   "description": "Zip and unzip files in React Native and Expo (iOS & Android)",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "jest",
     "test:interop": "node scripts/verify-zip-interop.js --expect-fail fixtures/interop/winzip-aes-marker.zip && node scripts/verify-zip-interop.js --fixtures",

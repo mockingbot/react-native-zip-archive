@@ -4,6 +4,9 @@
 
 ### Added
 - CI + npm publish gate: non-password zip fixtures must extract with Node `unzipper` and Java `ZipInputStream`; WinZip-AES extra field `0x9901` fails the job (RNZA-16, #333 / #323 class)
+- `AbortSignal` on `zip` / `zipWithPassword` / `unzip` / `unzipWithPassword` / `unzipAssets` via an options object (`{ signal, compressionLevel?, entries? }`)
+- `ZipError` with a stable `.code` (`ERR_CANCELLED`, `ERR_INVALID_ARGS`, …)
+- `package.json` `"types": "index.d.ts"` so TypeScript and reactnative.directory `hasTypes` resolve
 
 ### Changed
 - README: tar/7z is an explicit non-goal; Nitro rewrite is not a growth plan (RNZA-23, RNZA-24)

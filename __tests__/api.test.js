@@ -10,6 +10,7 @@ const {
   cancel,
   subscribe,
   ErrorCodes,
+  ZipError,
   DEFAULT_COMPRESSION,
   NO_COMPRESSION,
   BEST_SPEED,
@@ -50,6 +51,13 @@ describe('react-native-zip-archive API', () => {
     expect(ErrorCodes.FILE_NOT_FOUND).toBe('ERR_FILE_NOT_FOUND');
   });
 
+  test('ZipError carries a stable code', () => {
+    const err = new ZipError(ErrorCodes.CANCELLED, 'Operation cancelled');
+    expect(err).toBeInstanceOf(Error);
+    expect(err.name).toBe('ZipError');
+    expect(err.code).toBe('ERR_CANCELLED');
+  });
+
   describe('cancel', () => {
     test('cancel calls native module', async () => {
       await cancel();
@@ -78,6 +86,39 @@ describe('react-native-zip-archive API', () => {
       await zip('/source', '/target.zip', BEST_COMPRESSION);
       expect(mockRNZipArchive.zipFolder).toHaveBeenCalledWith('/source', '/target.zip', 9);
     });
+
+    test('zip options object sets compressionLevel', async () => {
+      await zip('/source', '/target.zip', { compressionLevel: BEST_SPEED });
+      expect(mockRNZipArchive.zipFolder).toHaveBeenCalledWith('/source', '/target.zip', 1);
+    });
+
+    test('zip aborted signal rejects before native call', async () => {
+      const controller = new AbortController();
+      controller.abort();
+      await expect(
+        zip('/source', '/target.zip', { signal: controller.signal })
+      ).rejects.toMatchObject({
+        name: 'ZipError',
+        code: ErrorCodes.CANCELLED,
+      });
+      expect(mockRNZipArchive.zipFolder).not.toHaveBeenCalled();
+    });
+
+    test('zip abort mid-flight calls cancel', async () => {
+      let resolveNative;
+      mockRNZipArchive.zipFolder.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveNative = resolve;
+        })
+      );
+      const controller = new AbortController();
+      const pending = zip('/source', '/target.zip', { signal: controller.signal });
+      await Promise.resolve();
+      controller.abort();
+      await expect(pending).rejects.toMatchObject({ code: ErrorCodes.CANCELLED });
+      expect(mockRNZipArchive.cancel).toHaveBeenCalled();
+      resolveNative('/mock/path.zip');
+    });
   });
 
   describe('zipWithPassword', () => {
@@ -94,6 +135,20 @@ describe('react-native-zip-archive API', () => {
     test('zipWithPassword normalizes file:// paths', async () => {
       await zipWithPassword('file:///folder', 'file:///out.zip', 'pass');
       expect(mockRNZipArchive.zipFolderWithPassword).toHaveBeenCalledWith('/folder', '/out.zip', 'pass', '', -1);
+    });
+
+    test('zipWithPassword options object', async () => {
+      await zipWithPassword('/folder', '/out.zip', 'pass', {
+        encryptionMethod: 'AES-256',
+        compressionLevel: 9,
+      });
+      expect(mockRNZipArchive.zipFolderWithPassword).toHaveBeenCalledWith(
+        '/folder',
+        '/out.zip',
+        'pass',
+        'AES-256',
+        9
+      );
     });
   });
 
@@ -134,8 +189,20 @@ describe('react-native-zip-archive API', () => {
     });
 
     test('unzip rejects empty entries', async () => {
-      await expect(unzip('/source.zip', '/dest', [])).rejects.toThrow(
-        'unzip: entries must be a non-empty array when provided'
+      await expect(unzip('/source.zip', '/dest', [])).rejects.toMatchObject({
+        name: 'ZipError',
+        code: ErrorCodes.INVALID_ARGS,
+        message: 'unzip: entries must be a non-empty array when provided',
+      });
+    });
+
+    test('unzip options object passes entries and default charset', async () => {
+      await unzip('/source.zip', '/dest', { entries: ['a.txt'] });
+      expect(mockRNZipArchive.unzip).toHaveBeenCalledWith(
+        '/source.zip',
+        '/dest',
+        'UTF-8',
+        ['a.txt']
       );
     });
   });
@@ -174,8 +241,21 @@ describe('react-native-zip-archive API', () => {
     test('unzipWithPassword rejects empty entries', async () => {
       await expect(
         unzipWithPassword('/source.zip', '/dest', 'secret', [])
-      ).rejects.toThrow(
-        'unzipWithPassword: entries must be a non-empty array when provided'
+      ).rejects.toMatchObject({
+        name: 'ZipError',
+        code: ErrorCodes.INVALID_ARGS,
+      });
+    });
+
+    test('unzipWithPassword options object', async () => {
+      await unzipWithPassword('/source.zip', '/dest', 'secret', {
+        entries: ['a.txt'],
+      });
+      expect(mockRNZipArchive.unzipWithPassword).toHaveBeenCalledWith(
+        '/source.zip',
+        '/dest',
+        'secret',
+        ['a.txt']
       );
     });
   });

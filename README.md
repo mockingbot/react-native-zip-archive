@@ -1,4 +1,4 @@
-# React Native Zip Archive [![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive) [![React Native New Architecture](https://img.shields.io/badge/React%20Native-New%20Architecture%20(TurboModules)-61dafb)](https://reactnative.dev/docs/new-architecture-intro)
+# React Native Zip Archive [![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive) [![npm downloads](https://img.shields.io/npm/dw/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive) [![TypeScript](https://img.shields.io/badge/TypeScript-types-3178C6?logo=typescript&logoColor=white)](./index.d.ts) [![React Native New Architecture](https://img.shields.io/badge/React%20Native-New%20Architecture%20(TurboModules)-61dafb)](https://reactnative.dev/docs/new-architecture-intro)
 
 Zip archive utility for React Native.
 
@@ -86,6 +86,7 @@ import {
   isPasswordProtected,
   getUncompressedSize,
   ErrorCodes,
+  ZipError,
   DEFAULT_COMPRESSION,
   NO_COMPRESSION,
   BEST_SPEED,
@@ -107,15 +108,36 @@ import * as FileSystem from 'expo-file-system/legacy'
 const DocumentDirectoryPath = FileSystem.documentDirectory
 ```
 
+List, extract a subset, and abort with `AbortSignal`:
+
+```js
+const controller = new AbortController()
+
+const entries = await listContents(`${DocumentDirectoryPath}/bundle.zip`)
+const assets = entries
+  .filter((entry) => !entry.isDirectory && entry.path.startsWith('assets/'))
+  .map((entry) => entry.path)
+
+await unzip(`${DocumentDirectoryPath}/bundle.zip`, `${DocumentDirectoryPath}/out`, {
+  entries: assets,
+  signal: controller.signal,
+})
+
+// controller.abort()  → rejects with ZipError code ERR_CANCELLED
+```
+
+`zip` / `zipWithPassword` / `unzipAssets` accept the same `{ signal }` option. `cancel()` still aborts the in-flight native operation.
+
 ## API
 
-### `zip(source: string | string[], target: string, compressionLevel?: number): Promise<string>`
+### `zip(source: string | string[], target: string, compressionLevelOrOptions?: number | { compressionLevel?: number, signal?: AbortSignal }): Promise<string>`
 
 Zip a folder (string) or an array of files to the target path.
 
 - To zip a single file, pass it as an array: `zip([file], target)`.
 - Array items may also be directories: their contents are added recursively with entry paths relative to the listed directory (the directory's own name is not included). This behaves the same on Android and iOS. Empty directories are preserved on both platforms.
 - `compressionLevel` applies on both platforms for folder and file-array sources.
+- Or pass an options object: `zip(source, target, { compressionLevel: BEST_SPEED, signal })`.
 
 **Compression Level Constants:**
 - `DEFAULT_COMPRESSION` (-1)
@@ -170,6 +192,12 @@ Or with an explicit charset:
 
 ```js
 unzip(sourcePath, targetPath, 'UTF-8', ['readme.md', 'docs'])
+```
+
+Or with `AbortSignal` / selective extract as an options object:
+
+```js
+unzip(sourcePath, targetPath, { entries: ['readme.md', 'docs'], signal })
 ```
 
 > The `charset` parameter defaults to `UTF-8`. On Android, other charsets are supported. On iOS, non-UTF-8 values reject with `ERR_UNSUPPORTED`.
@@ -237,6 +265,8 @@ unzipAssets('./myFile.zip', DocumentDirectoryPath)
   .then((path) => console.log(`unzip completed at ${path}`))
   .catch((error) => console.error(error))
 ```
+
+Optional `{ signal }` as the third argument.
 
 ### `getUncompressedSize(source: string, charset?: string): Promise<number>`
 

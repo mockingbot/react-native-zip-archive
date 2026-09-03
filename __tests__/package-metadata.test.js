@@ -17,6 +17,10 @@ describe('npm listing (RNZA-13) and packed files', () => {
     }
   });
 
+  test('package.json points TypeScript at index.d.ts', () => {
+    expect(pkg.types).toBe('index.d.ts');
+  });
+
   test('npm pack includes the Expo plugin and SECURITY.md', () => {
     const packed = spawnSync('npm', ['pack', '--dry-run', '--json'], {
       cwd: path.join(__dirname, '..'),
@@ -33,6 +37,7 @@ describe('npm listing (RNZA-13) and packed files', () => {
     expect(files).toContain('SECURITY.md');
     expect(files).toContain('package.json');
     expect(files).toContain('README.md');
+    expect(files).toContain('index.d.ts');
     expect(files).not.toContain('playground-expo/app.json');
     expect(files.some((f) => f.startsWith('fixtures/'))).toBe(false);
   });
@@ -92,5 +97,7 @@ describe('docs claims vs native source (RNZA-7/15/17/19)', () => {
     expect(readme).toMatch(/tar and 7z are out of scope/i);
     expect(readme).toMatch(/Nitro rewrite is not a growth plan/i);
     expect(readme).toMatch(/test:interop/);
+    expect(readme).toMatch(/AbortSignal/);
+    expect(readme).toMatch(/ZipError/);
   });
 });
