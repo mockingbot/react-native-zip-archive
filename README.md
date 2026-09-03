@@ -34,8 +34,6 @@ Zip archive utility for React Native.
 
 Use this library for native zip/unzip on device. Use JSZip when you only need small archives in JS. Nitro may fit if you want additional archive formats and accept the extra Nitro dependency and smaller install base.
 
-**Non-goals:** tar and 7z are out of scope unless a dependent asks in writing — this package stays zip-excellent. A Nitro rewrite is not a growth plan; revisit only if Interop + Expo are done and a named app is still blocked on performance.
-
 ## Installation
 
 ### React Native (bare)

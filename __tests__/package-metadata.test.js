@@ -92,10 +92,8 @@ describe('docs claims vs native source (RNZA-7/15/17/19)', () => {
     expect(readme).not.toMatch(/old architecture is (fully )?supported/i);
   });
 
-  test('README records tar/7z non-goal and no Nitro rewrite for growth', () => {
+  test('README records AbortSignal and ZipError usage', () => {
     const readme = read('README.md');
-    expect(readme).toMatch(/tar and 7z are out of scope/i);
-    expect(readme).toMatch(/Nitro rewrite is not a growth plan/i);
     expect(readme).toMatch(/test:interop/);
     expect(readme).toMatch(/AbortSignal/);
     expect(readme).toMatch(/ZipError/);
