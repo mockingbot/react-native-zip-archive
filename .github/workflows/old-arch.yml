@@ -137,6 +137,9 @@ jobs:
         working-directory: ${{ runner.temp }}/RnzaOldArch/ios
         run: |
           set -euo pipefail
+          # RN 0.81 defaults to iOS 15.1; this library requires 15.5 (App Store privacy).
+          sed -i '' "s/platform :ios, min_ios_version_supported/platform :ios, '15.5'/" Podfile
+          grep "platform :ios" Podfile
           gem install cocoapods -v '>= 1.13'
           RCT_NEW_ARCH_ENABLED=0 pod install
 
