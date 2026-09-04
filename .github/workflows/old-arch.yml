@@ -149,8 +149,9 @@ jobs:
           RCT_NEW_ARCH_ENABLED: '0'
         run: |
           set -euo pipefail
-          WORKSPACE=$(ls -1 *.xcworkspace | head -1)
+          WORKSPACE=$(ls -d *.xcworkspace)
           SCHEME="${WORKSPACE%.xcworkspace}"
+          echo "Using workspace=$WORKSPACE scheme=$SCHEME"
           xcodebuild \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
