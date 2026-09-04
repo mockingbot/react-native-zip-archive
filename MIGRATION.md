@@ -21,6 +21,19 @@ Working examples: [playground-expo](./playground-expo/) and [playground-rn](./pl
 
 Stay on v7 only for React Native **< 0.70**. On 0.70+, New Architecture is recommended. If the native module fails to load on an old-architecture 0.70+ app, fall back to v7 until Interop is confirmed.
 
+## v9.5
+
+Additive JavaScript APIs. Existing positional `zip` / `unzip` calls are unchanged.
+
+- **`AbortSignal`:** pass `{ signal }` as the last argument to `zip` / `zipWithPassword` / `unzip` / `unzipWithPassword` / `unzipAssets` to cancel. Rejects with `ZipError` code `ERR_CANCELLED`.
+- **`ZipError`:** factory (not an ES `class`) with a stable `.code`. Check `error.code`; do not use `instanceof ZipError`.
+- **TypeScript:** `package.json` `"types"` points at `index.d.ts`.
+
+```bash
+npm install react-native-zip-archive@^9.5.0
+cd ios && pod install && cd ..
+```
+
 ## v9.2 / v9.3 / v9.4
 
 These releases add APIs and align iOS with Android. Most JavaScript call sites keep working; the notes below are the native/default changes that existing apps may observe.
