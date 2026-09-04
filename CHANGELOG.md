@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- CI + npm publish gate: non-password zip fixtures must extract with Node `unzipper` and Java `ZipInputStream`; WinZip-AES extra field `0x9901` fails the job (RNZA-16, #333 / #323 class)
+- `AbortSignal` on `zip` / `zipWithPassword` / `unzip` / `unzipWithPassword` / `unzipAssets` via an options object (`{ signal, compressionLevel?, entries? }`)
+- `ZipError` with a stable `.code` (`ERR_CANCELLED`, `ERR_INVALID_ARGS`, …) — implemented as a factory so Metro does not need `@babel/runtime` helpers when bundling the library
+- `package.json` `"types": "index.d.ts"` so TypeScript and reactnative.directory `hasTypes` resolve
+
+### Changed
+- SECURITY.md: 7.x Zip Slip / symlink backport is **7.1.2** (`maintenance-7`), not 7.1.1
+
 ## [9.4.1] - 2026-08-29
 
 ### Fixed

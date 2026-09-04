@@ -9,7 +9,7 @@
 | **7.x** | Security fixes only through **2027-02-19**. After that, 7.x is unsupported. Stay on 7.x if you are on React Native &lt; 0.70 until you upgrade RN. 7.x will not be deleted or unpublished. |
 | **&lt; 7** | Unsupported except for critical issues |
 
-Zip Slip / symlink fixes shipped in 9.x will be **evaluated for 7.x backports**. If a patch is warranted, it will be published as `7.x.y`. **7.1.1** backports Zip Slip validation and symlink skipping for Android and iOS extract paths.
+Zip Slip / symlink fixes shipped in 9.x will be **evaluated for 7.x backports**. If a patch is warranted, it will be published as `7.x.y`. **7.1.2** (`maintenance-7` dist-tag) backports Zip Slip validation and symlink skipping for Android and iOS extract paths. 7.x stays on security-only support through the EOL date above; it is not unpublished.
 
 ## Reporting a vulnerability
 

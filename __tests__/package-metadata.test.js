@@ -17,6 +17,10 @@ describe('npm listing (RNZA-13) and packed files', () => {
     }
   });
 
+  test('package.json points TypeScript at index.d.ts', () => {
+    expect(pkg.types).toBe('index.d.ts');
+  });
+
   test('npm pack includes the Expo plugin and SECURITY.md', () => {
     const packed = spawnSync('npm', ['pack', '--dry-run', '--json'], {
       cwd: path.join(__dirname, '..'),
@@ -33,7 +37,9 @@ describe('npm listing (RNZA-13) and packed files', () => {
     expect(files).toContain('SECURITY.md');
     expect(files).toContain('package.json');
     expect(files).toContain('README.md');
+    expect(files).toContain('index.d.ts');
     expect(files).not.toContain('playground-expo/app.json');
+    expect(files.some((f) => f.startsWith('fixtures/'))).toBe(false);
   });
 });
 
@@ -70,6 +76,8 @@ describe('docs claims vs native source (RNZA-7/15/17/19)', () => {
     const ios = read('ios/RNZipArchive.mm');
     expect(security).toMatch(/9\.x/);
     expect(security).toMatch(/2027-02-19/);
+    expect(security).toMatch(/7\.1\.2/);
+    expect(security).toMatch(/maintenance-7/);
     expect(zipSecurity).toMatch(/setExtractSymbolicLinks\(false\)/);
     expect(zipSecurity).toMatch(/Zip Path Traversal Vulnerability/);
     expect(ios).toMatch(/isSafeExtractPath/);
@@ -82,5 +90,12 @@ describe('docs claims vs native source (RNZA-7/15/17/19)', () => {
     const readme = read('README.md');
     expect(readme).toMatch(/old-architecture 0\.70\+ app/);
     expect(readme).not.toMatch(/old architecture is (fully )?supported/i);
+  });
+
+  test('README records AbortSignal and ZipError usage', () => {
+    const readme = read('README.md');
+    expect(readme).toMatch(/test:interop/);
+    expect(readme).toMatch(/AbortSignal/);
+    expect(readme).toMatch(/ZipError/);
   });
 });

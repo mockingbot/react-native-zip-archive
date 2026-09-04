@@ -17,6 +17,16 @@ function readUInt32LE(buf, offset) {
   return buf.readUInt32LE(offset);
 }
 
+function findEocdOffset(buf) {
+  const scanFrom = Math.max(0, buf.length - 65557);
+  for (let i = buf.length - 22; i >= scanFrom; i--) {
+    if (readUInt32LE(buf, i) === END_OF_CENTRAL_DIR) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 function validateZip(filePath) {
   const buf = fs.readFileSync(filePath);
   if (buf.length < 22) {
@@ -31,34 +41,37 @@ function validateZip(filePath) {
   }
 
   // EOCD is at the end; comment can make it earlier. Scan last 64KiB.
-  const scanFrom = Math.max(0, buf.length - 65557);
-  let eocd = -1;
-  for (let i = buf.length - 22; i >= scanFrom; i--) {
-    if (readUInt32LE(buf, i) === END_OF_CENTRAL_DIR) {
-      eocd = i;
-      break;
-    }
-  }
+  const eocd = findEocdOffset(buf);
   if (eocd < 0) {
     throw new Error(`${filePath}: end-of-central-directory signature not found`);
   }
 
   console.log(`OK ${filePath} (local=0x04034b50, eocd@${eocd})`);
+  return { buf, eocd };
 }
 
-const files = process.argv.slice(2);
-if (files.length === 0) {
-  console.error('Usage: node scripts/validate-zip-header.js <file.zip>...');
-  process.exit(2);
-}
+module.exports = {
+  LOCAL_FILE_HEADER,
+  END_OF_CENTRAL_DIR,
+  findEocdOffset,
+  validateZip,
+};
 
-let failed = false;
-for (const file of files) {
-  try {
-    validateZip(file);
-  } catch (err) {
-    console.error(String(err.message || err));
-    failed = true;
+if (require.main === module) {
+  const files = process.argv.slice(2);
+  if (files.length === 0) {
+    console.error('Usage: node scripts/validate-zip-header.js <file.zip>...');
+    process.exit(2);
   }
+
+  let failed = false;
+  for (const file of files) {
+    try {
+      validateZip(file);
+    } catch (err) {
+      console.error(String(err.message || err));
+      failed = true;
+    }
+  }
+  process.exit(failed ? 1 : 0);
 }
-process.exit(failed ? 1 : 0);

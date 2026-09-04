@@ -41,6 +41,11 @@ appId: ${APP_ID}
     timeout: 10000
 - assertVisible: "Extracted readme.md"
 - assertVisible: "Extracted docs/guide.md"
+- scrollUntilVisible:
+    element:
+      text: "Skipped hello.txt"
+    direction: DOWN
+    timeout: 10000
 - assertVisible: "Skipped hello.txt"
 - scrollUntilVisible:
     element:

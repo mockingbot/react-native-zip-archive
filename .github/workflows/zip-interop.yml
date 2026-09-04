@@ -1,0 +1,44 @@
+name: Zip Interop
+
+# RNZA-16: non-password zips must extract with Node unzipper and Java ZipInputStream.
+# This is the #333 / #323 class of "iOS zip unreadable on the server" regressions.
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zip-interop:
+    name: Node unzipper + Java ZipInputStream
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Reject WinZip-AES marker fixture
+        run: node scripts/verify-zip-interop.js --expect-fail fixtures/interop/winzip-aes-marker.zip
+
+      - name: Extract plain fixture with unzipper and ZipInputStream
+        run: node scripts/verify-zip-interop.js --fixtures

@@ -31,8 +31,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  zip-interop:
+    name: Zip interop (Node unzipper + Java ZipInputStream)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Setup Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Extract plain fixture with unzipper and ZipInputStream
+        run: |
+          if [ ! -f scripts/verify-zip-interop.js ]; then
+            echo "Interop script not on this ref — skipping (7.x / older tags)."
+            exit 0
+          fi
+          node scripts/verify-zip-interop.js --expect-fail fixtures/interop/winzip-aes-marker.zip
+          node scripts/verify-zip-interop.js --fixtures
+
   publish:
     name: Publish to npm
+    needs: zip-interop
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

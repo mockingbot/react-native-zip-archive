@@ -40,5 +40,6 @@ playground-rn/
 # Development files (not for npm)
 __tests__/
 __mocks__/
+fixtures/
 babel.config.js
 NEW_ARCHITECTURE_MIGRATION_PLAN.md
