@@ -6,19 +6,9 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 ## Old architecture (RNZA-5)
 
-This app defaults to New Architecture (`newArchEnabled=true`). To reproduce v9 on the old architecture:
+This app is **RN 0.83.9**. Since React Native 0.82, `newArchEnabled=false` and `RCT_NEW_ARCH_ENABLED=0` are ignored — New Architecture is the only option.
 
-```sh
-# Android — RN reads gradle.properties directly; -P is not enough
-cd android
-# set newArchEnabled=false in gradle.properties, then:
-./gradlew :app:assembleRelease
-
-# iOS — reinstall pods with New Architecture off, then build
-cd ios && RCT_NEW_ARCH_ENABLED=0 pod install
-```
-
-CI runs the Maestro zip/unzip suite against those builds in `.github/workflows/old-arch.yml` at the repo root.
+Old-architecture compile proof lives in `.github/workflows/old-arch.yml` against **RN 0.81.6** (last version that can opt out).
 
 ## Step 1: Start Metro
 

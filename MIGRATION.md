@@ -19,7 +19,7 @@ The JavaScript API is unchanged from v7 through v9 — no call-site changes. You
 
 Working examples: [playground-expo](./playground-expo/) and [playground-rn](./playground-rn/).
 
-Stay on v7 only for React Native **< 0.70**. On 0.70+, New Architecture is recommended. Old-architecture apps can stay on v9: Android registers as a legacy native module when `newArchEnabled=false`, iOS uses `RCT_EXPORT_MODULE`, and JS falls back to `NativeModules`. Gated by [playground-rn](./playground-rn/) (RN 0.83) in `.github/workflows/old-arch.yml`.
+Stay on v7 only for React Native **< 0.70**. On 0.70–0.81, New Architecture is recommended but old-architecture apps can stay on v9: Android registers as a legacy native module when `newArchEnabled=false`, iOS uses `RCT_EXPORT_MODULE`, and JS falls back to `NativeModules`. RN **0.82+** cannot opt out of New Architecture. Old-arch compile is gated by `.github/workflows/old-arch.yml` on RN 0.81.6.
 
 ## v9.5
 
@@ -133,7 +133,7 @@ v8.0 migrates `react-native-zip-archive` from Legacy Native Modules to **TurboMo
 
 **JavaScript API is unchanged.** No JavaScript call-site changes are required.
 
-Use v8+/v9 on React Native >= 0.70. Stay on v7 only if you are on React Native **< 0.70**. New Architecture is recommended. Old-architecture 0.70+ apps should load v9 via `NativeModules` without a separate Interop package — see the matrix in the README.
+Use v8+/v9 on React Native >= 0.70. Stay on v7 only if you are on React Native **< 0.70**. New Architecture is recommended. On RN 0.70–0.81, old-architecture apps should load v9 via `NativeModules` without a separate Interop package. RN 0.82+ is New Architecture only — see the matrix in the README.
 
 ### Migration Steps
 

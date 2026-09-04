@@ -8,7 +8,7 @@ Zip archive utility for React Native.
 > ```bash
 > npm install react-native-zip-archive@^7.0.0
 > ```
-> Old-architecture apps on RN **0.70+** can stay on v9: JS falls back to `NativeModules`, Android registers as a legacy native module when `newArchEnabled=false`, and iOS uses `RCT_EXPORT_MODULE`. That path is gated by [playground-rn](./playground-rn/) CI in `.github/workflows/old-arch.yml` (zip/unzip Maestro on RN 0.83). New Architecture is still recommended.
+> Old-architecture apps on RN **0.70–0.81** can stay on v9: JS falls back to `NativeModules`, Android registers as a legacy native module when `newArchEnabled=false`, and iOS uses `RCT_EXPORT_MODULE`. That path is compiled in CI on RN **0.81.6** (`.github/workflows/old-arch.yml`). RN **0.82+** cannot opt out of New Architecture ([RN 0.82](https://reactnative.dev/blog/2025/10/08/react-native-0.82)) — [playground-rn](./playground-rn/) (0.83) is New Arch only. New Architecture is recommended on every supported RN.
 >
 > **iOS:** Version 7.0.0+ requires a deployment target of iOS 15.5+ to comply with App Store privacy policy.
 
@@ -21,9 +21,9 @@ Zip archive utility for React Native.
 | iOS | >= 15.5 |
 | Android | >= API 23 (Android 6.0) |
 
-## Old architecture (RN 0.70+)
+## Old architecture (RN 0.70–0.81)
 
-v9 loads when New Architecture is off. Stay on v7 only for RN **< 0.70**.
+v9 loads when New Architecture is off. Stay on v7 only for RN **< 0.70**. RN **0.82+** ignores `newArchEnabled=false` / `RCT_NEW_ARCH_ENABLED=0` and always runs New Architecture.
 
 | Surface | Old-arch path |
 |---------|----------------|
@@ -31,19 +31,19 @@ v9 loads when New Architecture is off. Stay on v7 only for RN **< 0.70**.
 | Android | `isTurboModule` follows `BuildConfig.IS_NEW_ARCHITECTURE_ENABLED`; paper specs compile when new arch is off |
 | iOS | `RCT_EXPORT_MODULE` always; `getTurboModule` is `#ifdef RCT_NEW_ARCH_ENABLED` |
 
-| App | RN | Android `newArchEnabled=false` | iOS `RCT_NEW_ARCH_ENABLED=0` | New Arch on (control) |
-|-----|----|--------------------------------|------------------------------|------------------------|
-| [playground-rn](./playground-rn/) | 0.83.9 | CI e2e (`.github/workflows/old-arch.yml`) | CI e2e | existing `e2e.yml` |
-| Production apps | 0.73–0.76 | Same native paths; not e2e-tested in this repo | Same native paths; not e2e-tested in this repo | — |
+| RN | Android `newArchEnabled=false` | iOS `RCT_NEW_ARCH_ENABLED=0` | New Arch on |
+|----|--------------------------------|------------------------------|-------------|
+| 0.82+ ([playground-rn](./playground-rn/) 0.83.9) | N/A — flag ignored | N/A — flag ignored | existing `e2e.yml` (zip/unzip Maestro) |
+| 0.81.6 (last opt-out) | CI compile (`.github/workflows/old-arch.yml`) | CI compile | — |
+| 0.73–0.80 | same native paths as 0.81; not separately built | same | — |
 
-Reproduce locally from `playground-rn`:
+Reproduce the 0.81 compile locally (same as CI):
 
 ```bash
-# Android — set newArchEnabled=false in android/gradle.properties, then:
-cd android && ./gradlew :app:assembleRelease
-
-# iOS
-cd ios && RCT_NEW_ARCH_ENABLED=0 pod install
+npx @react-native-community/cli@15.1.3 init RnzaOldArch --version 0.81.6 --pm npm --skip-git-init
+cd RnzaOldArch && npm install /path/to/react-native-zip-archive
+# Android: set newArchEnabled=false in android/gradle.properties, then assembleRelease
+# iOS: RCT_NEW_ARCH_ENABLED=0 pod install
 ```
 
 ## Comparison
