@@ -8,7 +8,7 @@ Zip archive utility for React Native.
 > ```bash
 > npm install react-native-zip-archive@^7.0.0
 > ```
-> If the native module fails to load on an old-architecture 0.70+ app, fall back to v7 until Interop Layer support is confirmed.
+> Old-architecture apps on RN **0.70+** can stay on v9: JS falls back to `NativeModules`, Android registers as a legacy native module when `newArchEnabled=false`, and iOS uses `RCT_EXPORT_MODULE`. That path is gated by [playground-rn](./playground-rn/) CI in `.github/workflows/old-arch.yml` (zip/unzip Maestro on RN 0.83). New Architecture is still recommended.
 >
 > **iOS:** Version 7.0.0+ requires a deployment target of iOS 15.5+ to comply with App Store privacy policy.
 
@@ -20,6 +20,31 @@ Zip archive utility for React Native.
 | React | >= 18.0.0 |
 | iOS | >= 15.5 |
 | Android | >= API 23 (Android 6.0) |
+
+## Old architecture (RN 0.70+)
+
+v9 loads when New Architecture is off. Stay on v7 only for RN **< 0.70**.
+
+| Surface | Old-arch path |
+|---------|----------------|
+| JS | `TurboModuleRegistry.get('RNZipArchive')`, then `NativeModules.RNZipArchive` |
+| Android | `isTurboModule` follows `BuildConfig.IS_NEW_ARCHITECTURE_ENABLED`; paper specs compile when new arch is off |
+| iOS | `RCT_EXPORT_MODULE` always; `getTurboModule` is `#ifdef RCT_NEW_ARCH_ENABLED` |
+
+| App | RN | Android `newArchEnabled=false` | iOS `RCT_NEW_ARCH_ENABLED=0` | New Arch on (control) |
+|-----|----|--------------------------------|------------------------------|------------------------|
+| [playground-rn](./playground-rn/) | 0.83.9 | CI e2e (`.github/workflows/old-arch.yml`) | CI e2e | existing `e2e.yml` |
+| Production apps | 0.73–0.76 | Same native paths; not e2e-tested in this repo | Same native paths; not e2e-tested in this repo | — |
+
+Reproduce locally from `playground-rn`:
+
+```bash
+# Android
+cd android && ./gradlew :app:assembleRelease -PnewArchEnabled=false
+
+# iOS
+cd ios && RCT_NEW_ARCH_ENABLED=0 pod install
+```
 
 ## Comparison
 

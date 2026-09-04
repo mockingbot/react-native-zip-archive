@@ -1,0 +1,241 @@
+name: Old Architecture
+# RNZA-5: prove v9 zip/unzip when New Architecture is off (playground-rn, RN 0.83).
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-ios-old-arch:
+    name: E2E iOS old-arch (rn)
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+
+      - name: Install Maestro
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            echo "Installing Maestro (attempt $attempt)..."
+            if curl -fsSL "https://get.maestro.mobile.dev" | bash \
+              && test -x "$HOME/.maestro/bin/maestro"; then
+              break
+            fi
+            echo "Maestro install failed on attempt $attempt"
+            rm -rf "$HOME/.maestro"
+            if [ "$attempt" -eq 3 ]; then
+              echo "Maestro install failed after 3 attempts"
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+          "$HOME/.maestro/bin/maestro" --version
+
+      - name: Cache node_modules
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: playground-rn/node_modules
+          key: ${{ runner.os }}-rn-oldarch-node-${{ hashFiles('playground-rn/package.json') }}
+
+      - name: Install dependencies
+        working-directory: playground-rn
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            npm install -g pnpm@9
+            pnpm install
+          else
+            npm install
+          fi
+
+      - name: Cache CocoaPods
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: playground-rn/ios/Pods
+          key: ${{ runner.os }}-rn-oldarch-pods-${{ hashFiles('playground-rn/ios/Podfile.lock') }}
+
+      - name: Install CocoaPods (RCT_NEW_ARCH_ENABLED=0)
+        working-directory: playground-rn/ios
+        run: |
+          gem install cocoapods -v '>= 1.13'
+          RCT_NEW_ARCH_ENABLED=0 pod install
+
+      - name: Build iOS app
+        working-directory: playground-rn/ios
+        env:
+          RCT_NEW_ARCH_ENABLED: '0'
+        run: |
+          xcodebuild \
+            -workspace PlaygroundRN.xcworkspace \
+            -scheme PlaygroundRN \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            RCT_NEW_ARCH_ENABLED=0
+
+      - name: Boot iOS Simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices | grep -E 'iPhone [0-9]+ \(' | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -1)
+          echo "Booting simulator: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID"
+          echo "MAESTRO_IOS_DEVICE=$DEVICE_ID" >> $GITHUB_ENV
+          xcrun simctl bootstatus "$DEVICE_ID"
+
+      - name: Run E2E tests
+        env:
+          MAESTRO_DRIVER_STARTUP_TIMEOUT: 300000
+        run: |
+          APP_PATH="playground-rn/ios/build/Build/Products/Release-iphonesimulator/PlaygroundRN.app"
+          xcrun simctl install "$MAESTRO_IOS_DEVICE" "$APP_PATH"
+          export APP_ID="com.rnziparchive.playground.rn"
+          maestro test --device="$MAESTRO_IOS_DEVICE" --env APP_ID="$APP_ID" .maestro/flows/ci-master.yaml
+
+      - name: Upload Maestro debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: maestro-debug-ios-rn-old-arch
+          path: ~/.maestro/tests/
+
+      - name: Upload iOS crash logs
+        if: failure()
+        run: |
+          mkdir -p crash-logs
+          cp ~/Library/Logs/DiagnosticReports/*.crash crash-logs/ 2>/dev/null || true
+          ls crash-logs/ || echo "No crash logs found"
+        shell: bash
+
+      - name: Upload crash logs artifact
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ios-crash-logs-rn-old-arch
+          path: crash-logs/
+
+  e2e-android-old-arch:
+    name: E2E Android old-arch (rn)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Maestro
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            echo "Installing Maestro (attempt $attempt)..."
+            if curl -fsSL "https://get.maestro.mobile.dev" | bash \
+              && test -x "$HOME/.maestro/bin/maestro"; then
+              break
+            fi
+            echo "Maestro install failed on attempt $attempt"
+            rm -rf "$HOME/.maestro"
+            if [ "$attempt" -eq 3 ]; then
+              echo "Maestro install failed after 3 attempts"
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+          "$HOME/.maestro/bin/maestro" --version
+
+      - name: Cache node_modules
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: playground-rn/node_modules
+          key: ${{ runner.os }}-rn-oldarch-node-${{ hashFiles('playground-rn/package.json') }}
+
+      - name: Install dependencies
+        working-directory: playground-rn
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            npm install -g pnpm@9
+            pnpm install
+          else
+            npm install
+          fi
+
+      - name: Cache Gradle
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-rn-oldarch-gradle-${{ hashFiles('playground-rn/android/gradle/wrapper/gradle-wrapper.properties', 'playground-rn/android/build.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-rn-oldarch-gradle-
+
+      - name: Build Android app (newArchEnabled=false)
+        working-directory: playground-rn/android
+        env:
+          ORG_GRADLE_PROJECT_newArchEnabled: 'false'
+        run: ./gradlew :app:assembleRelease -PnewArchEnabled=false
+
+      - name: Assert New Architecture is off in BuildConfig
+        working-directory: playground-rn/android
+        run: |
+          set -euo pipefail
+          app_bc=$(find app/build/generated -name BuildConfig.java | head -1)
+          test -n "$app_bc"
+          echo "App BuildConfig: $app_bc"
+          grep -n 'IS_NEW_ARCHITECTURE_ENABLED' "$app_bc"
+          grep -E 'IS_NEW_ARCHITECTURE_ENABLED = (false|Boolean\.parseBoolean\("false"\))' "$app_bc"
+          echo "Library BuildConfig candidates:"
+          find ../.. -name BuildConfig.java 2>/dev/null | grep -E 'rnziparchive|zip-archive' || true
+          lib_hit=$(find ../.. -name BuildConfig.java 2>/dev/null | xargs grep -l 'IS_NEW_ARCHITECTURE_ENABLED' 2>/dev/null | grep -E 'com/rnziparchive/BuildConfig.java' || true)
+          if [ -n "$lib_hit" ]; then
+            echo "$lib_hit"
+            echo "$lib_hit" | xargs grep -n 'IS_NEW_ARCHITECTURE_ENABLED'
+            echo "$lib_hit" | xargs grep -E 'IS_NEW_ARCHITECTURE_ENABLED = (false|Boolean\.parseBoolean\("false"\))'
+          fi
+
+      - name: Run E2E tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 29
+          arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          heap-size: 1024M
+          disk-size: 4096M
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            adb shell settings put global hide_error_dialogs 1
+            adb install playground-rn/android/app/build/outputs/apk/release/app-release.apk
+            maestro test --env APP_ID="com.rnziparchive.playground.rn" .maestro/flows/ci-master.yaml
+
+      - name: Upload Maestro debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: maestro-debug-android-rn-old-arch
+          path: ~/.maestro/tests/

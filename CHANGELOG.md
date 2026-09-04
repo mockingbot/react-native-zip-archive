@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+- Android: register as a legacy Native Module when New Architecture is off (`isTurboModule` follows `BuildConfig.IS_NEW_ARCHITECTURE_ENABLED`) so `NativeModules.RNZipArchive` is non-null on old-arch apps (RNZA-5)
+
+### Added
+- CI: playground-rn old-architecture Android + iOS Maestro e2e (zip/unzip) in `.github/workflows/old-arch.yml` (RNZA-5)
+
 ## [9.5.0] - 2026-09-04
 
 ### Added

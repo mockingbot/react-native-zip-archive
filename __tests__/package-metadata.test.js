@@ -86,10 +86,14 @@ describe('docs claims vs native source (RNZA-7/15/17/19)', () => {
     expect(ios).not.toMatch(/SSZipArchive unzipFileAtPath/);
   });
 
-  test('README does not claim old-arch Interop is proven', () => {
+  test('README documents old-arch v9 load path and playground-rn CI', () => {
     const readme = read('README.md');
-    expect(readme).toMatch(/old-architecture 0\.70\+ app/);
-    expect(readme).not.toMatch(/old architecture is (fully )?supported/i);
+    const pkgJava = read('android/src/main/java/com/rnziparchive/RNZipArchivePackage.java');
+    expect(readme).toMatch(/old-arch\.yml/);
+    expect(readme).toMatch(/newArchEnabled=false/);
+    expect(readme).toMatch(/RCT_NEW_ARCH_ENABLED=0/);
+    expect(pkgJava).toMatch(/boolean isTurboModule = BuildConfig\.IS_NEW_ARCHITECTURE_ENABLED/);
+    expect(pkgJava).not.toMatch(/true\s*\/\/ isTurboModule = true/);
   });
 
   test('README records AbortSignal and ZipError usage', () => {

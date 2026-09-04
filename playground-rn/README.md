@@ -4,6 +4,20 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
 
+## Old architecture (RNZA-5)
+
+This app defaults to New Architecture (`newArchEnabled=true`). To reproduce v9 on the old architecture:
+
+```sh
+# Android — overrides android/gradle.properties
+cd android && ./gradlew :app:assembleRelease -PnewArchEnabled=false
+
+# iOS — reinstall pods with New Architecture off, then build
+cd ios && RCT_NEW_ARCH_ENABLED=0 pod install
+```
+
+CI runs the Maestro zip/unzip suite against those builds in `.github/workflows/old-arch.yml` at the repo root.
+
 ## Step 1: Start Metro
 
 First, you will need to run **Metro**, the JavaScript build tool for React Native.
