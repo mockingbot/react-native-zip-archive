@@ -9,8 +9,10 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 This app defaults to New Architecture (`newArchEnabled=true`). To reproduce v9 on the old architecture:
 
 ```sh
-# Android — overrides android/gradle.properties
-cd android && ./gradlew :app:assembleRelease -PnewArchEnabled=false
+# Android — RN reads gradle.properties directly; -P is not enough
+cd android
+# set newArchEnabled=false in gradle.properties, then:
+./gradlew :app:assembleRelease
 
 # iOS — reinstall pods with New Architecture off, then build
 cd ios && RCT_NEW_ARCH_ENABLED=0 pod install

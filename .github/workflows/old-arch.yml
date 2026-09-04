@@ -193,11 +193,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-rn-oldarch-gradle-
 
+      - name: Disable New Architecture in gradle.properties
+        working-directory: playground-rn/android
+        run: |
+          set -euo pipefail
+          # RN's gradle plugin reads gradle.properties directly; -PnewArchEnabled=false
+          # does not flip IS_NEW_ARCHITECTURE_ENABLED on the app BuildConfig.
+          grep -q '^newArchEnabled=' gradle.properties
+          sed -i 's/^newArchEnabled=.*/newArchEnabled=false/' gradle.properties
+          grep '^newArchEnabled=false$' gradle.properties
+
       - name: Build Android app (newArchEnabled=false)
         working-directory: playground-rn/android
-        env:
-          ORG_GRADLE_PROJECT_newArchEnabled: 'false'
-        run: ./gradlew :app:assembleRelease -PnewArchEnabled=false
+        run: ./gradlew :app:assembleRelease
 
       - name: Assert New Architecture is off in BuildConfig
         working-directory: playground-rn/android

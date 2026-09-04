@@ -39,8 +39,8 @@ v9 loads when New Architecture is off. Stay on v7 only for RN **< 0.70**.
 Reproduce locally from `playground-rn`:
 
 ```bash
-# Android
-cd android && ./gradlew :app:assembleRelease -PnewArchEnabled=false
+# Android — set newArchEnabled=false in android/gradle.properties, then:
+cd android && ./gradlew :app:assembleRelease
 
 # iOS
 cd ios && RCT_NEW_ARCH_ENABLED=0 pod install
