@@ -27,6 +27,17 @@ Working examples: [playground-expo](./playground-expo/) and [playground-rn](./pl
 
 Old-arch proof is compile + link on RN **0.81.6** (`.github/workflows/old-arch.yml`), not device Maestro. See the [README matrix](./README.md#old-architecture-rn-070081).
 
+## v9.5.1
+
+Android old-architecture load fix. JavaScript call sites are unchanged. Native rebuild required.
+
+```bash
+npm install react-native-zip-archive@^9.5.1
+cd ios && pod install && cd ..
+```
+
+Stay on `^7.0.0` only for RN **< 0.70**. On 0.70–0.81, old architecture works. On 0.82+, New Architecture is the only option.
+
 ## v9.5
 
 Additive JavaScript APIs. Existing positional `zip` / `unzip` calls are unchanged.
