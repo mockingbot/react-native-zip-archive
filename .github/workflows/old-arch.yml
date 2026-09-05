@@ -1,0 +1,162 @@
+name: Old Architecture
+# RNZA-5: prove v9 still builds when New Architecture is off.
+# playground-rn is RN 0.83 — since 0.82, newArchEnabled=false / RCT_NEW_ARCH_ENABLED=0
+# are ignored. Last opt-out line is RN 0.81.
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RN_OLD_ARCH_VERSION: '0.81.6'
+  RN_OLD_ARCH_CLI: '15.1.3'
+
+jobs:
+  compile-android-0-81:
+    name: Compile Android old-arch (RN 0.81)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Pack library
+        run: |
+          set -euo pipefail
+          TARBALL=$(npm pack --silent)
+          echo "TARBALL=$TARBALL" >> "$GITHUB_ENV"
+          echo "Packed $TARBALL"
+
+      - name: Init RN ${{ env.RN_OLD_ARCH_VERSION }} app
+        working-directory: ${{ runner.temp }}
+        env:
+          CI: '1'
+        run: |
+          set -euo pipefail
+          npx --yes "@react-native-community/cli@${RN_OLD_ARCH_CLI}" init RnzaOldArch \
+            --version "$RN_OLD_ARCH_VERSION" \
+            --pm npm \
+            --skip-git-init \
+            --install-pods=false
+          test -d RnzaOldArch
+
+      - name: Install packed library
+        working-directory: ${{ runner.temp }}/RnzaOldArch
+        run: |
+          set -euo pipefail
+          npm install "${GITHUB_WORKSPACE}/${TARBALL}"
+
+      - name: Disable New Architecture
+        working-directory: ${{ runner.temp }}/RnzaOldArch/android
+        run: |
+          set -euo pipefail
+          grep -q '^newArchEnabled=' gradle.properties
+          sed -i 's/^newArchEnabled=.*/newArchEnabled=false/' gradle.properties
+          grep '^newArchEnabled=false$' gradle.properties
+
+      - name: Assemble release
+        working-directory: ${{ runner.temp }}/RnzaOldArch/android
+        run: ./gradlew :app:assembleRelease --no-configuration-cache
+
+      - name: Assert New Architecture is off
+        working-directory: ${{ runner.temp }}/RnzaOldArch/android
+        run: |
+          set -euo pipefail
+          app_bc=$(find app/build/generated -name BuildConfig.java | head -1)
+          test -n "$app_bc"
+          echo "App BuildConfig: $app_bc"
+          grep -n 'IS_NEW_ARCHITECTURE_ENABLED' "$app_bc"
+          grep -E 'IS_NEW_ARCHITECTURE_ENABLED = (false|Boolean\.parseBoolean\("false"\))' "$app_bc"
+          echo "Library BuildConfig:"
+          lib_hit=$(find . "${GITHUB_WORKSPACE}/android" -name BuildConfig.java 2>/dev/null \
+            | xargs grep -l 'package com.rnziparchive;' 2>/dev/null || true)
+          echo "$lib_hit"
+          if [ -n "$lib_hit" ]; then
+            echo "$lib_hit" | xargs grep -n 'IS_NEW_ARCHITECTURE_ENABLED'
+            echo "$lib_hit" | xargs grep -E 'IS_NEW_ARCHITECTURE_ENABLED = (false|Boolean\.parseBoolean\("false"\))'
+          fi
+
+  compile-ios-0-81:
+    name: Compile iOS old-arch (RN 0.81)
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+
+      - name: Pack library
+        run: |
+          set -euo pipefail
+          TARBALL=$(npm pack --silent)
+          echo "TARBALL=$TARBALL" >> "$GITHUB_ENV"
+          echo "Packed $TARBALL"
+
+      - name: Init RN ${{ env.RN_OLD_ARCH_VERSION }} app
+        working-directory: ${{ runner.temp }}
+        env:
+          CI: '1'
+        run: |
+          set -euo pipefail
+          npx --yes "@react-native-community/cli@${RN_OLD_ARCH_CLI}" init RnzaOldArch \
+            --version "$RN_OLD_ARCH_VERSION" \
+            --pm npm \
+            --skip-git-init \
+            --install-pods=false
+          test -d RnzaOldArch
+
+      - name: Install packed library
+        working-directory: ${{ runner.temp }}/RnzaOldArch
+        run: |
+          set -euo pipefail
+          npm install "${GITHUB_WORKSPACE}/${TARBALL}"
+
+      - name: Install CocoaPods (RCT_NEW_ARCH_ENABLED=0)
+        working-directory: ${{ runner.temp }}/RnzaOldArch/ios
+        run: |
+          set -euo pipefail
+          # RN 0.81 defaults to iOS 15.1; this library requires 15.5 (App Store privacy).
+          sed -i '' "s/platform :ios, min_ios_version_supported/platform :ios, '15.5'/" Podfile
+          grep "platform :ios" Podfile
+          gem install cocoapods -v '>= 1.13'
+          RCT_NEW_ARCH_ENABLED=0 pod install
+
+      - name: Build iOS app
+        working-directory: ${{ runner.temp }}/RnzaOldArch/ios
+        env:
+          RCT_NEW_ARCH_ENABLED: '0'
+        run: |
+          set -euo pipefail
+          WORKSPACE=$(ls -d *.xcworkspace)
+          SCHEME="${WORKSPACE%.xcworkspace}"
+          echo "Using workspace=$WORKSPACE scheme=$SCHEME"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO

@@ -19,7 +19,13 @@ The JavaScript API is unchanged from v7 through v9 — no call-site changes. You
 
 Working examples: [playground-expo](./playground-expo/) and [playground-rn](./playground-rn/).
 
-Stay on v7 only for React Native **< 0.70**. On 0.70+, New Architecture is recommended. If the native module fails to load on an old-architecture 0.70+ app, fall back to v7 until Interop is confirmed.
+| Your React Native | What to install |
+|-------------------|-----------------|
+| **< 0.70** | Stay on `^7.0.0` (or upgrade RN first) |
+| **0.70–0.81** | Latest v9. New Architecture recommended; old architecture works. Rebuild native. |
+| **0.82+** | Latest v9. New Architecture only — RN ignores `newArchEnabled=false` / `RCT_NEW_ARCH_ENABLED=0`. |
+
+Old-arch proof is compile + link on RN **0.81.6** (`.github/workflows/old-arch.yml`), not device Maestro. See the [README matrix](./README.md#old-architecture-rn-070081).
 
 ## v9.5
 
@@ -133,7 +139,7 @@ v8.0 migrates `react-native-zip-archive` from Legacy Native Modules to **TurboMo
 
 **JavaScript API is unchanged.** No JavaScript call-site changes are required.
 
-Use v8+/v9 on React Native >= 0.70. Stay on v7 only if you are on React Native **< 0.70**. New Architecture is recommended; old-architecture Interop on 0.70+ is not confirmed — if the native module fails to load, fall back to v7 or enable New Architecture (see Troubleshooting).
+Use v8+/v9 on React Native >= 0.70. Stay on v7 only if you are on React Native **< 0.70**. New Architecture is recommended, not required on 0.70–0.81. Do not add a separate Interop package. RN 0.82+ is New Architecture only — see the [README matrix](./README.md#old-architecture-rn-070081).
 
 ### Migration Steps
 
@@ -145,16 +151,18 @@ npx react-native --version
 
 If you're on React Native < 0.70, stay on v7.x of this library (or upgrade React Native to 0.70+ first).
 
-#### Step 2: New Architecture (recommended)
+#### Step 2: New Architecture (recommended, not required on 0.70–0.81)
 
-Follow the [official React Native guide](https://reactnative.dev/docs/new-architecture-intro).
+This library does **not** require New Architecture on RN 0.70–0.81. On RN 0.82+ you cannot turn it off ([RN 0.82](https://reactnative.dev/blog/2025/10/08/react-native-0.82)).
+
+If you want New Architecture on 0.70–0.81, follow the [official React Native guide](https://reactnative.dev/docs/new-architecture-intro):
 
 **Android**: In `android/gradle.properties`:
 ```properties
 newArchEnabled=true
 ```
 
-**iOS**: Reinstall pods with New Architecture enabled:
+**iOS**:
 ```bash
 cd ios
 RCT_NEW_ARCH_ENABLED=1 pod install
@@ -200,10 +208,10 @@ npm install react-native-zip-archive@^7.0.0
 
 | Issue | Solution |
 |-------|----------|
-| "Native module not found" | Enable New Architecture first. On an old-architecture 0.70+ app, fall back to `^7.0.0` until Interop is confirmed. |
-| Build fails on iOS | Delete `ios/Pods` and `ios/Podfile.lock`, then `pod install` |
+| "Native module not found" | Rebuild the native app (`pod install` + Android rebuild). Stay on `^7.0.0` only for RN **< 0.70**. On 0.70–0.81 with New Architecture off, v9 loads via `NativeModules` after a native rebuild (see [README](./README.md#old-architecture-rn-070081)). If it is still null after rebuild, open an issue with RN version and `newArchEnabled`. |
+| Build fails on iOS | Delete `ios/Pods` and `ios/Podfile.lock`, then `pod install`. This library requires iOS **15.5+**. |
 | Build fails on Android | Run `./gradlew clean` and clear Metro cache |
-| Works on Android but not iOS | Ensure you ran `RCT_NEW_ARCH_ENABLED=1 pod install` |
+| Works on Android but not iOS | Confirm a native rebuild. On RN 0.82+ New Architecture cannot be disabled. On 0.70–0.81, `RCT_NEW_ARCH_ENABLED=1` is optional for this library. |
 | Expo Go shows "Native module not found" | Use Expo Development Build instead |
 
 ### Need Help?

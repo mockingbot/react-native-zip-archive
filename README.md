@@ -2,13 +2,13 @@
 
 Zip archive utility for React Native.
 
-> Latest **v8+ / v9** targets React Native ≥ 0.70 with TurboModules. **New Architecture is recommended.**
+> **v9** is for React Native ≥ 0.70. New Architecture is recommended. Stay on v7 only for RN **< 0.70**.
 >
-> Use `^7.0.0` only if you are on React Native **< 0.70**:
-> ```bash
-> npm install react-native-zip-archive@^7.0.0
-> ```
-> If the native module fails to load on an old-architecture 0.70+ app, fall back to v7 until Interop Layer support is confirmed.
+> | Your React Native | Install |
+> |-------------------|---------|
+> | **< 0.70** | `npm install react-native-zip-archive@^7.0.0` |
+> | **0.70–0.81** | latest v9 (old architecture works; native rebuild required) |
+> | **0.82+** | latest v9 (New Architecture only — RN ignores the opt-out flags) |
 >
 > **iOS:** Version 7.0.0+ requires a deployment target of iOS 15.5+ to comply with App Store privacy policy.
 
@@ -20,6 +20,31 @@ Zip archive utility for React Native.
 | React | >= 18.0.0 |
 | iOS | >= 15.5 |
 | Android | >= API 23 (Android 6.0) |
+
+## Old architecture (RN 0.70–0.81)
+
+Do not stay on v7 for old architecture on RN 0.70+. Install latest v9 and rebuild native.
+
+| Surface | How v9 loads when New Architecture is off |
+|---------|-------------------------------------------|
+| JS | `TurboModuleRegistry.get('RNZipArchive')`, then `NativeModules.RNZipArchive` |
+| Android | `isTurboModule` follows `BuildConfig.IS_NEW_ARCHITECTURE_ENABLED`; paper specs compile when new arch is off |
+| iOS | `RCT_EXPORT_MODULE` always; `getTurboModule` is `#ifdef RCT_NEW_ARCH_ENABLED` |
+
+| RN | Android `newArchEnabled=false` | iOS `RCT_NEW_ARCH_ENABLED=0` | Evidence |
+|----|--------------------------------|------------------------------|----------|
+| **0.82+** ([playground-rn](./playground-rn/) 0.83.9) | N/A — flag ignored | N/A — flag ignored | [RN 0.82](https://reactnative.dev/blog/2025/10/08/react-native-0.82); zip/unzip Maestro on New Arch (`e2e.yml`) |
+| **0.81.6** (last opt-out) | compile + `IS_NEW_ARCHITECTURE_ENABLED=false` | compile + Legacy Architecture | `.github/workflows/old-arch.yml` (not device Maestro) |
+| **0.73–0.80** | same native paths as 0.81 | same | inferred; not separately built |
+
+Reproduce the 0.81 compile (same as CI):
+
+```bash
+npx @react-native-community/cli@15.1.3 init RnzaOldArch --version 0.81.6 --pm npm --skip-git-init
+cd RnzaOldArch && npm install /path/to/react-native-zip-archive
+# Android: set newArchEnabled=false in android/gradle.properties, then assembleRelease
+# iOS: set platform :ios, '15.5' in the Podfile, then RCT_NEW_ARCH_ENABLED=0 pod install
+```
 
 ## Comparison
 

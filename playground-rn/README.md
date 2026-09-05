@@ -4,6 +4,12 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
 
+## Old architecture (RNZA-5)
+
+This app is **RN 0.83.9**. Since React Native 0.82, `newArchEnabled=false` and `RCT_NEW_ARCH_ENABLED=0` are ignored — New Architecture is the only option.
+
+Old-architecture compile proof lives in `.github/workflows/old-arch.yml` against **RN 0.81.6** (last version that can opt out).
+
 ## Step 1: Start Metro
 
 First, you will need to run **Metro**, the JavaScript build tool for React Native.
