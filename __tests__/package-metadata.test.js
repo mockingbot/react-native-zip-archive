@@ -88,10 +88,16 @@ describe('docs claims vs native source (RNZA-7/15/17/19)', () => {
 
   test('README documents old-arch v9 load path and playground-rn CI', () => {
     const readme = read('README.md');
+    const migration = read('MIGRATION.md');
     const pkgJava = read('android/src/main/java/com/rnziparchive/RNZipArchivePackage.java');
     expect(readme).toMatch(/old-arch\.yml/);
     expect(readme).toMatch(/newArchEnabled=false/);
     expect(readme).toMatch(/RCT_NEW_ARCH_ENABLED=0/);
+    expect(readme).toMatch(/Stay on v7 only for RN/);
+    expect(readme).toMatch(/0\.70–0\.81/);
+    expect(readme).toMatch(/0\.82\+/);
+    expect(migration).toMatch(/0\.70–0\.81/);
+    expect(migration).toMatch(/recommended, not required on 0\.70–0\.81/);
     expect(pkgJava).toMatch(/boolean isTurboModule = BuildConfig\.IS_NEW_ARCHITECTURE_ENABLED/);
     expect(pkgJava).not.toMatch(/true\s*\/\/ isTurboModule = true/);
   });

@@ -8,6 +8,9 @@
 ### Added
 - CI: RN 0.81.6 old-architecture Android + iOS compile in `.github/workflows/old-arch.yml` (RNZA-5). RN 0.82+ cannot opt out of New Architecture.
 
+### Changed
+- README + MIGRATION: install table by RN version — v7 only for RN < 0.70; v9 on 0.70–0.81 including old architecture; New Architecture only on 0.82+
+
 ## [9.5.0] - 2026-09-04
 
 ### Added
