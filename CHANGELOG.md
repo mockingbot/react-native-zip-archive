@@ -2,8 +2,10 @@
 
 ## [Unreleased]
 
+## [9.5.1] - 2026-09-05
+
 ### Fixed
-- Android: register as a legacy Native Module when New Architecture is off (`isTurboModule` follows `BuildConfig.IS_NEW_ARCHITECTURE_ENABLED`) so `NativeModules.RNZipArchive` is non-null on old-arch apps (RNZA-5)
+- Android: register as a legacy Native Module when New Architecture is off (`isTurboModule` follows `BuildConfig.IS_NEW_ARCHITECTURE_ENABLED`) so `NativeModules.RNZipArchive` is non-null on old-arch apps (RNZA-5, #385)
 
 ### Added
 - CI: RN 0.81.6 old-architecture Android + iOS compile in `.github/workflows/old-arch.yml` (RNZA-5). RN 0.82+ cannot opt out of New Architecture.
