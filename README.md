@@ -436,6 +436,13 @@ npm test
 
 See the [playground apps](#playground) for testing and contribution reference.
 
+### Minor releases
+
+Each **minor** (`vX.Y.0`) gets one GitHub Discussion in **Announcements** (why to upgrade, 3–5 bullets) linked from that minor’s GitHub Release.
+
+1. Add `.github/announcements/vX.Y.md` with an H1 title and `<!-- releases: vX.Y.0 -->`
+2. Merge to `master` — [minor-discussion.yml](./.github/workflows/minor-discussion.yml) opens or reuses the Discussion and edits the release notes
+
 ## Related Projects
 
 - [ZipArchive](https://github.com/ZipArchive/ZipArchive)

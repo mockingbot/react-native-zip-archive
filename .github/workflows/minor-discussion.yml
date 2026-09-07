@@ -1,0 +1,49 @@
+name: Minor release discussion
+
+# RNZA-28: one Announcements discussion per minor, linked from GitHub Releases.
+# After a 9.x minor, add .github/announcements/vX.Y.md and merge to master
+# (or Actions → Minor release discussion → Run workflow).
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/announcements/**'
+      - '.github/scripts/upsert-minor-discussion.js'
+      - '.github/workflows/minor-discussion.yml'
+  pull_request:
+    paths:
+      - '.github/announcements/**'
+      - '.github/scripts/upsert-minor-discussion.js'
+      - '.github/workflows/minor-discussion.yml'
+
+permissions:
+  contents: write
+  discussions: write
+  issues: write
+
+concurrency:
+  group: minor-discussion
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    name: Upsert Announcements discussion
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Create or reuse discussion and link releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node .github/scripts/upsert-minor-discussion.js

@@ -40,7 +40,7 @@ Stay on `^7.0.0` only for RN **< 0.70**. On 0.70–0.81, old architecture works.
 
 ## v9.5
 
-Additive JavaScript APIs. Existing positional `zip` / `unzip` calls are unchanged.
+Additive JavaScript APIs. Existing positional `zip` / `unzip` calls are unchanged. Why to upgrade: [9.5 Discussion](https://github.com/mockingbot/react-native-zip-archive/discussions/389).
 
 - **`AbortSignal`:** pass `{ signal }` as the last argument to `zip` / `zipWithPassword` / `unzip` / `unzipWithPassword` / `unzipAssets` to cancel. Rejects with `ZipError` code `ERR_CANCELLED`.
 - **`ZipError`:** factory (not an ES `class`) with a stable `.code`. Check `error.code`; do not use `instanceof ZipError`.

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Process: each 9.x minor gets an Announcements GitHub Discussion linked from the GitHub Release (`.github/announcements/vX.Y.md`, RNZA-28). [9.5 Discussion](https://github.com/mockingbot/react-native-zip-archive/discussions/389)
+
 ## [9.5.1] - 2026-09-05
 
 ### Fixed
