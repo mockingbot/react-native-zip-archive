@@ -1,6 +1,24 @@
 # AGENTS.md
 
-Guidance for AI coding agents and human contributors working in this repository.
+Canonical guide for AI coding agents working in this repository ([AGENTS.md](https://agents.md/) open standard — complements the human-facing [README.md](./README.md)).
+
+## Keep in sync
+
+| File | Audience | Role |
+|------|----------|------|
+| [README.md](./README.md) | Humans / npm consumers | Install, quick start, API reference |
+| **AGENTS.md** (this file) | Agents (+ contributor ops) | Hard rules, architecture, test/debug commands |
+| [CLAUDE.md](./CLAUDE.md) | Claude Code | Thin pointer to this file — do not fork rules there |
+
+**Shared facts** (version matrix, peer floors, iOS 15.5, Zip Slip / `ERR_UNSAFE_PATH`, public API names) must agree between `README.md` and this file. Prefer one canonical sentence + a cross-link over two diverging copies.
+
+When you change doc-impacting code (`index.js`, `index.d.ts`, `specs/`, `android/src/`, `ios/RNZipArchive.*`, `package.json`, `app.plugin.js`):
+
+1. Update **both** `README.md` and `AGENTS.md` in the same change when user-facing or agent-facing guidance shifts.
+2. Run `npm run test:docs-sync` (same check as CI and optional [pre-commit](https://pre-commit.com/)).
+3. Rare internal-only change with no doc impact: commit message may include `[docs-sync skip]`.
+
+Enforcement is **portable** (not editor-specific): `scripts/check-docs-sync.sh` → GitHub Actions `docs-sync.yml` + optional `.pre-commit-config.yaml`.
 
 ## What this is
 
@@ -63,6 +81,7 @@ Run from repo root:
 ```bash
 npm test                 # Jest — preferred fast check for JS/API changes
 npm run test:interop     # Node unzipper + Java ZipInputStream on fixtures/
+npm run test:docs-sync   # README ↔ AGENTS.md (same as CI / pre-commit)
 npm run lint             # ESLint on index.js
 ```
 
@@ -98,19 +117,21 @@ Treat playground edits as optional unless the task is demo/E2E related. Prefer k
 
 | File | Audience |
 |------|----------|
-| `README.md` | Install, quick start, API reference |
+| `README.md` | Humans — install, quick start, API |
+| `AGENTS.md` | Agents — this file (canonical) |
+| `CLAUDE.md` | Claude Code — pointer to `AGENTS.md` |
 | `MIGRATION.md` | Version upgrades (v7→v9, minor notes) |
 | `SECURITY.md` | Supported versions, vuln reporting, Zip Slip scope |
 | `REVIEW.md` | PR review focus (parity, security, threading) |
-| `AGENTS.md` | This file — agent/contributor working map |
 | `CHANGELOG.md` | Release history |
 
-Keep README examples accurate to `index.d.ts`. Prefer linking here or to `MIGRATION.md` for deep architecture detail instead of duplicating long matrices in the README.
+Keep README examples accurate to `index.d.ts`. Prefer linking here or to `MIGRATION.md` for deep architecture detail instead of duplicating long matrices in the README. See [Keep in sync](#keep-in-sync).
 
 ## CI workflows (`.github/workflows/`)
 
 | Workflow | What it covers |
 |----------|----------------|
+| `docs-sync.yml` | README ↔ AGENTS.md fact + change pairing |
 | `android-build.yml` / `ios-build.yml` | Native builds |
 | `e2e.yml` | Maestro E2E |
 | `old-arch.yml` | RN 0.81.6 paper/old-arch compile |
@@ -127,8 +148,9 @@ Keep README examples accurate to `index.d.ts`. Prefer linking here or to `MIGRAT
 3. `index.js` wrappers (options / AbortSignal / validation).
 4. `index.d.ts` overloads.
 5. Jest mocks + tests.
-6. README API section (short example).
-7. `MIGRATION.md` if behavior/default changes for existing callers.
+6. README API section (short example) **and** this file if hard rules/commands change.
+7. `npm run test:docs-sync`
+8. `MIGRATION.md` if behavior/default changes for existing callers.
 
 ### Encryption / interop change
 
@@ -157,4 +179,4 @@ Keep README examples accurate to `index.d.ts`. Prefer linking here or to `MIGRAT
 - [ ] Skim `specs/NativeZipArchive.ts` + `index.d.ts` for the real API.
 - [ ] For native bugs: find the path in `ios/RNZipArchive.mm` and `android/src/main/java/com/rnziparchive/`.
 - [ ] Run `npm test` after JS changes; `npm run test:interop` after format/crypto changes.
-- [ ] Update docs only for the surfaces you changed (avoid drive-by README rewrites unless asked).
+- [ ] Update docs for the surfaces you changed; keep README + AGENTS.md paired (`npm run test:docs-sync`).

@@ -28,6 +28,8 @@ New Architecture is recommended. See [MIGRATION.md](./MIGRATION.md) for upgrades
 | iOS | ≥ 15.5 |
 | Android | API 23+ |
 
+Published version and peer ranges: see [`package.json`](./package.json).
+
 ## Installation
 
 ### React Native
@@ -264,11 +266,11 @@ Stable `error.code` on both platforms (also on `ErrorCodes`):
 
 ## Old architecture (RN 0.70–0.81)
 
-Do not stay on v7 for old architecture on RN 0.70+. Install latest v9 and rebuild native.
+Stay on v7 only for RN **&lt; 0.70**. On 0.70+, install latest v9 and rebuild native — do not stay on v7 for old architecture.
 
-v9 loads via `TurboModuleRegistry` first, then `NativeModules.RNZipArchive`. On RN 0.82+, the old-architecture opt-out flags are ignored.
+v9 loads via `TurboModuleRegistry` first, then `NativeModules.RNZipArchive`. On RN **0.82+**, the opt-out flags `newArchEnabled=false` / `RCT_NEW_ARCH_ENABLED=0` are ignored (New Architecture only).
 
-CI compile proof for RN 0.81.6: [`.github/workflows/old-arch.yml`](./.github/workflows/old-arch.yml). Details for agents and contributors: [AGENTS.md](./AGENTS.md).
+CI compile proof for RN 0.81.6: [`.github/workflows/old-arch.yml`](./.github/workflows/old-arch.yml). Agent/contributor details: [AGENTS.md](./AGENTS.md).
 
 ## Playgrounds
 
@@ -296,6 +298,7 @@ Use this library for on-device native zip/unzip. Use JSZip for small in-JS archi
 ```bash
 npm test                 # Jest (JS layer + mocks)
 npm run test:interop     # Node/Java unzip of committed fixtures
+npm run test:docs-sync   # README ↔ AGENTS.md fact + change pairing
 ```
 
 E2E (Maestro): see [e2e/README.md](./e2e/README.md).
@@ -311,8 +314,9 @@ Supported versions and reporting: [SECURITY.md](./SECURITY.md).
 ## Contributing
 
 - Use the [playground apps](#playgrounds) to exercise changes.
-- Agent / contributor map: [AGENTS.md](./AGENTS.md).
+- **[AGENTS.md](./AGENTS.md)** — canonical agent guide ([agents.md](https://agents.md/) standard). README is for humans; keep shared facts in sync (`npm run test:docs-sync`).
 - Review focus areas: [REVIEW.md](./REVIEW.md).
+- Optional local gate: [pre-commit](https://pre-commit.com/) (`.pre-commit-config.yaml`).
 
 ### Minor releases
 
