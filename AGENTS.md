@@ -131,13 +131,16 @@ Keep README examples accurate to `index.d.ts`. Prefer linking here or to `MIGRAT
 
 | Workflow | What it covers |
 |----------|----------------|
-| `docs-sync.yml` | README ↔ AGENTS.md fact + change pairing |
-| `android-build.yml` / `ios-build.yml` | Native builds |
-| `e2e.yml` | Maestro E2E |
-| `old-arch.yml` | RN 0.81.6 paper/old-arch compile |
-| `zip-interop.yml` | Fixture unzip interop |
-| `publish.yml` | npm publish |
+| `docs-sync.yml` | README ↔ AGENTS.md fact + change pairing (always) |
+| `js-tests.yml` | Jest + lint when `js` paths change |
+| `android-build.yml` / `ios-build.yml` | Native builds — only when `native` paths change |
+| `e2e.yml` | Maestro E2E — only when `native` paths change |
+| `old-arch.yml` | RN 0.81.6 paper/old-arch compile — `native` paths |
+| `zip-interop.yml` | Fixture unzip interop — `interop` paths |
+| `publish.yml` | npm publish (tags) |
 | `minor-discussion.yml` | Announcement Discussion for minors |
+
+Path filters live in [`.github/path-filters.yml`](./.github/path-filters.yml) (see [`.github/workflows/path-filters.md`](./.github/workflows/path-filters.md)). Docs-only PRs must not burn macOS/Android build minutes: heavy jobs are gated behind a cheap `changes` job so `concurrency: cancel-in-progress` can still stop outdated runs. Force a full build with **Actions → Run workflow**.
 
 ## Common tasks
 
