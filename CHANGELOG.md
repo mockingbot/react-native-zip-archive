@@ -2,8 +2,17 @@
 
 ## [Unreleased]
 
-- Process: each 9.x minor gets an Announcements GitHub Discussion linked from the GitHub Release (`.github/announcements/vX.Y.md`, RNZA-28). [9.5 Discussion](https://github.com/mockingbot/react-native-zip-archive/discussions/389)
-- SECURITY.md: 7.x install line is **7.1.3** (`maintenance-7`). 7.1.2 has the Zip Slip backport but does not compile on Android (#390).
+## [9.5.2] - 2026-09-28
+
+### Changed
+- npm package includes `AGENTS.md` and `CLAUDE.md`. They were on `master` after 9.5.1 was published, so 9.5.1 does not contain them (#391).
+- README rewrite: version matrix, quick start, tighter API (#391).
+- SECURITY.md: 7.x install line is **7.1.3** (`maintenance-7`). 7.1.2 has the Zip Slip backport but does not compile on Android (#390, #394).
+- MIGRATION.md links the [9.5 Discussion](https://github.com/mockingbot/react-native-zip-archive/discussions/389).
+
+### Added
+- `npm run test:docs-sync` (`scripts/check-docs-sync.sh`) keeps README and AGENTS.md aligned (#391).
+- Each 9.x minor gets an Announcements GitHub Discussion linked from the GitHub Release (RNZA-28).
 
 ## [9.5.1] - 2026-09-05
 

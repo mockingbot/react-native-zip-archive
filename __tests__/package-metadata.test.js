@@ -37,6 +37,8 @@ describe('npm listing (RNZA-13) and packed files', () => {
     expect(files).toContain('SECURITY.md');
     expect(files).toContain('package.json');
     expect(files).toContain('README.md');
+    expect(files).toContain('AGENTS.md');
+    expect(files).toContain('CLAUDE.md');
     expect(files).toContain('index.d.ts');
     expect(files).not.toContain('playground-expo/app.json');
     expect(files.some((f) => f.startsWith('fixtures/'))).toBe(false);
