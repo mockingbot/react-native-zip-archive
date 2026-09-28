@@ -1,82 +1,47 @@
-# React Native Zip Archive [![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive) [![npm downloads](https://img.shields.io/npm/dw/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive) [![TypeScript](https://img.shields.io/badge/TypeScript-types-3178C6?logo=typescript&logoColor=white)](./index.d.ts) [![React Native New Architecture](https://img.shields.io/badge/React%20Native-New%20Architecture%20(TurboModules)-61dafb)](https://reactnative.dev/docs/new-architecture-intro)
+# React Native Zip Archive
 
-Zip archive utility for React Native.
+[![npm](https://img.shields.io/npm/v/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive)
+[![npm downloads](https://img.shields.io/npm/dw/react-native-zip-archive.svg)](https://www.npmjs.com/package/react-native-zip-archive)
+[![TypeScript](https://img.shields.io/badge/TypeScript-types-3178C6?logo=typescript&logoColor=white)](./index.d.ts)
+[![React Native New Architecture](https://img.shields.io/badge/React%20Native-New%20Architecture%20(TurboModules)-61dafb)](https://reactnative.dev/docs/new-architecture-intro)
 
-> **v9** is for React Native ≥ 0.70. New Architecture is recommended. Stay on v7 only for RN **< 0.70**.
->
-> | Your React Native | Install |
-> |-------------------|---------|
-> | **< 0.70** | `npm install react-native-zip-archive@^7.0.0` |
-> | **0.70–0.81** | latest v9 (old architecture works; native rebuild required) |
-> | **0.82+** | latest v9 (New Architecture only — RN ignores the opt-out flags) |
->
-> **iOS:** Version 7.0.0+ requires a deployment target of iOS 15.5+ to comply with App Store privacy policy.
+Native zip and unzip for React Native and Expo (iOS & Android). Password protection, progress events, selective extract, and `AbortSignal` cancellation.
+
+## Which version?
+
+| React Native | Install |
+|--------------|---------|
+| **&lt; 0.70** | `npm install react-native-zip-archive@^7.0.0` |
+| **0.70–0.81** | Latest **v9** (old architecture works; rebuild native) |
+| **0.82+** | Latest **v9** (New Architecture only) |
+
+**iOS:** v7+ requires deployment target **iOS 15.5+**.
+
+New Architecture is recommended. See [MIGRATION.md](./MIGRATION.md) for upgrades from v7.
 
 ## Requirements
 
-| Platform | Minimum Version |
-|----------|-----------------|
-| React Native | >= 0.70.0 |
-| React | >= 18.0.0 |
-| iOS | >= 15.5 |
-| Android | >= API 23 (Android 6.0) |
+| | Minimum |
+|--|---------|
+| React Native | ≥ 0.70 |
+| React | ≥ 18 |
+| iOS | ≥ 15.5 |
+| Android | API 23+ |
 
-## Old architecture (RN 0.70–0.81)
-
-Do not stay on v7 for old architecture on RN 0.70+. Install latest v9 and rebuild native.
-
-| Surface | How v9 loads when New Architecture is off |
-|---------|-------------------------------------------|
-| JS | `TurboModuleRegistry.get('RNZipArchive')`, then `NativeModules.RNZipArchive` |
-| Android | `isTurboModule` follows `BuildConfig.IS_NEW_ARCHITECTURE_ENABLED`; paper specs compile when new arch is off |
-| iOS | `RCT_EXPORT_MODULE` always; `getTurboModule` is `#ifdef RCT_NEW_ARCH_ENABLED` |
-
-| RN | Android `newArchEnabled=false` | iOS `RCT_NEW_ARCH_ENABLED=0` | Evidence |
-|----|--------------------------------|------------------------------|----------|
-| **0.82+** ([playground-rn](./playground-rn/) 0.83.9) | N/A — flag ignored | N/A — flag ignored | [RN 0.82](https://reactnative.dev/blog/2025/10/08/react-native-0.82); zip/unzip Maestro on New Arch (`e2e.yml`) |
-| **0.81.6** (last opt-out) | compile + `IS_NEW_ARCHITECTURE_ENABLED=false` | compile + Legacy Architecture | `.github/workflows/old-arch.yml` (not device Maestro) |
-| **0.73–0.80** | same native paths as 0.81 | same | inferred; not separately built |
-
-Reproduce the 0.81 compile (same as CI):
-
-```bash
-npx @react-native-community/cli@15.1.3 init RnzaOldArch --version 0.81.6 --pm npm --skip-git-init
-cd RnzaOldArch && npm install /path/to/react-native-zip-archive
-# Android: set newArchEnabled=false in android/gradle.properties, then assembleRelease
-# iOS: set platform :ios, '15.5' in the Podfile, then RCT_NEW_ARCH_ENABLED=0 pod install
-```
-
-## Comparison
-
-| | This library | JSZip in React Native | Nitro (`react-native-nitro-unzip` / `react-native-nitro-archive`) |
-|---|---|---|---|
-| Zip / unzip | Native iOS + Android | Pure JS (not a native unzip) | Native via Nitro |
-| Password-protected zip | Yes | Fine for small in-memory archives | Check those packages |
-| Expo | Development builds / EAS (not Expo Go) | Can run in Expo Go | Native — needs a development build |
-| Extra native dependency | None beyond this package | None | `react-native-nitro-modules` |
-| Large files | Native I/O | Memory-heavy | Speed / extra-format claims |
-| Install base | Production RN apps | Very widely used as JS | Much smaller today |
-
-Use this library for native zip/unzip on device. Use JSZip when you only need small archives in JS. Nitro may fit if you want additional archive formats and accept the extra Nitro dependency and smaller install base.
+Published version and peer ranges: see [`package.json`](./package.json).
 
 ## Installation
 
-### React Native (bare)
+### React Native
 
 ```bash
 npm install react-native-zip-archive
-```
-
-**iOS:**
-```bash
 cd ios && pod install
 ```
 
-New Architecture is recommended. See [MIGRATION.md](./MIGRATION.md).
-
 ### Expo
 
-Works in **Expo development builds / EAS**. Does **not** work in Expo Go (this package includes custom native code).
+Works in **development builds / EAS** only — not Expo Go (custom native code).
 
 ```bash
 npx expo install react-native-zip-archive
@@ -92,361 +57,278 @@ Add the config plugin in `app.json`:
 }
 ```
 
-See [playground-expo](./playground-expo/) for a working Expo Development Build example.
+See [playground-expo](./playground-expo/) for a working example.
 
-## Usage
+## Quick start
 
 ```js
 import {
   zip,
-  zipWithPassword,
   unzip,
+  zipWithPassword,
   unzipWithPassword,
   listContents,
-  unzipAssets,
-  cancel,
   subscribe,
-  isPasswordProtected,
-  getUncompressedSize,
+  cancel,
   ErrorCodes,
-  ZipError,
-  DEFAULT_COMPRESSION,
-  NO_COMPRESSION,
-  BEST_SPEED,
-  BEST_COMPRESSION
 } from 'react-native-zip-archive'
-```
 
-**Bare React Native** — [react-native-fs](https://github.com/johanneslumpe/react-native-fs):
-
-```js
+// Paths: use react-native-fs (bare) or expo-file-system/legacy (Expo)
 import { DocumentDirectoryPath } from 'react-native-fs'
-```
+// Expo: const DocumentDirectoryPath = FileSystem.documentDirectory
 
-**Expo** — [playground-expo](./playground-expo/) uses `expo-file-system/legacy`:
+const archive = `${DocumentDirectoryPath}/bundle.zip`
+const outDir = `${DocumentDirectoryPath}/out`
 
-```js
-import * as FileSystem from 'expo-file-system/legacy'
+// Zip a folder
+await zip(DocumentDirectoryPath, archive)
 
-const DocumentDirectoryPath = FileSystem.documentDirectory
-```
+// Unzip
+await unzip(archive, outDir)
 
-List, extract a subset, and abort with `AbortSignal`:
+// Password
+await zipWithPassword(DocumentDirectoryPath, archive, 'secret', 'STANDARD')
+await unzipWithPassword(archive, outDir, 'secret')
 
-```js
+// List + selective extract + AbortSignal
 const controller = new AbortController()
-
-const entries = await listContents(`${DocumentDirectoryPath}/bundle.zip`)
+const entries = await listContents(archive)
 const assets = entries
-  .filter((entry) => !entry.isDirectory && entry.path.startsWith('assets/'))
-  .map((entry) => entry.path)
+  .filter((e) => !e.isDirectory && e.path.startsWith('assets/'))
+  .map((e) => e.path)
 
-await unzip(`${DocumentDirectoryPath}/bundle.zip`, `${DocumentDirectoryPath}/out`, {
-  entries: assets,
-  signal: controller.signal,
+await unzip(archive, outDir, { entries: assets, signal: controller.signal })
+// controller.abort() → rejects with ZipError code ERR_CANCELLED
+```
+
+Progress and cancel:
+
+```js
+const sub = subscribe(({ progress, filePath }) => {
+  console.log(progress, filePath) // progress: 0…1
 })
 
-// controller.abort()  → rejects with ZipError code ERR_CANCELLED
-```
+await unzip(archive, outDir)
+sub.remove()
 
-`zip` / `zipWithPassword` / `unzipAssets` accept the same `{ signal }` option. `cancel()` still aborts the in-flight native operation.
+// Or abort the in-flight native op
+await cancel() // rejects with ErrorCodes.CANCELLED
+```
 
 ## API
 
-### `zip(source: string | string[], target: string, compressionLevelOrOptions?: number | { compressionLevel?: number, signal?: AbortSignal }): Promise<string>`
+### `zip(source, target, compressionLevelOrOptions?)`
 
-Zip a folder (string) or an array of files to the target path.
+Zip a folder (`string`) or files/folders (`string[]`) to `target`.
 
-- To zip a single file, pass it as an array: `zip([file], target)`.
-- Array items may also be directories: their contents are added recursively with entry paths relative to the listed directory (the directory's own name is not included). This behaves the same on Android and iOS. Empty directories are preserved on both platforms.
-- `compressionLevel` applies on both platforms for folder and file-array sources.
-- Or pass an options object: `zip(source, target, { compressionLevel: BEST_SPEED, signal })`.
-
-**Compression Level Constants:**
-- `DEFAULT_COMPRESSION` (-1)
-- `NO_COMPRESSION` (0)
-- `BEST_SPEED` (1)
-- `BEST_COMPRESSION` (9)
+- Single file: `zip([file], target)`.
+- Array items may be directories; contents are added recursively (entry paths relative to that directory; empty dirs preserved).
+- Third arg: compression level (`0`–`9`, or constants below) or `{ compressionLevel, signal }`.
 
 ```js
-const sourcePath = DocumentDirectoryPath
-const targetPath = `${DocumentDirectoryPath}/myFile.zip`
+import { BEST_SPEED } from 'react-native-zip-archive'
 
-zip(sourcePath, targetPath)
-  .then((path) => console.log(`zip completed at ${path}`))
-  .catch((error) => console.error(error))
+await zip(sourceDir, targetZip)
+await zip([fileA, fileB], targetZip, BEST_SPEED)
+await zip(sourceDir, targetZip, { compressionLevel: BEST_SPEED, signal })
 ```
 
-### `zipWithPassword(source: string | string[], target: string, password: string, encryptionType?: string, compressionLevel?: number): Promise<string>`
+**Compression constants:** `DEFAULT_COMPRESSION` (-1), `NO_COMPRESSION` (0), `BEST_SPEED` (1), `BEST_COMPRESSION` (9).
 
-Zip with password protection.
+### `zipWithPassword(source, target, password, encryptionTypeOrOptions?, compressionLevel?)`
 
-- To zip a single file, pass it as an array: `zipWithPassword([file], target, password)`.
-- Array items may also be directories: their contents are added recursively with entry paths relative to the listed directory (the directory's own name is not included). This behaves the same on Android and iOS. Empty directories are preserved on both platforms.
-- `compressionLevel` applies on both platforms for folder and file-array sources.
+Same sources as `zip`, with a password.
 
-**Encryption Types:**
-- `'STANDARD'` — Traditional ZIP encryption / ZipCrypto (default). This is **not** PKWARE Strong Encryption. On Android this writes zip4j `ZIP_STANDARD` so iOS and common unzip tools can decrypt the archive.
-- `'AES-128'` — AES 128-bit
-- `'AES-256'` — AES 256-bit
+**Encryption types:**
 
-> **iOS:** Both AES-128 and AES-256 use AES-256 internally. File arrays honor `encryptionType` the same as folders. The default is ZipCrypto (`'STANDARD'`), including when the 4th argument is omitted — file arrays previously always wrote WinZip-AES. Pass `'AES-128'` or `'AES-256'` if you need AES. Prefer `'STANDARD'` when the archive will be unzipped by Node, Java, or other non-WinZip tools.
+| Value | Meaning |
+|-------|---------|
+| `'STANDARD'` (default) | ZipCrypto — readable by Node, Java, stock `unzip` |
+| `'AES-128'` / `'AES-256'` | WinZip-AES (stronger; many server tools cannot open) |
+
+On iOS, both AES options use AES-256 internally. Prefer `'STANDARD'` when archives will be unzipped off-device.
 
 ```js
-const sourcePath = DocumentDirectoryPath
-const targetPath = `${DocumentDirectoryPath}/myFile.zip`
-
-zipWithPassword(sourcePath, targetPath, 'password', 'STANDARD')
-  .then((path) => console.log(`zip completed at ${path}`))
-  .catch((error) => console.error(error))
+await zipWithPassword(sourceDir, targetZip, 'password', 'STANDARD')
+await zipWithPassword(sourceDir, targetZip, 'password', {
+  encryptionMethod: 'AES-256',
+  compressionLevel: BEST_COMPRESSION,
+  signal,
+})
 ```
 
-### `unzip(source: string, target: string, charset?: string | string[], entries?: string[]): Promise<string>`
+### `unzip(source, target, charsetOrEntriesOrOptions?, entries?)`
 
-Unzip from source to target. Pass `entries` to extract only those paths; directory names match that entry and all nested children (e.g. `'docs'` extracts `docs/` and `docs/readme.md`).
-
-You can pass entries as the third argument when using the default charset:
+Extract an archive. Optional `entries` extracts only those paths (directories include nested children).
 
 ```js
-unzip(sourcePath, targetPath, ['readme.md', 'docs'])
+await unzip(source, target)
+await unzip(source, target, 'UTF-8')
+await unzip(source, target, ['readme.md', 'docs'])
+await unzip(source, target, 'UTF-8', ['readme.md'])
+await unzip(source, target, { entries: ['readme.md'], signal })
 ```
 
-Or with an explicit charset:
+Charset defaults to `UTF-8`. On iOS, non-UTF-8 values reject with `ERR_UNSUPPORTED`.
+
+### `unzipWithPassword(source, target, password, entriesOrOptions?)`
 
 ```js
-unzip(sourcePath, targetPath, 'UTF-8', ['readme.md', 'docs'])
+await unzipWithPassword(source, target, 'password')
+await unzipWithPassword(source, target, 'password', ['secret.txt'])
+await unzipWithPassword(source, target, 'password', { entries: ['secret.txt'], signal })
 ```
 
-Or with `AbortSignal` / selective extract as an options object:
-
-```js
-unzip(sourcePath, targetPath, { entries: ['readme.md', 'docs'], signal })
-```
-
-> The `charset` parameter defaults to `UTF-8`. On Android, other charsets are supported. On iOS, non-UTF-8 values reject with `ERR_UNSUPPORTED`.
-
-```js
-const sourcePath = `${DocumentDirectoryPath}/myFile.zip`
-const targetPath = DocumentDirectoryPath
-
-unzip(sourcePath, targetPath, 'UTF-8')
-  .then((path) => console.log(`unzip completed at ${path}`))
-  .catch((error) => console.error(error))
-```
-
-### `unzipWithPassword(source: string, target: string, password: string, entries?: string[]): Promise<string>`
-
-Unzip a password-protected archive. Pass `entries` to extract only those paths.
-
-```js
-unzipWithPassword(sourcePath, targetPath, 'password')
-  .then((path) => console.log(`unzip completed at ${path}`))
-  .catch((error) => console.error(error))
-
-unzipWithPassword(sourcePath, targetPath, 'password', ['secret.txt'])
-  .then((path) => console.log(`selective unzip completed at ${path}`))
-  .catch((error) => console.error(error))
-```
-
-### `listContents(source: string, charset?: string): Promise<ZipEntry[]>`
-
-List archive entries without extracting.
+### `listContents(source, charset?)` → `Promise<ZipEntry[]>`
 
 ```ts
 type ZipEntry = {
   path: string
-  size: number           // uncompressed size in bytes
+  size: number           // uncompressed bytes
   compressedSize: number
   isDirectory: boolean
   isEncrypted: boolean
 }
 ```
 
-> The `charset` parameter defaults to `UTF-8`. On Android, other charsets are supported. On iOS, non-UTF-8 values reject with `ERR_UNSUPPORTED`.
+### `unzipAssets(assetPath, target, options?)`
+
+Unzip a **bundled** archive (relative path only — not an absolute filesystem path).
+
+- **Android:** path under APK `assets/` (also accepts `content://` URIs)
+- **iOS:** path in the main app bundle
 
 ```js
-listContents(sourcePath)
-  .then((entries) => {
-    entries.forEach((entry) => {
-      console.log(entry.path, entry.size, entry.isDirectory)
-    })
-  })
-  .catch((error) => console.error(error))
+await unzipAssets('./myFile.zip', DocumentDirectoryPath)
+await unzipAssets('./myFile.zip', DocumentDirectoryPath, { signal })
 ```
 
-### `unzipAssets(assetPath: string, target: string): Promise<string>`
+### `getUncompressedSize(source, charset?)` → `Promise<number>`
 
-Unzip a bundled archive.
+Total uncompressed size in bytes. Charset is Android-only; iOS ignores it.
 
-- **Android:** relative path inside the APK `assets/` folder (also accepts `content://` URIs).
-- **iOS:** relative path inside the main app bundle (e.g. a file copied with Xcode “Copy Bundle Resources”).
+### `isPasswordProtected(source)` → `Promise<boolean>`
 
-Do not pass an absolute filesystem path.
+### `cancel()` → `Promise<void>`
+
+Best-effort abort of the in-flight operation. The active promise rejects with `ErrorCodes.CANCELLED` (`ERR_CANCELLED`).
+
+Operations are serialized (Android single-thread executor / iOS serial queue). Concurrent calls queue FIFO; `cancel()` is not blocked behind in-flight work.
+
+### `subscribe(callback)` → `{ remove() }`
 
 ```js
-unzipAssets('./myFile.zip', DocumentDirectoryPath)
-  .then((path) => console.log(`unzip completed at ${path}`))
-  .catch((error) => console.error(error))
+subscribe(({ progress, filePath }) => { /* progress 0…1 */ })
 ```
 
-Optional `{ signal }` as the third argument.
-
-### `getUncompressedSize(source: string, charset?: string): Promise<number>`
-
-Returns the total uncompressed size of all files in the zip archive (in bytes).
-
-> The `charset` parameter is only supported on Android. On iOS it is ignored.
-
-```js
-getUncompressedSize(sourcePath)
-  .then((size) => console.log(`Uncompressed size: ${size} bytes`))
-  .catch((error) => console.error(error))
-```
-
-### `cancel(): Promise<void>`
-
-Cancel the in-flight zip/unzip operation (best-effort). The active operation's promise rejects with `ErrorCodes.CANCELLED` (`ERR_CANCELLED`).
-
-Zip/unzip work is serialized. Android runs operations on a **single-thread executor**; concurrent calls queue FIFO and do not run in parallel. iOS uses a background serial queue similarly, so `cancel()` is not blocked behind the operation it is meant to stop.
-
-```js
-const unzipPromise = unzip(sourcePath, targetPath)
-cancel()
-unzipPromise.catch((error) => {
-  if (error.code === ErrorCodes.CANCELLED) {
-    console.log('unzip cancelled')
-  }
-})
-```
+- Event is **global** — match `filePath` to your operation, then call `.remove()`.
+- `unzip` / `unzipWithPassword`: byte-weighted after each entry.
+- `zip` / `zipWithPassword`: per-file.
+- `unzipAssets` (Android): approximate vs compressed size.
 
 ### Error codes
 
-Native rejections use stable `error.code` values on both platforms:
+Stable `error.code` on both platforms (also on `ErrorCodes`):
 
 | Code | When |
 |------|------|
 | `ERR_FILE_NOT_FOUND` | Source missing |
 | `ERR_INVALID_PATH` | Bad / null path |
 | `ERR_INVALID_ARGS` | Empty password, empty entries, etc. |
-| `ERR_WRONG_PASSWORD` | Password decrypt failed |
-| `ERR_NOT_PASSWORD_PROTECTED` | Password API used on a plain archive |
-| `ERR_CORRUPT_ARCHIVE` | Not a zip / truncated / unreadable |
+| `ERR_WRONG_PASSWORD` | Decrypt failed |
+| `ERR_NOT_PASSWORD_PROTECTED` | Password API on a plain archive |
+| `ERR_CORRUPT_ARCHIVE` | Not a zip / truncated |
 | `ERR_UNSAFE_PATH` | Zip Slip / path traversal |
-| `ERR_CANCELLED` | `cancel()` interrupted the operation |
-| `ERR_ZIP` / `ERR_UNZIP` | Generic zip/unzip failure |
-| `ERR_UNSUPPORTED` | API not available on this platform |
+| `ERR_CANCELLED` | `cancel()` or `AbortSignal` |
+| `ERR_ZIP` / `ERR_UNZIP` | Generic failure |
+| `ERR_UNSUPPORTED` | Not available on this platform |
 
-Also exported as the `ErrorCodes` constant map.
+`ZipError` is a factory (not an ES class). Check `error.code`; do not use `instanceof`.
 
-### `subscribe(callback: ({ progress: number, filePath: string }) => void): EmitterSubscription`
+## Platform support
 
-Subscribe to progress events. Useful for showing a progress bar.
+| Feature | iOS | Android |
+|---------|:---:|:-------:|
+| `zip` / `zipWithPassword` | ✅ | ✅ |
+| `unzip` / `unzipWithPassword` (+ selective `entries`) | ✅ | ✅ |
+| `listContents` | ✅ | ✅ |
+| `unzipAssets` | ✅ | ✅ |
+| `cancel` / `AbortSignal` | ✅ | ✅ |
+| `isPasswordProtected` / `getUncompressedSize` | ✅ | ✅ |
+| Progress events | ✅ | ✅ |
 
-- `progress` — value from 0 to 1 (1 = completed)
-- `filePath` — the zip file path (on iOS, the entry being processed for unzip operations; empty for zip operations)
+**Notes**
 
-Progress is reported monotonically from 0 to 1, with explicit 0% and 100% events at the start and end of each operation. The granularity depends on the operation:
+- **Encryption:** Prefer `'STANDARD'` for server-side unzip. AES archives often fail with Node `unzipper` / Java `ZipInputStream`.
+- **Charset:** Android supports custom charsets; iOS is UTF-8 only (`ERR_UNSUPPORTED` otherwise).
+- **Paths:** Decode URL-encoded paths (`decodeURIComponent`) before passing them — `%20` has been mistaken for corrupt archives (#333).
+- **Interop check:** `node scripts/validate-zip-header.js /path/to/archive.zip` and `npm run test:interop`.
 
-- `unzip` / `unzipWithPassword` — byte-weighted: progress reflects uncompressed bytes extracted so far, updated after each entry completes.
-- `zip` / `zipWithPassword` — per-file: progress reflects the number of files compressed so far.
-- `unzipAssets` (Android only) — approximate: compares bytes read to the compressed archive size.
+## Old architecture (RN 0.70–0.81)
 
-> The event is global — check `filePath` in your callback to ensure it matches the operation you care about. Remember to call `.remove()` on the returned subscription when done.
+Stay on v7 only for RN **&lt; 0.70**. On 0.70+, install latest v9 and rebuild native — do not stay on v7 for old architecture.
 
-```js
-import { useEffect } from 'react'
+v9 loads via `TurboModuleRegistry` first, then `NativeModules.RNZipArchive`. On RN **0.82+**, the opt-out flags `newArchEnabled=false` / `RCT_NEW_ARCH_ENABLED=0` are ignored (New Architecture only).
 
-useEffect(() => {
-  const sub = subscribe(({ progress, filePath }) => {
-    console.log(`progress: ${progress}, file: ${filePath}`)
-  })
-  return () => sub.remove()
-}, [])
-```
+CI compile proof for RN 0.81.6: [`.github/workflows/old-arch.yml`](./.github/workflows/old-arch.yml). Agent/contributor details: [AGENTS.md](./AGENTS.md).
 
-## Platform Support
+## Playgrounds
 
-| Feature | iOS | Android | Notes |
-|---------|-----|---------|-------|
-| `zip` (folder) | ✅ | ✅ | `compressionLevel` 0–9 |
-| `zip` (files array) | ✅ | ✅ | `compressionLevel` applies on both platforms |
-| `zipWithPassword` (folder) | ✅ | ✅ | Prefer `STANDARD` for server unzip |
-| `zipWithPassword` (files array) | ✅ | ✅ | iOS honors `STANDARD` vs AES; `compressionLevel` applies |
-| `unzip` | ✅ | ✅ | Optional `entries`; non-UTF-8 charset → `ERR_UNSUPPORTED` on iOS |
-| `unzipWithPassword` | ✅ | ✅ | Optional `entries` for selective extract |
-| `listContents` | ✅ | ✅ | Non-UTF-8 charset → `ERR_UNSUPPORTED` on iOS |
-| `unzipAssets` | ✅ | ✅ | Android `assets/` (+ `content://`); iOS main bundle |
-| `cancel` | ✅ | ✅ | Best-effort mid-operation abort |
-| `isPasswordProtected` | ✅ | ✅ | — |
-| `getUncompressedSize` | ✅ | ✅ | Non-UTF-8 charset → `ERR_UNSUPPORTED` on iOS |
-| Progress Events | ✅ | ✅ | File path empty on iOS for zip |
+| App | Stack |
+|-----|--------|
+| [playground-expo](./playground-expo/) | Expo SDK 55, Expo Router, New Architecture |
+| [playground-rn](./playground-rn/) | Bare RN 0.83.9, New Architecture |
 
-### Cross-Platform Notes
+Both consume the library via `file:..` and include Maestro E2E flows under [`.maestro/`](./.maestro/).
 
-- **Compression levels:** Android and iOS apply `compressionLevel` (0–9) for folder and file-array `zip` / `zipWithPassword`.
-- **Encryption:** Android supports AES-128, AES-256, and Standard ZIP encryption for all operations. On iOS, pass `'STANDARD'` (default) for ZipCrypto archives that Node `unzipper` / Java `ZipInputStream` can read; `'AES-128'` / `'AES-256'` produce WinZip-AES archives that many server tools cannot open.
-- **Charset:** Android supports custom charsets (default UTF-8). iOS accepts only UTF-8; other values reject with `ERR_UNSUPPORTED`.
-- **unzipAssets:** Android reads `assets/` (and `content://`). iOS reads from the main app bundle using the same relative path.
-- **Empty directories:** Preserved when zipping directory contents via a files/folders array on both platforms.
-- **Concurrent operations:** Android zip/unzip run on a single-thread executor; concurrent calls queue FIFO and do not run in parallel. iOS uses a background serial queue similarly (so `cancel()` is not blocked behind in-flight work).
+## Comparison
 
-### Server-side unzip interoperability
+| | This library | JSZip | Nitro unzip/archive |
+|--|--------------|-------|---------------------|
+| Zip / unzip | Native iOS + Android | Pure JS | Native via Nitro |
+| Password zips | Yes | Small in-memory only | Check those packages |
+| Expo Go | No (dev build) | Yes | No (dev build) |
+| Extra native deps | None | None | `react-native-nitro-modules` |
+| Large files | Native I/O | Memory-heavy | Varies |
 
-Plain (non-AES) zips created on iOS and Android are intended to open with common server unzippers (`unzip`, Node `unzipper`, Java `ZipInputStream`). Practical tips:
-
-- Prefer `zip(...)` or `zipWithPassword(..., 'STANDARD')` when the archive will be extracted off-device.
-- Avoid AES password zips if the consumer is stock Java/`unzipper` — use `'STANDARD'` instead.
-- Decode URL-encoded paths (`decodeURIComponent`) before passing them in; `%20` in paths has been mistaken for corrupt archives (#333).
-- After upgrading, you can sanity-check a produced file with:
-
-```bash
-node scripts/validate-zip-header.js /path/to/archive.zip
-```
-
-CI and the npm publish workflow also extract a committed non-password fixture with Node `unzipper` and Java `ZipInputStream` (`npm run test:interop`). A WinZip-AES archive fails that gate — that was the #333 / #323 class of iOS default-AES zips.
-
-## Expo
-
-Works in Expo development builds / EAS only — not Expo Go. Install and plugin setup are under [Installation](#installation). See [playground-expo](./playground-expo/) for a working example.
-
-## Playground
-
-Two fully-featured playground apps are included to demonstrate every API method:
-
-- **[playground-expo](./playground-expo/)** — Expo SDK 55 with Expo Router (New Architecture)
-- **[playground-rn](./playground-rn/)** — Bare React Native 0.83.9 (New Architecture)
-
-Both apps consume the local library via `file:..` and include Maestro E2E tests.
-
-## Migrating
-
-Coming from v7? Start with [Upgrade from v7](./MIGRATION.md#upgrade-from-v7). See [MIGRATION.md](./MIGRATION.md) for v7 → v8, v8 → v9.0, and v9.2–v9.4 notes.
-
-## Security
-
-See [SECURITY.md](./SECURITY.md) for supported versions and how to report vulnerabilities.
+Use this library for on-device native zip/unzip. Use JSZip for small in-JS archives.
 
 ## Testing
 
 ```bash
-npm test
+npm test                 # Jest (JS layer + mocks)
+npm run test:interop     # Node/Java unzip of committed fixtures
+npm run test:docs-sync   # README ↔ AGENTS.md fact + change pairing
 ```
+
+E2E (Maestro): see [e2e/README.md](./e2e/README.md).
+
+## Migrating
+
+Coming from v7? Start with [Upgrade from v7](./MIGRATION.md#upgrade-from-v7). Full notes: [MIGRATION.md](./MIGRATION.md).
+
+## Security
+
+Supported versions and reporting: [SECURITY.md](./SECURITY.md).
 
 ## Contributing
 
-See the [playground apps](#playground) for testing and contribution reference.
+- Use the [playground apps](#playgrounds) to exercise changes.
+- **[AGENTS.md](./AGENTS.md)** — canonical agent guide ([agents.md](https://agents.md/) standard). README is for humans; keep shared facts in sync (`npm run test:docs-sync`).
+- Review focus areas: [REVIEW.md](./REVIEW.md).
+- Optional local gate: [pre-commit](https://pre-commit.com/) (`.pre-commit-config.yaml`).
 
 ### Minor releases
 
-Each **minor** (`vX.Y.0`) gets one GitHub Discussion in **Announcements** (why to upgrade, 3–5 bullets) linked from that minor’s GitHub Release.
+Each minor (`vX.Y.0`) gets one GitHub Discussion in **Announcements**.
 
 1. Add `.github/announcements/vX.Y.md` with an H1 title and `<!-- releases: vX.Y.0 -->`
-2. Merge to `master` — [minor-discussion.yml](./.github/workflows/minor-discussion.yml) opens or reuses the Discussion and edits the release notes
+2. Merge to `master` — [minor-discussion.yml](./.github/workflows/minor-discussion.yml) opens or reuses the Discussion
 
-## Related Projects
+## Related
 
-- [ZipArchive](https://github.com/ZipArchive/ZipArchive)
-- [zip4j](https://github.com/srikanth-lingala/zip4j)
+- [ZipArchive](https://github.com/ZipArchive/ZipArchive) (iOS)
+- [zip4j](https://github.com/srikanth-lingala/zip4j) (Android)
 
 ---
 

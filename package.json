@@ -7,6 +7,7 @@
   "scripts": {
     "test": "jest",
     "test:interop": "node scripts/verify-zip-interop.js --expect-fail fixtures/interop/winzip-aes-marker.zip && node scripts/verify-zip-interop.js --fixtures",
+    "test:docs-sync": "bash scripts/check-docs-sync.sh",
     "lint": "eslint index.js",
     "test:e2e:expo:ios": "./scripts/e2e-ios.sh",
     "test:e2e:expo:android": "./scripts/e2e-android.sh",

@@ -1,7 +1,4 @@
-name: Zip Interop
-
-# RNZA-16: non-password zips must extract with Node unzipper and Java ZipInputStream.
-# This is the #333 / #323 class of "iOS zip unreadable on the server" regressions.
+name: JS Tests
 
 on:
   pull_request:
@@ -16,11 +13,11 @@ concurrency:
 
 jobs:
   changes:
-    name: Detect interop changes
+    name: Detect JS changes
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      interop: ${{ steps.filter.outputs.interop }}
+      js: ${{ steps.filter.outputs.js }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -31,10 +28,10 @@ jobs:
         with:
           filters: .github/path-filters.yml
 
-  zip-interop:
-    name: Node unzipper + Java ZipInputStream
+  jest:
+    name: Jest
     needs: changes
-    if: ${{ needs.changes.outputs.interop == 'true' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ needs.changes.outputs.js == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -46,17 +43,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup Java
-        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
       - name: Install dependencies
         run: npm install
 
-      - name: Reject WinZip-AES marker fixture
-        run: node scripts/verify-zip-interop.js --expect-fail fixtures/interop/winzip-aes-marker.zip
+      - name: Run Jest
+        run: npm test
 
-      - name: Extract plain fixture with unzipper and ZipInputStream
-        run: node scripts/verify-zip-interop.js --fixtures
+      - name: Lint
+        run: npm run lint

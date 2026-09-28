@@ -1,0 +1,12 @@
+# Standard pre-commit hooks: https://pre-commit.com/
+# Install once: pip install pre-commit && pre-commit install
+# Runs the same check as CI (scripts/check-docs-sync.sh).
+repos:
+  - repo: local
+    hooks:
+      - id: docs-sync
+        name: README.md ↔ AGENTS.md sync
+        entry: bash scripts/check-docs-sync.sh
+        language: system
+        pass_filenames: false
+        always_run: true

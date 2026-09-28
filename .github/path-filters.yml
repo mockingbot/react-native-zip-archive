@@ -1,0 +1,37 @@
+# Shared path filters for dorny/paths-filter (see heavy CI workflows).
+# Docs-only / AGENTS.md / README changes must NOT set native or e2e.
+
+native:
+  - android/**
+  - ios/**
+  - index.js
+  - index.d.ts
+  - specs/**
+  - app.plugin.js
+  - RNZipArchive.podspec
+  - babel.config.js
+  - playground-rn/**
+  - playground-expo/**
+  - __mocks__/**
+  - .maestro/**
+  - scripts/e2e-*.sh
+  - e2e/**
+
+interop:
+  - scripts/verify-zip-interop.js
+  - scripts/validate-zip-header.js
+  - scripts/ZipInputStreamCheck.java
+  - scripts/generate-interop-fixtures.py
+  - fixtures/interop/**
+  - package.json
+
+js:
+  - index.js
+  - index.d.ts
+  - __tests__/**
+  - __mocks__/**
+  - package.json
+  - babel.config.js
+  - app.plugin.js
+  - scripts/**
+  - jest.config.*

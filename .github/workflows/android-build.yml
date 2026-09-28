@@ -12,8 +12,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect native changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      native: ${{ steps.filter.outputs.native }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Path filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: .github/path-filters.yml
+
   build-android:
     name: Build Android (${{ matrix.app }})
+    needs: changes
+    if: ${{ needs.changes.outputs.native == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
