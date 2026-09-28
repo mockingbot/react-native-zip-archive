@@ -56,7 +56,8 @@ describe('zip interop gate (RNZA-16)', () => {
       path.join(__dirname, '..', '.github', 'workflows', 'publish.yml'),
       'utf8'
     );
-    expect(yml).toMatch(/needs:\s*zip-interop/);
+    expect(yml).toMatch(/needs:\s*\[on-master,\s*zip-interop\]/);
+    expect(yml).toMatch(/needs:\s*on-master/);
     expect(yml).toMatch(/verify-zip-interop\.js --fixtures/);
   });
 

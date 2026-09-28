@@ -11,10 +11,13 @@ name: Publish to npm
 #   B) Legacy token: add NPM_AUTH_TOKEN (npm granular publish token) to repo secrets
 #
 # Release:
-#   1. Bump version in package.json on master (9.x) or 7.x
-#   2. git tag vX.Y.Z && git push origin vX.Y.Z
-#      Tag must match package.json version (e.g. v9.4.1)
-#   Or: Actions → Publish to npm → Run workflow (manual dispatch)
+#   1. Pull request: bump package.json and CHANGELOG. Merge it to master.
+#   2. Tag that merge commit and push the tag:
+#        git tag vX.Y.Z && git push origin vX.Y.Z
+#      The tag commit must already be on master. A tag on an open pull
+#      request fails before npm publish. Tag must match package.json
+#      (e.g. v9.5.2).
+#   Or: Actions → Publish to npm → Run workflow from master.
 #
 # After a 9.x minor (vX.Y.0):
 #   3. Add .github/announcements/vX.Y.md (H1 title + `<!-- releases: vX.Y.0 -->`)
@@ -36,8 +39,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  on-master:
+    name: Require commit on master
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Fetch master
+        run: git fetch origin master
+
+      - name: Refuse publish unless this commit is on master
+        run: bash scripts/require-commit-on-master.sh
+
   zip-interop:
     name: Zip interop (Node unzipper + Java ZipInputStream)
+    needs: on-master
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -71,7 +93,7 @@ jobs:
 
   publish:
     name: Publish to npm
-    needs: zip-interop
+    needs: [on-master, zip-interop]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
