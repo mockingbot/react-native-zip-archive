@@ -55,6 +55,27 @@ public class ZipSecurityTest {
   }
 
   @Test
+  public void validateExtractPath_acceptsDestinationItself() throws IOException {
+    File dest = temporaryFolder.newFolder("dest");
+
+    ZipSecurity.validateExtractPath(dest.getAbsolutePath(), ".");
+    ZipSecurity.validateExtractPath(dest.getAbsolutePath(), "");
+    ZipSecurity.validateExtractPath(dest.getAbsolutePath(), "nested/..");
+  }
+
+  @Test
+  public void validateExtractPath_rejectsSiblingPrefix() throws IOException {
+    File dest = temporaryFolder.newFolder("dest");
+
+    try {
+      ZipSecurity.validateExtractPath(dest.getAbsolutePath(), "../dest-evil/file.txt");
+      fail("Expected SecurityException for sibling prefix");
+    } catch (SecurityException ex) {
+      assertTrue(ex.getMessage().contains("Zip Path Traversal Vulnerability"));
+    }
+  }
+
+  @Test
   public void validateExtractPath_acceptsEntryInSubdirectoryNamedLikeTraversal() throws IOException {
     File dest = temporaryFolder.newFolder("dest");
 

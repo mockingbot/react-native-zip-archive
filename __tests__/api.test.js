@@ -102,6 +102,25 @@ describe('react-native-zip-archive API', () => {
         code: ErrorCodes.CANCELLED,
       });
       expect(mockRNZipArchive.zipFolder).not.toHaveBeenCalled();
+      expect(mockRNZipArchive.cancel).not.toHaveBeenCalled();
+    });
+
+    test('zip signal that aborts while the listener is attached does not start work', async () => {
+      const signal = {
+        aborted: false,
+        addEventListener() {
+          this.aborted = true;
+        },
+        removeEventListener() {},
+      };
+      await expect(
+        zip('/source', '/target.zip', { signal })
+      ).rejects.toMatchObject({
+        name: 'ZipError',
+        code: ErrorCodes.CANCELLED,
+      });
+      expect(mockRNZipArchive.zipFolder).not.toHaveBeenCalled();
+      expect(mockRNZipArchive.cancel).not.toHaveBeenCalled();
     });
 
     test('zip abort mid-flight calls cancel', async () => {

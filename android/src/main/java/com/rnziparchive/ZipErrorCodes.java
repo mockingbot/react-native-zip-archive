@@ -1,5 +1,8 @@
 package com.rnziparchive;
 
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
+
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -26,6 +29,9 @@ public final class ZipErrorCodes {
     if (ex instanceof SecurityException) {
       return UNSAFE_PATH;
     }
+    if (ex instanceof IllegalCharsetNameException || ex instanceof UnsupportedCharsetException) {
+      return UNSUPPORTED;
+    }
     if (ex instanceof ZipException) {
       ZipException zipException = (ZipException) ex;
       if (zipException.getType() == ZipException.Type.WRONG_PASSWORD) {
@@ -34,6 +40,9 @@ public final class ZipErrorCodes {
       String message = zipException.getMessage();
       if (message != null) {
         String lower = message.toLowerCase();
+        if (lower.contains("does not exist")) {
+          return FILE_NOT_FOUND;
+        }
         if (lower.contains("not a zip") || lower.contains("corrupt")
             || lower.contains("invalid") || lower.contains("malformed")) {
           return CORRUPT_ARCHIVE;

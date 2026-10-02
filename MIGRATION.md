@@ -27,6 +27,17 @@ Working examples: [playground-expo](./playground-expo/) and [playground-rn](./pl
 
 Old-arch proof is compile + link on RN **0.81.6** (`.github/workflows/old-arch.yml`), not device Maestro. See the [README matrix](./README.md#old-architecture-rn-070081).
 
+## Unreleased
+
+Native behavior fixes. JavaScript call sites are unchanged. Rebuild the native app after upgrading.
+
+- **Android zip progress** stays monotonic, including when `zip` is given a mix of files and folders. The work total is counted before the first event.
+- **Android `unzipAssets` progress** stays within 0–1 when an entry's compressed size is unknown.
+- **Android full `unzip` / `unzipWithPassword`** create directory entries, including empty directories. iOS and selective extract already did.
+- **Missing archives** reject with `ERR_FILE_NOT_FOUND` from Android `unzipWithPassword`, `isPasswordProtected`, and `getUncompressedSize`, and from iOS `getUncompressedSize`.
+- **Android `zip` / `zipWithPassword`** fsync the archive before the promise resolves. iOS already did.
+- **`AbortSignal`:** if the signal aborts before the listener is attached, the call rejects with `ERR_CANCELLED` and does not start native work.
+
 ## v9.5.1
 
 Android old-architecture load fix. JavaScript call sites are unchanged. Native rebuild required.
