@@ -123,6 +123,7 @@ Zip a folder (`string`) or files/folders (`string[]`) to `target`.
 
 - Single file: `zip([file], target)`.
 - Array items may be directories; contents are added recursively (entry paths relative to that directory; empty dirs preserved).
+- Progress events run from 0 to 1 and do not move backwards. The archive is flushed to disk before the promise resolves.
 - Third arg: compression level (`0`–`9`, or constants below) or `{ compressionLevel, signal }`.
 
 ```js
@@ -159,7 +160,7 @@ await zipWithPassword(sourceDir, targetZip, 'password', {
 
 ### `unzip(source, target, charsetOrEntriesOrOptions?, entries?)`
 
-Extract an archive. Optional `entries` extracts only those paths (directories include nested children).
+Extract an archive. Optional `entries` extracts only those paths (directories include nested children). Directory entries are created, including empty directories.
 
 ```js
 await unzip(source, target)
@@ -222,9 +223,10 @@ subscribe(({ progress, filePath }) => { /* progress 0…1 */ })
 ```
 
 - Event is **global** — match `filePath` to your operation, then call `.remove()`.
+- Progress moves from 0 to 1 and does not go backwards.
 - `unzip` / `unzipWithPassword`: byte-weighted after each entry.
-- `zip` / `zipWithPassword`: per-file.
-- `unzipAssets` (Android): approximate vs compressed size.
+- `zip` / `zipWithPassword`: per immediate file or folder. The total is counted before the first tick.
+- `unzipAssets` (Android): approximate vs compressed size. An entry whose compressed size is unknown counts the bytes copied, and the value stays within 0–1.
 
 ### Error codes
 

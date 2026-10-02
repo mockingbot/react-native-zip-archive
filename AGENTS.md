@@ -71,8 +71,10 @@ Options objects (`{ signal }`, `{ entries }`, `{ compressionLevel }`) are JS-sid
 
 - **Threading:** Android zip/unzip on a single-thread executor (FIFO). iOS on a background serial queue. Never block the UI/main thread with archive I/O. `cancel()` must not wait behind the operation it should abort.
 - **Encryption default:** `'STANDARD'` = ZipCrypto (interop with Node/Java/`unzip`). AES = WinZip-AES; many server tools cannot open AES zips — default to STANDARD for off-device consumers.
-- **Charset:** Android may honor non-UTF-8; iOS must reject non-UTF-8 with `ERR_UNSUPPORTED` (except where docs say charset is ignored, e.g. `getUncompressedSize` on iOS).
-- **Progress:** Emit monotonic 0→1 with explicit start/end. Shape: `{ progress, filePath }`. Treat cross-platform divergence as a bug.
+- **Charset:** Android may honor non-UTF-8; an invalid charset name rejects with `ERR_UNSUPPORTED`. iOS must reject non-UTF-8 with `ERR_UNSUPPORTED` (except where docs say charset is ignored, e.g. `getUncompressedSize` on iOS).
+- **Progress:** Emit monotonic 0→1 with explicit start/end. Shape: `{ progress, filePath }`. Android `zip` counts work units before the first event. `unzipAssets` uses bytes copied when `ZipInputStream` reports compressed size `-1`, so progress cannot go negative. Treat cross-platform divergence as a bug.
+- **Durability:** After a successful zip, fsync the archive before resolving (iOS `fsync`, Android `FileDescriptor.sync`) so a following read or upload sees the full file.
+- **Missing sources:** Reject with `ERR_FILE_NOT_FOUND` when the archive path is missing (`unzip`, `unzipWithPassword`, `listContents`, `isPasswordProtected`, `getUncompressedSize`). Do not collapse that case into `ERR_UNZIP` / `ERR_CORRUPT_ARCHIVE`.
 
 ## Testing commands
 

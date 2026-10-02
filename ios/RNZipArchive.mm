@@ -884,6 +884,10 @@ compressionLevel:(double)compressionLevel
     if ([self rejectIfUnsupportedCharset:charset reject:reject]) {
         return;
     }
+    if (path.length == 0 || ![[NSFileManager defaultManager] fileExistsAtPath:path]) {
+        reject(kZipErrFileNotFound, @"failed to open zip file", nil);
+        return;
+    }
     [self beginOperation];
     [self runAsync:^{
         NSError *error = nil;
