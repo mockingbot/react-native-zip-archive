@@ -1,6 +1,7 @@
 package com.rnziparchive;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,6 +42,38 @@ public final class ZipProgress {
       return bytesCopied;
     }
     return 0;
+  }
+
+  /**
+   * Next {@code unzipAssets} byte count. Unknown compressed sizes (-1) contribute the
+   * bytes copied, and the running total stays under 99% of the archive until the caller
+   * emits the explicit 100% event.
+   */
+  public static long advanceAssetBytes(long extractedBytes, long archiveSize, long compressedSize, long bytesCopied) {
+    long next = extractedBytes + assetEntryDelta(compressedSize, bytesCopied);
+    if (next < 0) {
+      next = 0;
+    }
+    if (archiveSize > 0 && next > archiveSize * 0.99) {
+      return (long) (archiveSize * 0.99);
+    }
+    return next;
+  }
+
+  /**
+   * Progress events {@code processZip} emits for these paths: explicit 0, one tick per
+   * work unit, then explicit 1. The total is fixed up front.
+   */
+  public static List<Double> events(List<String> entries) {
+    int totalFiles = countWorkUnits(entries);
+    long progressTotal = Math.max(totalFiles, 1);
+    List<Double> planned = new ArrayList<>();
+    planned.add(fraction(0, progressTotal));
+    for (int i = 1; i <= totalFiles; i++) {
+      planned.add(fraction(i, progressTotal));
+    }
+    planned.add(fraction(1, 1));
+    return planned;
   }
 
   /**

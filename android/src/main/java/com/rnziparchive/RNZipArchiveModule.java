@@ -162,7 +162,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           if (rejectIfCancelled(promise)) {
             return;
           }
-          extractHeader(zipFile, destDirectory, fileHeader);
+          ZipExtractor.extractEntry(zipFile, destDirectory, fileHeader);
           if (!fileHeader.isDirectory()) {
             extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
           }
@@ -205,7 +205,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           if (rejectIfCancelled(promise)) {
             return;
           }
-          extractHeader(zipFile, destDirectory, fileHeader);
+          ZipExtractor.extractEntry(zipFile, destDirectory, fileHeader);
           if (!fileHeader.isDirectory()) {
             extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
           }
@@ -321,7 +321,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           if (rejectIfCancelled(promise)) {
             return;
           }
-          extractHeader(zipFile, destDirectory, fileHeader);
+          ZipExtractor.extractEntry(zipFile, destDirectory, fileHeader);
           if (!fileHeader.isDirectory()) {
             extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
           }
@@ -471,12 +471,8 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
               copied = StreamUtil.copy(bin, bout, null);
             }
 
-            extractedBytes += ZipProgress.assetEntryDelta(entry.getCompressedSize(), copied);
-
-            // Stay under 100% until the stream is finished. Compressed size is only an estimate.
-            if (extractedBytes > compressedSize * 0.99) {
-              extractedBytes = (long) (compressedSize * 0.99);
-            }
+            extractedBytes = ZipProgress.advanceAssetBytes(
+                extractedBytes, compressedSize, entry.getCompressedSize(), copied);
 
             updateProgress(extractedBytes, compressedSize, entryName);
           }
@@ -580,11 +576,10 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           ? new net.lingala.zip4j.ZipFile(destFile, password)
           : new net.lingala.zip4j.ZipFile(destFile)) {
 
-        // Count first so a mix of files and folders cannot move progress backwards.
-        int totalFiles = ZipProgress.countWorkUnits(entries);
-        long progressTotal = Math.max(totalFiles, 1);
-        int fileCounter = 0;
-        updateProgress(0, progressTotal, destFile);
+        // Same event list the end-to-end test asserts: fixed total, so progress cannot rewind.
+        java.util.List<Double> planned = ZipProgress.events(entries);
+        int cursor = 0;
+        emitProgress(planned.get(cursor++), destFile);
 
         for (int i = 0; i < entries.size(); i++) {
           if (rejectIfCancelled(promise)) {
@@ -606,14 +601,12 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
                 } else {
                   zipFile.addFile(files.get(j), parameters);
                 }
-                fileCounter += 1;
-                updateProgress(fileCounter, progressTotal, destFile);
+                emitProgress(plannedEvent(planned, cursor++), destFile);
               }
 
             } else {
               zipFile.addFile(f, parameters);
-              fileCounter += 1;
-              updateProgress(fileCounter, progressTotal, destFile);
+              emitProgress(plannedEvent(planned, cursor++), destFile);
             }
           } else {
             promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "File or folder does not exist");
@@ -625,7 +618,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         return;
       }
       syncFile(destFile);
-      updateProgress(1, 1, destFile); // force 100%
+      emitProgress(1, destFile); // force 100%
       promise.resolve(destFile);
     });
   }
@@ -761,21 +754,6 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     }
   }
 
-  /**
-   * Validate the entry, then extract it. Directory entries are created (including empty
-   * ones). Symlinks stay disabled via {@link ZipSecurity#createExtractParameters()}.
-   */
-  private void extractHeader(net.lingala.zip4j.ZipFile zipFile, String destDirectory, FileHeader fileHeader)
-      throws Exception {
-    ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
-    if (fileHeader.isDirectory()) {
-      //noinspection ResultOfMethodCallIgnored
-      new File(destDirectory, fileHeader.getFileName()).mkdirs();
-      return;
-    }
-    zipFile.extractFile(fileHeader, destDirectory, ZipSecurity.createExtractParameters());
-  }
-
   private void applyEncryptionMethod(ZipParameters parameters, String encryptionMethod) {
     ZipEncryptionChoice.Kind kind = ZipEncryptionChoice.parse(encryptionMethod);
     if (kind == ZipEncryptionChoice.Kind.AES_256) {
@@ -812,13 +790,26 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     }
   }
 
-  protected void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
-    final double progress = ZipProgress.fraction(extractedBytes, totalSize);
-    Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
+  private static double plannedEvent(java.util.List<Double> planned, int index) {
+    if (planned.isEmpty()) {
+      return 0;
+    }
+    if (index < 0) {
+      return planned.get(0);
+    }
+    if (index >= planned.size()) {
+      return planned.get(planned.size() - 1);
+    }
+    return planned.get(index);
+  }
+
+  private void emitProgress(double progress, String zipFilePath) {
+    final double clamped = progress < 0 ? 0 : Math.min(progress, 1);
+    Log.d(TAG, String.format("updateProgress: %.0f%%", clamped * 100));
 
     final WritableMap map = Arguments.createMap();
     map.putString(EVENT_KEY_FILENAME, zipFilePath);
-    map.putDouble(EVENT_KEY_PROGRESS, progress);
+    map.putDouble(EVENT_KEY_PROGRESS, clamped);
 
     mainHandler.post(() -> {
       ReactApplicationContext context = getReactApplicationContext();
@@ -827,6 +818,10 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
             .emit(PROGRESS_EVENT_NAME, map);
       }
     });
+  }
+
+  protected void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
+    emitProgress(ZipProgress.fraction(extractedBytes, totalSize), zipFilePath);
   }
 
   @Override
