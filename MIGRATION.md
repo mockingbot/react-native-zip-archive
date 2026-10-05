@@ -27,7 +27,7 @@ Working examples: [playground-expo](./playground-expo/) and [playground-rn](./pl
 
 Old-arch proof is compile + link on RN **0.81.6** (`.github/workflows/old-arch.yml`), not device Maestro. See the [README matrix](./README.md#old-architecture-rn-070081).
 
-## Unreleased
+## v9.5.3
 
 Native behavior fixes. JavaScript call sites are unchanged. Rebuild the native app after upgrading.
 
@@ -37,6 +37,11 @@ Native behavior fixes. JavaScript call sites are unchanged. Rebuild the native a
 - **Missing archives** reject with `ERR_FILE_NOT_FOUND` from Android `unzipWithPassword`, `isPasswordProtected`, and `getUncompressedSize`, and from iOS `getUncompressedSize`.
 - **Android `zip` / `zipWithPassword`** fsync the archive before the promise resolves. iOS already did.
 - **`AbortSignal`:** if the signal aborts before the listener is attached, the call rejects with `ERR_CANCELLED` and does not start native work.
+
+```bash
+npm install react-native-zip-archive@^9.5.3
+cd ios && pod install && cd ..
+```
 
 ## v9.5.1
 

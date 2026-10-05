@@ -1,6 +1,6 @@
 {
   "name": "react-native-zip-archive",
-  "version": "9.5.2",
+  "version": "9.5.3",
   "description": "Zip and unzip files in React Native and Expo (iOS & Android)",
   "main": "index.js",
   "types": "index.d.ts",
