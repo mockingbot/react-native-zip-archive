@@ -2,6 +2,8 @@ package com.rnziparchive;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.charset.UnsupportedCharsetException;
+
 import net.lingala.zip4j.exception.ZipException;
 
 import org.junit.Test;
@@ -26,5 +28,19 @@ public class ZipErrorCodesTest {
     assertEquals(
         ZipErrorCodes.ZIP,
         ZipErrorCodes.mapException(new RuntimeException("boom"), ZipErrorCodes.ZIP));
+  }
+
+  @Test
+  public void mapsMissingZipFileToFileNotFound() {
+    assertEquals(
+        ZipErrorCodes.FILE_NOT_FOUND,
+        ZipErrorCodes.mapException(new ZipException("zip file does not exist"), ZipErrorCodes.UNZIP));
+  }
+
+  @Test
+  public void mapsUnsupportedCharsetToUnsupported() {
+    assertEquals(
+        ZipErrorCodes.UNSUPPORTED,
+        ZipErrorCodes.mapException(new UnsupportedCharsetException("not-a-charset"), ZipErrorCodes.UNZIP));
   }
 }

@@ -22,8 +22,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -113,6 +112,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   @Override
   public void isPasswordProtected(final String zipFilePath, final Promise promise) {
     submitWork(() -> {
+      if (rejectIfZipMissing(zipFilePath, promise)) {
+        return;
+      }
       try (net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath)) {
         promise.resolve(zipFile.isEncrypted());
       } catch (Exception ex) {
@@ -134,6 +136,13 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       return;
     }
     submitWork(() -> {
+      if (rejectIfZipMissing(zipFilePath, promise)) {
+        return;
+      }
+      if (password == null || password.isEmpty()) {
+        promise.reject(ZipErrorCodes.INVALID_ARGS, "Password is empty");
+        return;
+      }
       try (net.lingala.zip4j.ZipFile zipFile = new net.lingala.zip4j.ZipFile(zipFilePath)) {
         if (zipFile.isEncrypted()) {
           zipFile.setPassword(password.toCharArray());
@@ -141,6 +150,8 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           promise.reject(ZipErrorCodes.NOT_PASSWORD_PROTECTED, String.format("Zip file: %s is not password protected", zipFilePath));
           return;
         }
+
+        ensureDestination(destDirectory);
 
         List<FileHeader> fileHeaderList = zipFile.getFileHeaders();
         long totalBytes = Math.max(totalUncompressedSize(fileHeaderList), 1);
@@ -151,10 +162,8 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           if (rejectIfCancelled(promise)) {
             return;
           }
-          ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
-
+          ZipExtractor.extractEntry(zipFile, destDirectory, fileHeader);
           if (!fileHeader.isDirectory()) {
-            zipFile.extractFile(fileHeader, destDirectory, ZipSecurity.createExtractParameters());
             extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
           }
           updateProgress(extractedBytes, totalBytes, zipFilePath);
@@ -180,22 +189,12 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       return;
     }
     submitWork(() -> {
-      if (zipFilePath == null) {
-        promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
-        return;
-      }
-      File zipFileRef = new File(zipFilePath);
-      if (!zipFileRef.exists()) {
-        promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "Couldn't open file " + zipFilePath + ".");
+      if (rejectIfZipMissing(zipFilePath, promise)) {
         return;
       }
 
       try (net.lingala.zip4j.ZipFile zipFile = openZipFile(zipFilePath, charset)) {
-        File destDir = new File(destDirectory);
-        if (!destDir.exists()) {
-          //noinspection ResultOfMethodCallIgnored
-          destDir.mkdirs();
-        }
+        ensureDestination(destDirectory);
 
         List<FileHeader> fileHeaderList = zipFile.getFileHeaders();
         long totalBytes = Math.max(totalUncompressedSize(fileHeaderList), 1);
@@ -206,10 +205,8 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           if (rejectIfCancelled(promise)) {
             return;
           }
-          ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
-
+          ZipExtractor.extractEntry(zipFile, destDirectory, fileHeader);
           if (!fileHeader.isDirectory()) {
-            zipFile.extractFile(fileHeader, destDirectory, ZipSecurity.createExtractParameters());
             extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
           }
           updateProgress(extractedBytes, totalBytes, zipFilePath);
@@ -254,13 +251,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   @Override
   public void listContents(final String zipFilePath, final String charset, final Promise promise) {
     submitWork(() -> {
-      if (zipFilePath == null) {
-        promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
-        return;
-      }
-      File zipFileRef = new File(zipFilePath);
-      if (!zipFileRef.exists()) {
-        promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "Couldn't open file " + zipFilePath + ".");
+      if (rejectIfZipMissing(zipFilePath, promise)) {
         return;
       }
 
@@ -286,13 +277,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
                                       final List<String> wantedEntries, final String charset,
                                       final String password, final Promise promise) {
     submitWork(() -> {
-      if (zipFilePath == null) {
-        promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
-        return;
-      }
-      File zipFileRef = new File(zipFilePath);
-      if (!zipFileRef.exists()) {
-        promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "Couldn't open file " + zipFilePath + ".");
+      if (rejectIfZipMissing(zipFilePath, promise)) {
         return;
       }
       if (wantedEntries == null || wantedEntries.isEmpty()) {
@@ -302,6 +287,10 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
 
       try (net.lingala.zip4j.ZipFile zipFile = openZipFile(zipFilePath, charset)) {
         if (password != null) {
+          if (password.isEmpty()) {
+            promise.reject(ZipErrorCodes.INVALID_ARGS, "Password is empty");
+            return;
+          }
           if (!zipFile.isEncrypted()) {
             promise.reject(ZipErrorCodes.NOT_PASSWORD_PROTECTED,
                 String.format("Zip file: %s is not password protected", zipFilePath));
@@ -310,11 +299,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           zipFile.setPassword(password.toCharArray());
         }
 
-        File destDir = new File(destDirectory);
-        if (!destDir.exists()) {
-          //noinspection ResultOfMethodCallIgnored
-          destDir.mkdirs();
-        }
+        ensureDestination(destDirectory);
 
         List<FileHeader> selected = new ArrayList<>();
         for (FileHeader fileHeader : zipFile.getFileHeaders()) {
@@ -336,15 +321,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           if (rejectIfCancelled(promise)) {
             return;
           }
-          ZipSecurity.validateExtractPath(destDirectory, fileHeader.getFileName());
-
+          ZipExtractor.extractEntry(zipFile, destDirectory, fileHeader);
           if (!fileHeader.isDirectory()) {
-            zipFile.extractFile(fileHeader, destDirectory, ZipSecurity.createExtractParameters());
             extractedBytes += Math.max(fileHeader.getUncompressedSize(), 0);
-          } else {
-            File dir = new File(destDirectory, fileHeader.getFileName());
-            //noinspection ResultOfMethodCallIgnored
-            dir.mkdirs();
           }
           updateProgress(extractedBytes, totalBytes, zipFilePath);
         }
@@ -401,12 +380,18 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
    * from a file. When reading a zip from a stream, we can't
    * get accurate uncompressed sizes for files (ZipEntry#getCompressedSize() returns -1).
    * <p>
-   * Instead, we compare the number of bytes extracted to the size of the compressed zip file.
-   * In most cases this means the progress 'stays on' 100% for a little bit (compressedSize < uncompressed size)
+   * Instead, we compare bytes attributed to each entry with the size of the compressed zip.
+   * When the compressed size is unknown, the bytes actually copied are used so progress
+   * cannot move backwards. The value stays under 100% until the extract finishes.
    */
   @Override
   public void unzipAssets(final String assetsPath, final String destDirectory, final Promise promise) {
     submitWork(() -> {
+      if (assetsPath == null || assetsPath.isEmpty()) {
+        promise.reject(ZipErrorCodes.INVALID_ARGS, "asset path must not be empty");
+        return;
+      }
+
       InputStream assetsInputStream = null;
       AssetFileDescriptor fileDescriptor = null;
       long compressedSize;
@@ -459,30 +444,37 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
             if (rejectIfCancelled(promise)) {
               return;
             }
-            if (entry.isDirectory()) continue;
+            String entryName = entry.getName();
+            if (entryName == null || entryName.isEmpty()) {
+              continue;
+            }
 
-            Log.i("rnziparchive", "Extracting: " + entry.getName());
+            ZipSecurity.validateExtractPath(destDirectory, entryName);
+            Log.d(TAG, "Extracting: " + entryName);
 
-            ZipSecurity.validateExtractPath(destDirectory, entry.getName());
+            if (entry.isDirectory()) {
+              //noinspection ResultOfMethodCallIgnored
+              new File(destDirectory, entryName).mkdirs();
+              continue;
+            }
 
-            File fout = new File(destDirectory, entry.getName());
+            File fout = new File(destDirectory, entryName);
             File parentDir = fout.getParentFile();
             if (parentDir != null && !parentDir.exists()) {
               //noinspection ResultOfMethodCallIgnored
               parentDir.mkdirs();
             }
 
+            long copied;
             try (FileOutputStream out = new FileOutputStream(fout);
                  BufferedOutputStream bout = new BufferedOutputStream(out)) {
-              StreamUtil.copy(bin, bout, null);
+              copied = StreamUtil.copy(bin, bout, null);
             }
 
-            extractedBytes += entry.getCompressedSize();
+            extractedBytes = ZipProgress.advanceAssetBytes(
+                extractedBytes, compressedSize, entry.getCompressedSize(), copied);
 
-            // do not let the percentage go over 99% because we want it to hit 100% only when we are sure it's finished
-            if (extractedBytes > compressedSize * 0.99) extractedBytes = (long) (compressedSize * 0.99);
-
-            updateProgress(extractedBytes, compressedSize, entry.getName());
+            updateProgress(extractedBytes, compressedSize, entryName);
           }
 
           updateProgress(compressedSize, compressedSize, assetsPath); // force 100%
@@ -561,26 +553,7 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
       }
 
       parameters.setEncryptFiles(true);
-      String[] encParts = encryptionMethod.split("-");
-
-      if (encParts[0].equals("AES")) {
-        parameters.setEncryptionMethod(EncryptionMethod.AES);
-        if (encParts[1].equals("128")) {
-          parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_128);
-        } else if (encParts[1].equals("256")) {
-          parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-        } else {
-          parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_128);
-        }
-      } else if ("STANDARD".equals(encryptionMethod)) {
-        // ZipCrypto (ZIP_STANDARD). ZIP_STANDARD_VARIANT_STRONG is write-only in zip4j
-        // and fails create/extract with "encryption method is not supported".
-        parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
-        Log.d(TAG, "Standard Encryption");
-      } else {
-        parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
-        Log.d(TAG, "Encryption type not supported default to Standard Encryption");
-      }
+      applyEncryptionMethod(parameters, encryptionMethod);
 
       processZip(filesOrDirectory, destFile, parameters, promise, password.toCharArray());
     } catch (Exception ex) {
@@ -603,10 +576,10 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
           ? new net.lingala.zip4j.ZipFile(destFile, password)
           : new net.lingala.zip4j.ZipFile(destFile)) {
 
-        updateProgress(0, 100, destFile);
-
-        int totalFiles = 0;
-        int fileCounter = 0;
+        // Same event list the end-to-end test asserts: fixed total, so progress cannot rewind.
+        java.util.List<Double> planned = ZipProgress.events(entries);
+        int cursor = 0;
+        emitProgress(planned.get(cursor++), destFile);
 
         for (int i = 0; i < entries.size(); i++) {
           if (rejectIfCancelled(promise)) {
@@ -619,7 +592,6 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
               File[] listFiles = f.listFiles();
               List<File> files = listFiles != null ? Arrays.asList(listFiles) : new ArrayList<File>();
 
-              totalFiles += files.size();
               for (int j = 0; j < files.size(); j++) {
                 if (rejectIfCancelled(promise)) {
                   return;
@@ -629,15 +601,12 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
                 } else {
                   zipFile.addFile(files.get(j), parameters);
                 }
-                fileCounter += 1;
-                updateProgress(fileCounter, totalFiles, destFile);
+                emitProgress(plannedEvent(planned, cursor++), destFile);
               }
 
             } else {
-              totalFiles += 1;
               zipFile.addFile(f, parameters);
-              fileCounter += 1;
-              updateProgress(fileCounter, totalFiles, destFile);
+              emitProgress(plannedEvent(planned, cursor++), destFile);
             }
           } else {
             promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "File or folder does not exist");
@@ -648,7 +617,8 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
         rejectMapped(promise, ex, ZipErrorCodes.ZIP);
         return;
       }
-      updateProgress(1, 1, destFile); // force 100%
+      syncFile(destFile);
+      emitProgress(1, destFile); // force 100%
       promise.resolve(destFile);
     });
   }
@@ -656,6 +626,9 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
   @Override
   public void getUncompressedSize(String zipFilePath, String charset, final Promise promise) {
     submitWork(() -> {
+      if (rejectIfZipMissing(zipFilePath, promise)) {
+        return;
+      }
       try {
         long totalSize = getUncompressedSize(zipFilePath, charset);
         if (totalSize == -1) {
@@ -758,14 +731,85 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     return result;
   }
 
-  protected void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
-    // Ensure progress can't overflow 1
-    final double progress = Math.min((double) extractedBytes / (double) totalSize, 1);
-    Log.d(TAG, String.format("updateProgress: %.0f%%", progress * 100));
+  /**
+   * @return true when the promise was already rejected.
+   */
+  private boolean rejectIfZipMissing(String zipFilePath, Promise promise) {
+    if (zipFilePath == null) {
+      promise.reject(ZipErrorCodes.INVALID_PATH, "Couldn't open file null.");
+      return true;
+    }
+    if (!new File(zipFilePath).exists()) {
+      promise.reject(ZipErrorCodes.FILE_NOT_FOUND, "Couldn't open file " + zipFilePath + ".");
+      return true;
+    }
+    return false;
+  }
+
+  private static void ensureDestination(String destDirectory) {
+    File destDir = new File(destDirectory);
+    if (!destDir.exists()) {
+      //noinspection ResultOfMethodCallIgnored
+      destDir.mkdirs();
+    }
+  }
+
+  private void applyEncryptionMethod(ZipParameters parameters, String encryptionMethod) {
+    ZipEncryptionChoice.Kind kind = ZipEncryptionChoice.parse(encryptionMethod);
+    if (kind == ZipEncryptionChoice.Kind.AES_256) {
+      parameters.setEncryptionMethod(EncryptionMethod.AES);
+      parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+      return;
+    }
+    if (kind == ZipEncryptionChoice.Kind.AES_128) {
+      parameters.setEncryptionMethod(EncryptionMethod.AES);
+      parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_128);
+      return;
+    }
+    // ZipCrypto (ZIP_STANDARD). ZIP_STANDARD_VARIANT_STRONG is write-only in zip4j
+    // and fails create/extract with "encryption method is not supported".
+    parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
+    if (encryptionMethod != null && !encryptionMethod.isEmpty() && !"STANDARD".equals(encryptionMethod)) {
+      Log.d(TAG, "Encryption type not supported default to Standard Encryption");
+    } else {
+      Log.d(TAG, "Standard Encryption");
+    }
+  }
+
+  /**
+   * Flush zip bytes before resolving. Callers that upload or hash the archive immediately
+   * otherwise risk reading a partial file (same class of race as iOS fsync, #323).
+   */
+  private static void syncFile(String path) {
+    if (path == null) {
+      return;
+    }
+    try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
+      raf.getFD().sync();
+    } catch (IOException ignored) {
+    }
+  }
+
+  private static double plannedEvent(java.util.List<Double> planned, int index) {
+    if (planned.isEmpty()) {
+      return 0;
+    }
+    if (index < 0) {
+      return planned.get(0);
+    }
+    if (index >= planned.size()) {
+      return planned.get(planned.size() - 1);
+    }
+    return planned.get(index);
+  }
+
+  private void emitProgress(double progress, String zipFilePath) {
+    final double clamped = progress < 0 ? 0 : Math.min(progress, 1);
+    Log.d(TAG, String.format("updateProgress: %.0f%%", clamped * 100));
 
     final WritableMap map = Arguments.createMap();
     map.putString(EVENT_KEY_FILENAME, zipFilePath);
-    map.putDouble(EVENT_KEY_PROGRESS, progress);
+    map.putDouble(EVENT_KEY_PROGRESS, clamped);
 
     mainHandler.post(() -> {
       ReactApplicationContext context = getReactApplicationContext();
@@ -776,14 +820,8 @@ public class RNZipArchiveModule extends NativeZipArchiveSpec {
     });
   }
 
-  /**
-   * Returns the exception stack trace as a string
-   */
-  private String getStackTrace(Exception e) {
-    StringWriter sw = new StringWriter();
-    PrintWriter pw = new PrintWriter(sw);
-    e.printStackTrace(pw);
-    return sw.toString();
+  protected void updateProgress(long extractedBytes, long totalSize, String zipFilePath) {
+    emitProgress(ZipProgress.fraction(extractedBytes, totalSize), zipFilePath);
   }
 
   @Override

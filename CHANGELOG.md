@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed
+- Android: `zip` / `zipWithPassword` progress stays monotonic. The work total is counted before the first event, so a mix of files and folders no longer moves progress backwards.
+- Android: `unzipAssets` progress stays within 0–1 when an entry's compressed size is unknown (`ZipInputStream` reports `-1`). Directory entries in asset archives are created, and traversal paths are rejected.
+- Android: full `unzip` / `unzipWithPassword` create directory entries, including empty directories (same as iOS and selective extract). An entry that resolves to the destination directory itself is accepted; sibling prefixes such as `dest-evil` stay rejected.
+- Missing archives reject with `ERR_FILE_NOT_FOUND` from Android `unzipWithPassword`, `isPasswordProtected`, and `getUncompressedSize`, and from iOS `getUncompressedSize`.
+- Android: an invalid charset name rejects with `ERR_UNSUPPORTED`. A bare `AES` encryption method (or any unknown method) no longer throws; `AES` is AES-128 and unknown methods stay ZipCrypto.
+- Android: successful `zip` / `zipWithPassword` fsync the archive before resolving (iOS already did).
+- JS: an `AbortSignal` that aborts before the abort listener is attached rejects with `ERR_CANCELLED` and does not start native work or cancel a different in-flight operation.
+
 ## [9.5.2] - 2026-09-28
 
 ### Changed

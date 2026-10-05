@@ -41,9 +41,12 @@ public final class ZipSecurity {
     File fout = new File(destDir, entryName);
 
     String canonicalPath = fout.getCanonicalPath();
-    String destDirCanonicalPath = destDir.getCanonicalPath() + File.separator;
+    String destCanonical = destDir.getCanonicalPath();
+    String destDirCanonicalPath = destCanonical + File.separator;
 
-    if (!canonicalPath.startsWith(destDirCanonicalPath)) {
+    // The destination itself (entries "", ".", or "foo/..") is inside the root.
+    // The trailing separator keeps a sibling such as "dest-evil" from matching "dest".
+    if (!canonicalPath.equals(destCanonical) && !canonicalPath.startsWith(destDirCanonicalPath)) {
       throw new SecurityException(String.format("Found Zip Path Traversal Vulnerability with %s", canonicalPath));
     }
   }

@@ -84,20 +84,38 @@ function withAbort(signal, work) {
   }
 
   let settled = false;
+  let started = false;
   let rejectAbort;
   const abortGate = new Promise((_, reject) => {
     rejectAbort = reject;
   });
   const onAbort = () => {
-    cancel().catch(() => {});
+    // cancel() flags the native worker. Skip it when this call never started,
+    // so an already-aborted signal cannot abort a different in-flight operation.
+    if (started) {
+      cancel().catch(() => {});
+    }
     if (!settled) {
       rejectAbort(zipError(ErrorCodes.CANCELLED, "Operation cancelled"));
     }
   };
   signal.addEventListener("abort", onAbort, { once: true });
+  // Abort can land after the signal.aborted check and before the listener is attached.
+  if (signal.aborted) {
+    onAbort();
+    return abortGate.finally(() => {
+      signal.removeEventListener("abort", onAbort);
+    });
+  }
 
   const run = Promise.resolve()
-    .then(work)
+    .then(() => {
+      if (signal.aborted) {
+        throw zipError(ErrorCodes.CANCELLED, "Operation cancelled");
+      }
+      started = true;
+      return work();
+    })
     .then(
       (value) => {
         settled = true;
